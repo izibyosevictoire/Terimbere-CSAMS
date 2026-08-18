@@ -1,0 +1,137 @@
+package rw.terimbere.csams.modules.loan.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import rw.terimbere.csams.modules.loan.dto.LoanApproveRequest;
+import rw.terimbere.csams.modules.loan.dto.LoanRejectRequest;
+import rw.terimbere.csams.modules.loan.dto.LoanRepaymentCreateRequest;
+import rw.terimbere.csams.modules.loan.dto.LoanRepaymentResponse;
+import rw.terimbere.csams.modules.loan.dto.LoanRequestCreateRequest;
+import rw.terimbere.csams.modules.loan.dto.LoanResponse;
+import rw.terimbere.csams.modules.loan.entity.LoanStatus;
+import rw.terimbere.csams.modules.loan.service.LoanService;
+import rw.terimbere.csams.shared.common.dto.ApiResponse;
+import rw.terimbere.csams.shared.common.dto.PageResponse;
+
+@RestController
+@RequestMapping("/api/v1/cooperatives/{cooperativeId}/loans")
+@RequiredArgsConstructor
+@Tag(name = "Loans", description = "Loan requests, approvals, disbursement, and repayments")
+@SecurityRequirement(name = "bearerAuth")
+public class LoanController {
+
+    private final LoanService loanService;
+
+    @PostMapping
+    @PreAuthorize("hasAuthority('LOAN_READ')")
+    @Operation(summary = "Request a loan (self) or admin-issue for a member")
+    public ResponseEntity<ApiResponse<LoanResponse>> create(
+            @PathVariable UUID cooperativeId,
+            @Valid @RequestBody LoanRequestCreateRequest request,
+            HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(ApiResponse.ok(loanService.requestLoan(cooperativeId, request, httpRequest)));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('LOAN_READ')")
+    @Operation(summary = "List loans with optional filters")
+    public ResponseEntity<ApiResponse<PageResponse<LoanResponse>>> list(
+            @PathVariable UUID cooperativeId,
+            @RequestParam(required = false) LoanStatus status,
+            @RequestParam(required = false) UUID memberUserId,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.ok(loanService.list(cooperativeId, status, memberUserId, pageable)));
+    }
+
+    @GetMapping("/my")
+    @PreAuthorize("hasAuthority('LOAN_READ')")
+    @Operation(summary = "List current user's loans")
+    public ResponseEntity<ApiResponse<List<LoanResponse>>> myLoans(@PathVariable UUID cooperativeId) {
+        return ResponseEntity.ok(ApiResponse.ok(loanService.myLoans(cooperativeId)));
+    }
+
+    @GetMapping("/{loanId}")
+    @PreAuthorize("hasAuthority('LOAN_READ')")
+    @Operation(summary = "Get loan by id")
+    public ResponseEntity<ApiResponse<LoanResponse>> get(
+            @PathVariable UUID cooperativeId, @PathVariable UUID loanId) {
+        return ResponseEntity.ok(ApiResponse.ok(loanService.get(cooperativeId, loanId)));
+    }
+
+    @PostMapping("/{loanId}/approve")
+    @PreAuthorize("hasAuthority('LOAN_WRITE')")
+    @Operation(summary = "Approve a pending loan")
+    public ResponseEntity<ApiResponse<LoanResponse>> approve(
+            @PathVariable UUID cooperativeId,
+            @PathVariable UUID loanId,
+            @Valid @RequestBody(required = false) LoanApproveRequest request,
+            HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(
+                ApiResponse.ok(loanService.approve(cooperativeId, loanId, request, httpRequest)));
+    }
+
+    @PostMapping("/{loanId}/reject")
+    @PreAuthorize("hasAuthority('LOAN_WRITE')")
+    @Operation(summary = "Reject a pending loan")
+    public ResponseEntity<ApiResponse<LoanResponse>> reject(
+            @PathVariable UUID cooperativeId,
+            @PathVariable UUID loanId,
+            @Valid @RequestBody LoanRejectRequest request,
+            HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(
+                ApiResponse.ok(loanService.reject(cooperativeId, loanId, request, httpRequest)));
+    }
+
+    @PostMapping("/{loanId}/disburse")
+    @PreAuthorize("hasAuthority('LOAN_WRITE')")
+    @Operation(summary = "Disburse an approved loan (posts ledger debit)")
+    public ResponseEntity<ApiResponse<LoanResponse>> disburse(
+            @PathVariable UUID cooperativeId, @PathVariable UUID loanId, HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(ApiResponse.ok(loanService.disburse(cooperativeId, loanId, httpRequest)));
+    }
+
+    @PostMapping("/{loanId}/write-off")
+    @PreAuthorize("hasAuthority('LOAN_WRITE') or hasRole('SUPER_ADMIN')")
+    @Operation(summary = "Write off an active/overdue loan")
+    public ResponseEntity<ApiResponse<LoanResponse>> writeOff(
+            @PathVariable UUID cooperativeId, @PathVariable UUID loanId, HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(ApiResponse.ok(loanService.writeOff(cooperativeId, loanId, httpRequest)));
+    }
+
+    @PostMapping("/{loanId}/repayments")
+    @PreAuthorize("hasAuthority('LOAN_WRITE')")
+    @Operation(summary = "Record a loan repayment")
+    public ResponseEntity<ApiResponse<LoanRepaymentResponse>> repay(
+            @PathVariable UUID cooperativeId,
+            @PathVariable UUID loanId,
+            @Valid @RequestBody LoanRepaymentCreateRequest request,
+            HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(
+                ApiResponse.ok(loanService.recordRepayment(cooperativeId, loanId, request, httpRequest)));
+    }
+
+    @GetMapping("/{loanId}/repayments")
+    @PreAuthorize("hasAuthority('LOAN_READ')")
+    @Operation(summary = "List repayments for a loan")
+    public ResponseEntity<ApiResponse<List<LoanRepaymentResponse>>> listRepayments(
+            @PathVariable UUID cooperativeId, @PathVariable UUID loanId) {
+        return ResponseEntity.ok(ApiResponse.ok(loanService.listRepayments(cooperativeId, loanId)));
+    }
+}

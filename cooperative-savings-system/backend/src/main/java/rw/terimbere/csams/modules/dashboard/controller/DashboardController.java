@@ -1,0 +1,45 @@
+package rw.terimbere.csams.modules.dashboard.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import rw.terimbere.csams.modules.contribution.dto.MonthlyContributionChartPoint;
+import rw.terimbere.csams.modules.dashboard.dto.DashboardSummaryResponse;
+import rw.terimbere.csams.modules.dashboard.service.DashboardService;
+import rw.terimbere.csams.shared.common.dto.ApiResponse;
+
+@RestController
+@RequestMapping("/api/v1/cooperatives/{cooperativeId}/dashboard")
+@RequiredArgsConstructor
+@Tag(name = "Dashboard", description = "Cooperative dashboard metrics")
+@SecurityRequirement(name = "bearerAuth")
+public class DashboardController {
+
+    private final DashboardService dashboardService;
+
+    @GetMapping("/summary")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Dashboard contribution and membership summary")
+    public ResponseEntity<ApiResponse<DashboardSummaryResponse>> summary(@PathVariable UUID cooperativeId) {
+        return ResponseEntity.ok(ApiResponse.ok(dashboardService.summary(cooperativeId)));
+    }
+
+    @GetMapping("/charts/monthly-contributions")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Monthly contribution totals chart data")
+    public ResponseEntity<ApiResponse<List<MonthlyContributionChartPoint>>> monthlyContributions(
+            @PathVariable UUID cooperativeId, @RequestParam int year) {
+        return ResponseEntity.ok(
+                ApiResponse.ok(dashboardService.monthlyContributionsChart(cooperativeId, year)));
+    }
+}

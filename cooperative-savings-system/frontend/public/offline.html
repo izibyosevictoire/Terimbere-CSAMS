@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0F5C5C" />
+    <title>Offline — TERIMBERE CSAMS</title>
+    <style>
+      :root {
+        --teal: #0f5c5c;
+        --sand: #f5f1ea;
+        --ink: #1a2e2e;
+        --muted: #4a6363;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 1.5rem;
+        font-family: Georgia, 'Times New Roman', serif;
+        color: var(--ink);
+        background:
+          radial-gradient(ellipse at 20% 0%, rgba(15, 92, 92, 0.12), transparent 50%),
+          linear-gradient(180deg, var(--sand) 0%, #ece8df 100%);
+      }
+      .card {
+        max-width: 28rem;
+        text-align: center;
+      }
+      .mark {
+        width: 4rem;
+        height: 4rem;
+        margin: 0 auto 1.25rem;
+        border-radius: 0.85rem;
+        background: var(--teal);
+        color: var(--sand);
+        display: grid;
+        place-items: center;
+        font-size: 2rem;
+        font-weight: 700;
+      }
+      h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.75rem;
+        letter-spacing: 0.02em;
+        color: var(--teal);
+      }
+      p {
+        margin: 0 0 1.5rem;
+        font-family: system-ui, sans-serif;
+        font-size: 1rem;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1.35rem;
+        background: var(--teal);
+        color: var(--sand);
+        font-family: system-ui, sans-serif;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover {
+        filter: brightness(1.08);
+      }
+      button:focus-visible {
+        outline: 3px solid rgba(15, 92, 92, 0.35);
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <div class="mark" aria-hidden="true">T</div>
+      <h1>TERIMBERE</h1>
+      <p>
+        You are offline. Viewing cached pages may still work, but financial operations require an
+        internet connection to the server.
+      </p>
+      <button type="button" onclick="window.location.reload()">Retry connection</button>
+    </main>
+  </body>
+</html>

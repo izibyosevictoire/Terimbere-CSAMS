@@ -1,0 +1,26 @@
+/** Auth feature surface — login UI lives in pages/; API + slice wired for Phase 2. */
+export {
+  changePassword,
+  confirmPasswordReset,
+  fetchMe,
+  login,
+  loginRequest,
+  logout,
+  refresh,
+  requestPasswordReset,
+  unwrapApiData,
+} from '@/shared/api/auth'
+export {
+  clearAuth,
+  selectAccessToken,
+  selectAuthStatus,
+  selectAuthUser,
+  selectIsAuthenticated,
+  selectIsCooperativeAdmin,
+  selectIsSuperAdmin,
+  selectSelectedCooperativeId,
+  selectUserRoles,
+  setAuthStatus,
+  setCredentials,
+  setSelectedCooperativeId,
+} from '@/app/store/authSlice'

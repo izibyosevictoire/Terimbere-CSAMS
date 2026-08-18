@@ -1,0 +1,78 @@
+import { apiClient } from './client'
+import { unwrapApiData } from './auth'
+import type { ApiResponse, PageQuery, PageResponse } from '@/shared/types/api'
+import type {
+  Cooperative,
+  CooperativeCreateRequest,
+  CooperativeStatusUpdateRequest,
+  CooperativeSummary,
+  CooperativeUpdateRequest,
+} from '@/shared/types/cooperative'
+import { mapCooperativeSummary } from '@/shared/types/cooperative'
+
+function toParams(query: PageQuery = {}) {
+  const params: Record<string, string | number> = {}
+  if (query.q?.trim()) params.q = query.q.trim()
+  if (query.status) params.status = query.status
+  if (query.page != null) params.page = query.page
+  if (query.size != null) params.size = query.size
+  if (query.sort) params.sort = query.sort
+  return params
+}
+
+export async function fetchMyCooperatives(): Promise<CooperativeSummary[]> {
+  const response = await apiClient.get<ApiResponse<CooperativeSummary[]>>('/cooperatives/mine')
+  const data = unwrapApiData(response.data)
+  return (data ?? []).map(mapCooperativeSummary)
+}
+
+export async function fetchCooperatives(
+  query: PageQuery = {},
+): Promise<PageResponse<Cooperative>> {
+  const response = await apiClient.get<ApiResponse<PageResponse<Cooperative>>>('/cooperatives', {
+    params: toParams(query),
+  })
+  return unwrapApiData(response.data)
+}
+
+export async function fetchCooperative(id: string): Promise<Cooperative> {
+  const response = await apiClient.get<ApiResponse<Cooperative>>(`/cooperatives/${id}`)
+  return unwrapApiData(response.data)
+}
+
+export async function createCooperative(
+  payload: CooperativeCreateRequest,
+): Promise<Cooperative> {
+  const response = await apiClient.post<ApiResponse<Cooperative>>('/cooperatives', payload)
+  return unwrapApiData(response.data)
+}
+
+export async function updateCooperative(
+  id: string,
+  payload: CooperativeUpdateRequest,
+): Promise<Cooperative> {
+  const response = await apiClient.put<ApiResponse<Cooperative>>(`/cooperatives/${id}`, payload)
+  return unwrapApiData(response.data)
+}
+
+export async function updateCooperativeStatus(
+  id: string,
+  payload: CooperativeStatusUpdateRequest,
+): Promise<Cooperative> {
+  const response = await apiClient.patch<ApiResponse<Cooperative>>(
+    `/cooperatives/${id}/status`,
+    payload,
+  )
+  return unwrapApiData(response.data)
+}
+
+export async function uploadCooperativeLogo(id: string, file: File): Promise<Cooperative> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const response = await apiClient.post<ApiResponse<Cooperative>>(
+    `/cooperatives/${id}/logo`,
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  )
+  return unwrapApiData(response.data)
+}

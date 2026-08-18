@@ -1,0 +1,1338 @@
+{
+  "app": {
+    "name": "TERIMBERE",
+    "fullName": "TERIMBERE CSAMS",
+    "tagline": "Cooperative Savings Account Management System"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "members": "Members",
+    "contributions": "Contributions",
+    "loans": "Loans",
+    "fines": "Fines",
+    "finePaymentQueue": "Fine Payment Queue",
+    "socialFund": "Social Fund",
+    "socialDashboard": "Social Dashboard",
+    "investments": "Investments",
+    "transactions": "Transactions",
+    "ledger": "Ledger",
+    "payouts": "Share Out",
+    "shareOut": "Share Out",
+    "reports": "Reports",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "auditLogs": "Audit logs",
+    "profile": "Profile",
+    "cooperatives": "Cooperatives",
+    "system": "System",
+    "adminSection": "Admin",
+    "advanced": "Advanced",
+    "myContributions": "My contributions",
+    "myLoans": "My loans",
+    "myFines": "My fines",
+    "mySocial": "My Social Contributions"
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Manage savings, loans, and cooperative funds with confidence.",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "forgotPassword": "Forgot password?",
+    "devPreview": "Dev preview only",
+    "devPreviewWarning": "Development only — bypasses real authentication.",
+    "foundation": "Foundation status",
+    "foundationHint": "Verify the public health endpoint while you sign in.",
+    "checkHealth": "Check API health"
+  },
+  "forgotPassword": {
+    "title": "Forgot password",
+    "subtitle": "Enter your username or email to request a reset link.",
+    "usernameOrEmail": "Username or email",
+    "submit": "Request reset",
+    "success": "If an account matches, a password reset link will be sent.",
+    "backToLogin": "Back to sign in"
+  },
+  "resetPassword": {
+    "title": "Reset password",
+    "subtitle": "Choose a new password for your account.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "submit": "Update password",
+    "success": "Password updated. Redirecting to sign in…",
+    "missingToken": "This reset link is missing or invalid. Request a new one."
+  },
+  "changePassword": {
+    "title": "Change password",
+    "description": "Update your password while signed in.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "submit": "Save password",
+    "success": "Your password was changed successfully."
+  },
+  "profile": {
+    "fullName": "Full name",
+    "username": "Username",
+    "email": "Email",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "roles": "Roles",
+    "permissions": "Permissions",
+    "cooperatives": "Cooperatives",
+    "noPermissions": "No permissions listed",
+    "changePassword": "Change password"
+  },
+  "actions": {
+    "quickActions": "Quick actions",
+    "groupActions": "Group actions",
+    "addMember": "Add member",
+    "updateContributions": "Update contributions",
+    "specialContributions": "Special contributions",
+    "manageLoans": "Manage loans",
+    "manageFines": "Manage fines",
+    "finePaymentQueue": "Fine payment queue",
+    "memberView": "Member view",
+    "changePassword": "Change password",
+    "shareOutPayout": "Share-out payout",
+    "createInvestment": "Create investment",
+    "socialDashboard": "Social fund dashboard",
+    "badges": {
+      "add": "ADD",
+      "edit": "EDIT",
+      "special": "SPECIAL",
+      "loan": "LOAN",
+      "fine": "FINE",
+      "clear": "CLEAR",
+      "view": "VIEW",
+      "password": "PASSWORD",
+      "payout": "PAYOUT",
+      "invest": "INVEST",
+      "social": "SOCIAL"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "Overview of cooperative balances, activity, and alerts.",
+    "liveLater": "Live data in later phases",
+    "selectCooperativeTitle": "Select a cooperative",
+    "selectCooperativeDescription": "Choose a cooperative in the top bar to view its dashboard.",
+    "admin": {
+      "title": "Admin Dashboard",
+      "adminChip": "ADMIN",
+      "availableFundsHint": "Actual contributions minus outstanding principal and active investments, plus remaining available interest.",
+      "obligationsTitle": "Obligations & risk",
+      "pendingRepaymentsTitle": "Pending repayments",
+      "pendingRepaymentsDescription": "{{count}} loan(s) are overdue for repayment and need follow-up.",
+      "manageLoans": "Manage loans"
+    },
+    "member": {
+      "welcome": "Welcome, {{name}}",
+      "totalContributions": "Total contributions",
+      "outstandingLoan": "Outstanding loan",
+      "outstandingFines": "Outstanding fines",
+      "socialContributions": "Social contributions",
+      "contributionPercentage": "Contribution share",
+      "quickLinksTitle": "Quick links",
+      "links": {
+        "contributions": "My contributions",
+        "loans": "My loans",
+        "fines": "My fines",
+        "social": "My social fund",
+        "payouts": "My payouts"
+      }
+    },
+    "memberSummaries": {
+      "title": "Member financial summaries",
+      "emptyTitle": "No members found",
+      "emptyDescription": "Try adjusting your search."
+    },
+    "metrics": {
+      "totalMembers": "Total members",
+      "activeMembersHint": "{{count}} active",
+      "regularContributions": "Regular contributions",
+      "specialContributions": "Special contributions",
+      "actualContributions": "Actual contributions",
+      "availableGroupFunds": "Available group funds",
+      "pendingApprovals": "{{count}} pending special approvals",
+      "outstandingLoans": "Outstanding loans",
+      "totalLoanPrincipalHint": "Disbursed {{amount}}",
+      "loanInterestEarned": "Loan interest earned",
+      "overdueLoans": "Overdue loans",
+      "totalFines": "Total fines",
+      "unpaidFines": "Unpaid fines",
+      "approvedFineIncome": "Approved fine income",
+      "pendingFinePayments": "Pending fine payments",
+      "membersWithFines": "Members with fines",
+      "totalInterest": "Total interest",
+      "totalInterestHint": "Loan {{loan}} + Investment {{investment}}",
+      "socialFundBalance": "Social fund (separate)",
+      "socialFundBalanceHint": "Not part of available group funds",
+      "socialContributionsTotal": "Social contributions",
+      "socialDisbursementsTotal": "Social disbursements",
+      "pendingSocialApprovals": "Pending social approvals",
+      "activeInvestments": "Active investments",
+      "investmentCapital": "Investment capital",
+      "investmentProfits": "Investment profits",
+      "otherIncomeTotal": "Other income",
+      "generalExpensesTotal": "General expenses",
+      "interestExpensesTotal": "Interest expenses",
+      "availableInterest": "Available interest",
+      "pendingPayouts": "Pending payouts",
+      "totalConfirmedPayouts": "Confirmed payouts",
+      "regularHint": "Monthly contributions",
+      "specialHint": "Approved payments only",
+      "actualHint": "Regular plus approved special",
+      "availableInterestHint": "Used for expenses"
+    },
+    "charts": {
+      "monthlyContributions": "Monthly contributions",
+      "paid": "Paid"
+    }
+  },
+  "common": {
+    "loading": "Loading…",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "edit": "Edit",
+    "search": "Search",
+    "actions": "Actions",
+    "all": "All",
+    "yes": "Yes",
+    "no": "No",
+    "comingPhase": "Coming in Phase {{phase}}",
+    "emptyTitle": "Nothing here yet",
+    "emptyDescription": "This module will be connected when its backend phase is ready.",
+    "errorTitle": "Unable to load",
+    "selectCooperative": "Select cooperative",
+    "logout": "Sign out",
+    "language": "Language",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "apply": "Apply",
+    "clear": "Clear",
+    "filter": "Filter"
+  },
+  "pwa": {
+    "install": "Install app",
+    "updateAvailable": "Update available",
+    "reload": "Reload",
+    "offlineBanner": "You're offline. Viewing may work; financial actions are disabled.",
+    "offlineFinanceBlocked": "You are offline. Financial actions require an internet connection.",
+    "serverUnreachable": "The server cannot be reached. Financial actions are disabled until connectivity is restored.",
+    "offlineReady": "App shell is ready for offline viewing (financial actions still require internet)."
+  },
+  "status": {
+    "ACTIVE": "Active",
+    "INACTIVE": "Inactive",
+    "SUSPENDED": "Suspended",
+    "ARCHIVED": "Archived",
+    "PENDING": "Pending",
+    "LOCKED": "Locked"
+  },
+  "cooperatives": {
+    "create": "Create cooperative",
+    "createTitle": "Create cooperative",
+    "editTitle": "Edit cooperative",
+    "createSuccess": "Cooperative created",
+    "updateSuccess": "Cooperative updated",
+    "statusUpdated": "Cooperative status updated",
+    "logoUpdated": "Logo uploaded",
+    "logo": "Logo",
+    "noLogo": "No logo uploaded yet.",
+    "uploadLogo": "Upload logo",
+    "backToList": "Back to cooperatives",
+    "detailDescription": "Review cooperative settings, status, and branding.",
+    "statusActions": "Change status",
+    "confirmStatusTitle": "Confirm status change",
+    "confirmStatusMessage": "Set \"{{name}}\" to {{status}}?",
+    "emptyTitle": "No cooperatives yet",
+    "emptyDescription": "Create the first cooperative tenant to get started.",
+    "noneAvailable": "No cooperative",
+    "selectorError": "Could not load cooperatives",
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "registrationNumber": "Registration number",
+      "contactEmail": "Contact email",
+      "contactPhone": "Contact phone",
+      "address": "Address",
+      "currency": "Currency",
+      "financialYearStartMonth": "Financial year start month",
+      "monthlyContributionAmount": "Monthly contribution",
+      "contributionDueDay": "Contribution due day",
+      "registrationDate": "Registration date",
+      "status": "Status"
+    }
+  },
+  "members": {
+    "register": "Register member",
+    "registerTitle": "Register member",
+    "editTitle": "Edit member",
+    "createSuccess": "Member registered",
+    "financialSummary": {
+      "title": "Financial summary",
+      "regular": "Regular contributions",
+      "special": "Special contributions",
+      "actual": "Actual contributions",
+      "expected": "Expected contributions",
+      "outstandingContributions": "Outstanding contributions",
+      "contributionPercentage": "Contribution share",
+      "loansReceived": "Loans received",
+      "outstandingPrincipal": "Outstanding loan principal",
+      "outstandingInterest": "Outstanding loan interest",
+      "loanRepayments": "Total loan repayments",
+      "totalFines": "Total fines",
+      "unpaidFines": "Unpaid fines",
+      "approvedFinePayments": "Approved fine payments",
+      "socialContributions": "Social fund contributions",
+      "payoutTotal": "Payout total"
+    },
+    "updateSuccess": "Member updated",
+    "statusUpdated": "Membership status updated",
+    "profileImageUpdated": "Profile image uploaded",
+    "profileImage": "Profile image",
+    "uploadProfileImage": "Upload photo",
+    "backToList": "Back to members",
+    "detailDescription": "Member profile, membership status, and financial history.",
+    "statusActions": "Membership status",
+    "confirmStatusTitle": "Confirm status change",
+    "confirmStatusMessage": "Set \"{{name}}\" membership to {{status}}?",
+    "emptyTitle": "No members yet",
+    "emptyDescription": "Register the first member for this cooperative.",
+    "selectCooperativeTitle": "Select a cooperative",
+    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage its members.",
+    "temporaryPasswordHint": "Optional. Leave blank to auto-generate a temporary password.",
+    "oneTimePasswordAlert": "Temporary password (shown once): {{password}}",
+    "historyPlaceholderTitle": "Not available yet",
+    "historyPlaceholderDescription": "Available when those modules go live.",
+    "roles": {
+      "MEMBER": "Member",
+      "COOPERATIVE_ADMIN": "Cooperative admin"
+    },
+    "fields": {
+      "fullName": "Full name",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "username": "Username",
+      "email": "Email",
+      "phone": "Phone",
+      "nationalId": "National ID",
+      "address": "Address",
+      "membershipDate": "Membership date",
+      "temporaryPassword": "Temporary password",
+      "roleInCooperative": "Role in cooperative",
+      "membershipStatus": "Membership status",
+      "accountStatus": "Account status"
+    },
+    "generatePassword": "Generate Password",
+    "additionalInfo": "Additional information"
+  },
+  "contributions": {
+    "selectCooperativeTitle": "Select a cooperative",
+    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage contributions.",
+    "tabs": {
+      "monthly": "Monthly entry",
+      "history": "History",
+      "mine": "My contributions",
+      "special": "Special campaigns"
+    },
+    "myContributions": "Showing your contributions",
+    "savePeriod": "Save period",
+    "saveSuccess": "Contributions saved",
+    "confirmSaveTitle": "Save monthly contributions?",
+    "confirmSaveMessage": "Save {{count}} member lines for {{month}}/{{year}}?",
+    "periodEmptyTitle": "No members for this period",
+    "periodEmptyDescription": "Active members will appear here once registered.",
+    "historyEmptyTitle": "No contributions found",
+    "historyEmptyDescription": "Try adjusting filters or record a monthly period.",
+    "memberHistoryEmptyDescription": "No contribution records for this member yet.",
+    "validation": {
+      "nonNegativeAmount": "Paid amounts must be zero or greater."
+    },
+    "fields": {
+      "member": "Member",
+      "expected": "Expected",
+      "paid": "Paid",
+      "outstanding": "Outstanding",
+      "status": "Status",
+      "paymentDate": "Payment date",
+      "reference": "Reference",
+      "notes": "Notes",
+      "month": "Month",
+      "year": "Year",
+      "period": "Period"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "PARTIALLY_PAID": "Partially paid",
+      "PAID": "Paid",
+      "WAIVED": "Waived",
+      "CANCELLED": "Cancelled"
+    },
+    "campaignStatus": {
+      "DRAFT": "Draft",
+      "ACTIVE": "Active",
+      "CLOSED": "Closed",
+      "CANCELLED": "Cancelled"
+    },
+    "specialStatus": {
+      "PENDING": "Pending",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected"
+    },
+    "campaigns": {
+      "create": "Create campaign",
+      "createTitle": "Create special campaign",
+      "createSuccess": "Campaign created",
+      "statusUpdated": "Campaign status updated",
+      "submit": "Submit contribution",
+      "submitTitle": "Submit special contribution",
+      "submitSuccess": "Contribution submitted for review",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approveSuccess": "Contribution approved",
+      "rejectSuccess": "Contribution rejected",
+      "confirmApproveTitle": "Approve contribution?",
+      "confirmApproveMessage": "Approve this special contribution and post it to the ledger?",
+      "confirmRejectTitle": "Reject contribution?",
+      "confirmRejectMessage": "Reject this special contribution? It will not be posted to the ledger.",
+      "activate": "Activate",
+      "close": "Close",
+      "cancel": "Cancel campaign",
+      "backToList": "Back to campaigns",
+      "detailDescription": "Campaign details and member submissions.",
+      "contributions": "Campaign contributions",
+      "emptyTitle": "No special campaigns",
+      "emptyDescription": "Create a campaign to collect one-off contributions.",
+      "contributionsEmptyTitle": "No submissions yet",
+      "contributionsEmptyDescription": "Members can submit once the campaign is active.",
+      "fields": {
+        "name": "Name",
+        "purpose": "Purpose",
+        "description": "Description",
+        "suggestedAmount": "Suggested amount",
+        "targetAmount": "Target amount",
+        "startDate": "Start date",
+        "endDate": "End date",
+        "dates": "Dates"
+      }
+    }
+  },
+  "loans": {
+    "selectCooperativeTitle": "Select a cooperative",
+    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage loans.",
+    "tabs": {
+      "mine": "My loans",
+      "all": "All loans",
+      "request": "Request loan",
+      "issue": "Issue loan",
+      "settings": "Loan settings"
+    },
+    "emptyTitle": "No loans found",
+    "emptyDescription": "Create a loan request or issue a loan to a member.",
+    "myEmptyDescription": "You have no loans yet.",
+    "memberHistoryEmptyDescription": "No loan records for this member yet.",
+    "backToList": "Back to loans",
+    "detailTitle": "Loan — {{member}}",
+    "detailDescription": "Loan status, balances, and repayment history.",
+    "fields": {
+      "member": "Member",
+      "amount": "Amount",
+      "requestedAmount": "Requested amount",
+      "approvedAmount": "Approved amount",
+      "principal": "Principal",
+      "interestAmount": "Interest amount",
+      "interestRate": "Interest rate",
+      "outstanding": "Outstanding",
+      "outstandingPrincipal": "Outstanding principal",
+      "outstandingInterest": "Outstanding interest",
+      "status": "Status",
+      "termMonths": "Term (months)",
+      "dueDate": "Due date",
+      "requestDate": "Request date",
+      "disbursementDate": "Disbursement date",
+      "paymentDate": "Payment date",
+      "purpose": "Purpose",
+      "notes": "Notes",
+      "reference": "Reference",
+      "rejectionReason": "Rejection reason"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "APPROVED": "Approved",
+      "ACTIVE": "Active",
+      "OVERDUE": "Overdue",
+      "REJECTED": "Rejected",
+      "CLOSED": "Closed",
+      "WRITTEN_OFF": "Written off"
+    },
+    "interestType": {
+      "FLAT": "Flat",
+      "REDUCING": "Reducing"
+    },
+    "request": {
+      "requestTitle": "Request a loan",
+      "requestDescription": "Submit a loan request for admin approval.",
+      "issueTitle": "Issue a loan",
+      "issueDescription": "Create a loan for a member. It will still need approval before disbursement.",
+      "submit": "Submit request",
+      "issue": "Create loan",
+      "requestSuccess": "Loan request submitted",
+      "issueSuccess": "Loan created",
+      "memberRequestsDisabled": "Member loan requests are disabled for this cooperative.",
+      "settingsHint": "Current settings: {{rate}}% {{type}}, max amount {{maxAmount}}, max term {{maxTerm}} months."
+    },
+    "settings": {
+      "title": "Loan settings",
+      "description": "Configure interest rules and limits for new loans.",
+      "snapshotHint": "Changing settings does not alter existing loans — rates are snapshotted at request time.",
+      "interestRatePercent": "Interest rate (%)",
+      "interestType": "Interest type",
+      "maxLoanAmount": "Maximum loan amount",
+      "maxTermMonths": "Maximum term (months)",
+      "minMembershipMonths": "Minimum membership (months)",
+      "allowMemberRequests": "Allow member loan requests",
+      "lateFeeEnabled": "Late fees enabled (future)",
+      "reducingUnavailable": "Reducing-balance interest is not currently available. Please use Flat Interest.",
+      "saveSuccess": "Loan settings saved"
+    },
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "disburse": "Disburse",
+      "writeOff": "Write off",
+      "approveTitle": "Approve loan",
+      "rejectTitle": "Reject loan",
+      "approveSuccess": "Loan approved",
+      "rejectSuccess": "Loan rejected",
+      "disburseSuccess": "Loan disbursed",
+      "writeOffSuccess": "Loan written off",
+      "confirmApproveTitle": "Approve this loan?",
+      "confirmApproveMessage": "Approve and lock interest terms for this loan?",
+      "confirmDisburseTitle": "Disburse this loan?",
+      "confirmDisburseMessage": "Disburse principal from group funds and activate the loan?",
+      "confirmWriteOffTitle": "Write off this loan?",
+      "confirmWriteOffMessage": "Mark this loan as written off? This should only be used for uncollectible balances."
+    },
+    "repayment": {
+      "title": "Record repayment",
+      "record": "Record repayment",
+      "submit": "Save repayment",
+      "amount": "Amount",
+      "principal": "Principal",
+      "interest": "Interest",
+      "history": "Repayment history",
+      "emptyTitle": "No repayments yet",
+      "emptyDescription": "Record a repayment once the loan is active.",
+      "success": "Repayment recorded",
+      "maxHint": "Outstanding balance: {{amount}}"
+    }
+  },
+  "fines": {
+    "selectCooperativeTitle": "Select a cooperative",
+    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage fines.",
+    "tabs": {
+      "mine": "My fines",
+      "all": "All fines",
+      "issue": "Issue fine",
+      "settings": "Fine settings"
+    },
+    "emptyTitle": "No fines found",
+    "emptyDescription": "Issue a manual fine or generate automatic fines for overdue contributions.",
+    "myEmptyDescription": "You have no fines yet.",
+    "memberHistoryEmptyDescription": "No fine records for this member yet.",
+    "backToList": "Back to fines",
+    "detailTitle": "Fine — {{member}}",
+    "detailDescription": "Fine details, outstanding balance, and payment history.",
+    "fields": {
+      "member": "Member",
+      "amount": "Amount",
+      "totalAmount": "Total amount",
+      "baseAmount": "Base amount",
+      "paidAmount": "Paid amount",
+      "outstanding": "Outstanding",
+      "dailyIncrement": "Daily increment",
+      "overdueDays": "Overdue days",
+      "status": "Status",
+      "fineType": "Fine type",
+      "calculationMode": "Calculation mode",
+      "reason": "Reason",
+      "notes": "Notes",
+      "issuedDate": "Issued date",
+      "dueDate": "Due date",
+      "paymentDate": "Payment date",
+      "reference": "Reference",
+      "year": "Year",
+      "month": "Month"
+    },
+    "status": {
+      "UNPAID": "Unpaid",
+      "PARTIALLY_PAID": "Partially paid",
+      "PAID": "Paid",
+      "WAIVED": "Waived",
+      "CANCELLED": "Cancelled"
+    },
+    "fineType": {
+      "AUTOMATIC": "Automatic",
+      "MANUAL": "Manual"
+    },
+    "calculationMode": {
+      "FIXED": "Fixed",
+      "PROGRESSIVE": "Progressive"
+    },
+    "paymentStatus": {
+      "PENDING": "Pending",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected"
+    },
+    "issue": {
+      "title": "Issue a manual fine",
+      "description": "Create a fine for a specific member with a fixed or progressive amount.",
+      "hint": "Progressive fines use base amount + (overdue days × daily increment).",
+      "submit": "Issue fine",
+      "success": "Fine issued"
+    },
+    "generate": {
+      "title": "Generate automatic fines",
+      "description": "Scan overdue unpaid contributions and create automatic fines.",
+      "hint": "Duplicates for the same contribution are skipped automatically.",
+      "submit": "Generate fines",
+      "success": "Created {{created}} fine(s); skipped {{skipped}} duplicate(s)."
+    },
+    "settings": {
+      "title": "Fine settings",
+      "description": "Configure automatic fine rules for this cooperative.",
+      "progressiveHint": "Progressive total = base fine + (overdue days × daily increment).",
+      "autoFinesEnabled": "Enable automatic fines",
+      "fineMode": "Fine calculation mode",
+      "baseFineAmount": "Base fine amount",
+      "dailyIncrement": "Daily increment",
+      "graceDays": "Grace days",
+      "saveSuccess": "Fine settings saved",
+      "contributionDueDay": "Contribution due day",
+      "editDueDay": "Edit contribution due day",
+      "editDueDayHint": "Configured on the cooperative settings page."
+    },
+    "actions": {
+      "waive": "Waive",
+      "cancel": "Cancel fine",
+      "waiveSuccess": "Fine waived",
+      "cancelSuccess": "Fine cancelled",
+      "confirmWaiveTitle": "Waive this fine?",
+      "confirmWaiveMessage": "Mark this fine as waived? Outstanding balance will no longer be collectible.",
+      "confirmCancelTitle": "Cancel this fine?",
+      "confirmCancelMessage": "Cancel this fine? This should only be used when the fine was issued in error."
+    },
+    "payment": {
+      "title": "Submit fine payment",
+      "submitPayment": "Submit payment",
+      "submit": "Submit payment",
+      "amount": "Amount",
+      "method": "Payment method",
+      "methodDetail": "Method details",
+      "methods": {
+        "CASH": "Cash",
+        "MOBILE_MONEY": "Mobile money",
+        "BANK_TRANSFER": "Bank transfer",
+        "OTHER": "Other"
+      },
+      "evidence": "Payment evidence",
+      "uploadEvidence": "Upload evidence",
+      "evidenceOptional": "Optional — PDF, image, or Excel",
+      "uploadFailed": "Evidence upload failed",
+      "history": "Payment history",
+      "emptyTitle": "No payments yet",
+      "emptyDescription": "Submit a payment against the outstanding fine balance.",
+      "success": "Payment submitted for review",
+      "maxHint": "Outstanding balance: {{amount}}",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approveSuccess": "Fine payment approved",
+      "rejectSuccess": "Fine payment rejected",
+      "confirmApproveTitle": "Approve this payment?",
+      "confirmApproveMessage": "Approve and apply this payment to the fine balance and ledger?",
+      "confirmRejectTitle": "Reject this payment?",
+      "confirmRejectMessage": "Reject this payment? The fine outstanding balance will not change.",
+      "viewEvidence": "View evidence"
+    },
+    "workflowBanner": "Members submit payment details first. Only approved payments mark fines as paid and increase available cooperative funds.",
+    "summary": {
+      "total": "Total fines",
+      "unpaid": "Unpaid fines",
+      "paid": "Paid fines",
+      "awaitingReview": "Payments awaiting review"
+    },
+    "openQueue": "Fine Payment Queue"
+  },
+  "finePayments": {
+    "emptyTitle": "No fine payments found",
+    "emptyDescription": "Try adjusting filters, or wait for members to submit fine payments.",
+    "fields": {
+      "fineReason": "Fine reason"
+    },
+    "summary": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "approvedIncome": "Approved fine income"
+    },
+    "filters": {
+      "apply": "Apply",
+      "clear": "Clear"
+    }
+  },
+  "socialFund": {
+    "selectCooperativeTitle": "Select a cooperative",
+    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage the social fund.",
+    "separationTitle": "Separate from group savings",
+    "separationDescription": "The social fund is a welfare pot kept apart from available group funds. Approving social contributions or disbursements never changes the group savings balance used for loans.",
+    "tabs": {
+      "overview": "Overview",
+      "contributions": "Contributions",
+      "disbursements": "Disbursements",
+      "report": "Report"
+    },
+    "metrics": {
+      "balance": "Social fund balance",
+      "balanceHint": "Approved contributions minus approved disbursements",
+      "approvedContributions": "Approved contributions",
+      "approvedDisbursements": "Approved disbursements",
+      "pendingApprovals": "Pending approvals",
+      "pendingHint": "{{contributions}} contributions · {{disbursements}} disbursements"
+    },
+    "fields": {
+      "member": "Member",
+      "beneficiary": "Beneficiary",
+      "amount": "Amount",
+      "contributionDate": "Contribution date",
+      "disbursementDate": "Disbursement date",
+      "reference": "Reference",
+      "reason": "Reason",
+      "notes": "Notes",
+      "status": "Status"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected",
+      "CANCELLED": "Cancelled"
+    },
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "cancel": "Cancel"
+    },
+    "settings": {
+      "title": "Social fund settings",
+      "description": "Optional suggested contribution amount and enable/disable for this cooperative.",
+      "suggestedAmount": "Suggested contribution amount",
+      "enabled": "Social fund enabled",
+      "saveSuccess": "Social fund settings saved",
+      "unavailable": "Settings are not available yet for this cooperative."
+    },
+    "contributions": {
+      "hint": "Contributions stay pending until an admin approves them into the social fund.",
+      "submitTitle": "Submit social contribution",
+      "submitDescription": "Record a welfare contribution. It remains separate from regular savings.",
+      "submit": "Submit contribution",
+      "submitSuccess": "Social contribution submitted",
+      "memberOptional": "Leave blank to submit for yourself.",
+      "selfSubmit": "Myself (current user)",
+      "myTitle": "My social contributions",
+      "allTitle": "All social contributions",
+      "emptyTitle": "No social contributions yet",
+      "emptyDescription": "Submit a contribution or wait for members to contribute.",
+      "myEmptyDescription": "You have not submitted any social contributions yet.",
+      "memberHistoryEmptyDescription": "No social fund records for this member yet.",
+      "approveSuccess": "Social contribution approved",
+      "rejectSuccess": "Social contribution rejected",
+      "confirmApproveTitle": "Approve this contribution?",
+      "confirmApproveMessage": "Approve and credit the social fund balance? This does not affect available group funds.",
+      "confirmRejectTitle": "Reject this contribution?",
+      "confirmRejectMessage": "Reject this contribution? The social fund balance will not change."
+    },
+    "disbursements": {
+      "createTitle": "Request social disbursement",
+      "createDescription": "Request a welfare payout for a member from the social fund only.",
+      "submit": "Create request",
+      "createSuccess": "Disbursement request created",
+      "listTitle": "Social disbursements",
+      "emptyTitle": "No disbursements yet",
+      "emptyDescription": "Create a disbursement request when a member needs welfare support.",
+      "memberViewHint": "Disbursements are managed by cooperative admins. You can view approved and pending requests below.",
+      "memberEmptyDescription": "No social disbursements to show yet.",
+      "balanceCheckHint": "Available social fund balance: {{balance}}. Approval fails if the amount exceeds this balance.",
+      "approveSuccess": "Disbursement approved",
+      "rejectSuccess": "Disbursement rejected",
+      "cancelSuccess": "Disbursement cancelled",
+      "confirmApproveTitle": "Approve this disbursement?",
+      "confirmApproveMessage": "Approve and debit the social fund? Approval is blocked if the amount exceeds the social balance.",
+      "confirmRejectTitle": "Reject this disbursement?",
+      "confirmRejectMessage": "Reject this disbursement request? The social fund balance will not change.",
+      "confirmCancelTitle": "Cancel this disbursement?",
+      "confirmCancelMessage": "Cancel this pending disbursement request?"
+    },
+    "report": {
+      "title": "Social fund report",
+      "description": "Summarize approved social contributions and disbursements for a date range.",
+      "from": "From",
+      "to": "To",
+      "run": "Run report",
+      "prompt": "Choose a date range and run the report.",
+      "approvedContributions": "Approved contributions",
+      "approvedDisbursements": "Approved disbursements",
+      "netChange": "Net change",
+      "contributionsHeading": "Contributions in period",
+      "disbursementsHeading": "Disbursements in period",
+      "emptyPeriod": "Nothing approved in this period."
+    }
+  },
+  "investments": {
+    "selectCooperativeTitle": "Select a cooperative",
+    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage investments.",
+    "adminOnlyTitle": "Admin access required",
+    "adminOnlyDescription": "Investments are managed by cooperative administrators.",
+    "backToList": "Back to investments",
+    "detailDescription": "Activate, record returns, cancel, or record a loss for this investment.",
+    "notFoundTitle": "Investment not found",
+    "notFoundDescription": "This investment may have been removed or you do not have access.",
+    "emptyTitle": "No investments yet",
+    "emptyDescription": "Create a planned investment to allocate group funds.",
+    "returnsTitle": "Returns",
+    "returnsEmptyTitle": "No returns recorded",
+    "returnsEmptyDescription": "Capital and profit returns will appear here after recording.",
+    "activateFundWarning": "Available group funds ({{available}}) may be insufficient for this investment amount ({{amount}}). Activation will fail if funds are too low.",
+    "activateFundInfo": "Available group funds: {{available}}. Activation debits this amount from group funds.",
+    "tabs": {
+      "list": "Investments",
+      "create": "Create"
+    },
+    "fields": {
+      "name": "Name",
+      "amount": "Amount",
+      "remainingCapital": "Remaining capital",
+      "expectedReturnAmount": "Expected return",
+      "expectedReturnDate": "Expected return date",
+      "totalCapitalReturned": "Capital returned",
+      "totalProfitReturned": "Profit returned",
+      "description": "Description",
+      "status": "Status",
+      "activatedAt": "Activated",
+      "returnDate": "Return date",
+      "capitalPortion": "Capital portion",
+      "profitPortion": "Profit portion",
+      "amountTotal": "Total",
+      "reference": "Reference",
+      "notes": "Notes"
+    },
+    "status": {
+      "PLANNED": "Planned",
+      "ACTIVE": "Active",
+      "PARTIALLY_RETURNED": "Partially returned",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "LOSS_RECORDED": "Loss recorded"
+    },
+    "create": {
+      "title": "Create investment",
+      "description": "Create a planned investment. Activate it later when ready to allocate group funds.",
+      "submit": "Create investment",
+      "success": "Investment created",
+      "document": "Supporting document",
+      "uploadDocument": "Upload document",
+      "documentOptional": "Optional — PDF, image, or Excel"
+    },
+    "actions": {
+      "activate": "Activate",
+      "cancel": "Cancel investment",
+      "recordReturn": "Record return",
+      "recordLoss": "Record loss",
+      "activateSuccess": "Investment activated",
+      "cancelSuccess": "Investment cancelled",
+      "returnSuccess": "Return recorded",
+      "lossSuccess": "Loss recorded",
+      "confirmActivateTitle": "Activate this investment?",
+      "confirmActivateMessage": "Activate and debit {{amount}} from available group funds?",
+      "confirmActivateInsufficientMessage": "Available funds ({{available}}) appear lower than {{amount}}. Continue only if you expect the API to accept activation.",
+      "confirmCancelTitle": "Cancel this investment?",
+      "confirmCancelMessage": "Cancel this investment? Planned investments can be cancelled safely; active ones may be restricted if returns exist."
+    },
+    "returnDialog": {
+      "title": "Record investment return",
+      "submit": "Record return",
+      "remainingHint": "Remaining capital: {{amount}}"
+    },
+    "lossDialog": {
+      "title": "Record investment loss",
+      "submit": "Record loss",
+      "warning": "This writes off remaining capital of {{amount}} without a capital return credit."
+    }
+  },
+  "payouts": {
+    "selectCooperativeTitle": "Select a cooperative",
+    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage payouts.",
+    "backToList": "Back to payouts",
+    "detailDescription": "Review payout lines, confirm the run, mark paid, or download a statement.",
+    "notFoundTitle": "Payout not found",
+    "notFoundDescription": "This payout run may have been removed or you do not have access.",
+    "historyEmptyTitle": "No payout runs yet",
+    "historyEmptyDescription": "Preview a new payout to create the first run.",
+    "myEmptyTitle": "No payouts yet",
+    "myEmptyDescription": "Your payout shares will appear here after a run is previewed or confirmed.",
+    "memberHistoryEmptyDescription": "No payout lines recorded for this member yet.",
+    "linesTitle": "Payout lines",
+    "linesTotal": "Total payout: {{amount}}",
+    "tabs": {
+      "new": "New payout",
+      "history": "History",
+      "my": "My payouts"
+    },
+    "fields": {
+      "name": "Name",
+      "period": "Period",
+      "periodFrom": "Period from",
+      "periodTo": "Period to",
+      "includeRegular": "Include regular contributions",
+      "includeSpecial": "Include special contributions",
+      "payoutPoolAmount": "Payout pool amount",
+      "availableFundSnapshot": "Available fund (snapshot)",
+      "totalEligible": "Total eligible contributions",
+      "member": "Member",
+      "eligibleAmount": "Eligible amount",
+      "percentage": "Share %",
+      "payoutAmount": "Payout amount",
+      "status": "Status",
+      "notes": "Notes",
+      "createdAt": "Created",
+      "confirmedAt": "Confirmed",
+      "paidAt": "Paid"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "PREVIEWED": "Previewed",
+      "CONFIRMED": "Confirmed",
+      "PAID": "Paid",
+      "CANCELLED": "Cancelled",
+      "PENDING": "Pending"
+    },
+    "preview": {
+      "title": "Prepare payout",
+      "description": "Choose a contribution period, eligible types, and optional pool amount, then preview member shares.",
+      "availableFundHint": "Available group funds: {{amount}}. Leave pool blank to use this amount.",
+      "poolOptionalHint": "Optional. Defaults to available group funds if left blank.",
+      "includeRequired": "Select regular and/or special contributions.",
+      "submit": "Preview payout",
+      "reset": "Start over",
+      "success": "Payout preview created",
+      "resultTitle": "Preview result",
+      "resultSummary": "Pool {{pool}} · Eligible {{eligible}} · Lines total {{total}}",
+      "emptyLinesTitle": "No eligible members",
+      "emptyLinesDescription": "No members had eligible contributions in this period."
+    },
+    "actions": {
+      "confirm": "Confirm payout",
+      "markPaid": "Mark paid",
+      "cancel": "Cancel payout",
+      "viewDetail": "View detail",
+      "confirmSuccess": "Payout confirmed",
+      "markPaidSuccess": "Payout marked as paid",
+      "cancelSuccess": "Payout cancelled",
+      "confirmTitle": "Confirm this payout?",
+      "confirmMessage": "Confirm and debit {{amount}} from available group funds as member payouts?",
+      "markPaidTitle": "Mark payout as paid?",
+      "markPaidMessage": "Mark this confirmed payout run as paid?",
+      "cancelTitle": "Cancel this payout?",
+      "cancelMessage": "Cancel this previewed payout? Confirmed runs cannot be cancelled."
+    },
+    "statement": {
+      "title": "Payout statement",
+      "cooperativeFallback": "Cooperative",
+      "generatedAt": "Generated {{date}}",
+      "downloadJson": "Download JSON",
+      "print": "Print",
+      "loadError": "Statement details could not be loaded; showing run data instead."
+    }
+  },
+  "reports": {
+    "selectCooperativeTitle": "Select a cooperative",
+    "selectCooperativeDescription": "Choose a cooperative in the top bar to export reports or import contributions.",
+    "primaryTitle": "Primary reports",
+    "advancedTitle": "Advanced reports",
+    "openAll": "Open report centre",
+    "primary": {
+      "contributions": "Contributions",
+      "investments": "Investments",
+      "full": "Full financial report"
+    },
+    "tabs": {
+      "reports": "Reports",
+      "import": "Contribution import"
+    },
+    "types": {
+      "MEMBERS": "Members",
+      "CONTRIBUTIONS": "Contributions",
+      "SPECIAL_CONTRIBUTIONS": "Special contributions",
+      "LOANS": "Loans",
+      "REPAYMENTS": "Loan repayments",
+      "FINES": "Fines",
+      "FINE_PAYMENTS": "Fine payments",
+      "SOCIAL_FUND": "Social fund",
+      "INVESTMENTS": "Investments",
+      "INCOME": "Income",
+      "EXPENSES": "Expenses",
+      "PAYOUTS": "Payouts",
+      "FINANCIAL_LEDGER": "Financial ledger",
+      "AUDIT_LOGS": "Audit logs",
+      "FULL_FINANCIAL": "Full financial"
+    },
+    "export": {
+      "title": "Export Excel report",
+      "description": "Choose a report type and optional filters, then download an Excel workbook for the selected cooperative.",
+      "pdfLater": "PDF export can be added later without changing this flow. Excel is available now.",
+      "reportType": "Report type",
+      "noTypes": "No report types available",
+      "fromDate": "From date",
+      "toDate": "To date",
+      "year": "Year",
+      "month": "Month",
+      "member": "Member",
+      "status": "Status",
+      "transactionType": "Transaction type",
+      "submit": "Export Excel",
+      "exporting": "Exporting…",
+      "success": "Downloaded {{filename}}"
+    },
+    "import": {
+      "title": "Contribution Excel import",
+      "description": "Download a template, upload filled rows for a period, review validation, then confirm to save contributions.",
+      "adminOnly": "Contribution import is available to cooperative administrators only.",
+      "step1": "1. Select period and download template",
+      "step2": "2. Upload completed Excel file for preview",
+      "downloadTemplate": "Download template",
+      "downloadingTemplate": "Downloading…",
+      "templateSuccess": "Downloaded {{filename}}",
+      "uploadFile": "Upload XLSX",
+      "uploading": "Uploading…",
+      "previewSuccess": "Import preview ready",
+      "previewSummary": "{{valid}} valid / {{invalid}} invalid of {{total}} rows for {{month}}/{{year}}",
+      "confirm": "Confirm import",
+      "cancel": "Cancel import",
+      "confirmSuccess": "Contributions imported successfully",
+      "cancelSuccess": "Import cancelled",
+      "confirmTitle": "Confirm contribution import?",
+      "confirmMessage": "Import {{count}} valid rows into {{month}}/{{year}}? Invalid rows will be skipped.",
+      "cancelTitle": "Cancel this import?",
+      "cancelMessage": "Cancel the current import preview? Nothing will be saved.",
+      "rowValid": "Valid",
+      "rowInvalid": "Invalid",
+      "unknownError": "Invalid row",
+      "emptyPreviewTitle": "No rows in preview",
+      "emptyPreviewDescription": "Upload an Excel file that matches the template.",
+      "historyTitle": "Import history",
+      "historyDescription": "Past contribution imports for this cooperative.",
+      "emptyHistoryTitle": "No imports yet",
+      "emptyHistoryDescription": "Completed and cancelled imports will appear here.",
+      "countsSummary": "{{valid}} valid · {{invalid}} invalid · {{total}} total",
+      "fields": {
+        "rowNumber": "Row",
+        "username": "Username",
+        "memberName": "Member name",
+        "amount": "Amount",
+        "paymentDate": "Payment date",
+        "reference": "Reference",
+        "validity": "Validity",
+        "errors": "Errors",
+        "period": "Period",
+        "filename": "File",
+        "status": "Status",
+        "counts": "Rows",
+        "createdAt": "Created"
+      },
+      "status": {
+        "UPLOADED": "Uploaded",
+        "VALIDATED": "Validated",
+        "CONFIRMED": "Confirmed",
+        "CANCELLED": "Cancelled",
+        "FAILED": "Failed"
+      }
+    }
+  },
+  "transactions": {
+    "selectCooperativeTitle": "Select a cooperative",
+    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage income and expenses.",
+    "adminOnlyTitle": "Admin access required",
+    "adminOnlyDescription": "Income and expense transactions are managed by cooperative administrators.",
+    "emptyTitle": "No transactions yet",
+    "emptyDescription": "Create income, expense, or adjustment transactions to record other fund movements.",
+    "approvedLocked": "Approved (locked)",
+    "tabs": {
+      "list": "Transactions",
+      "create": "Create",
+      "ledger": "Ledger"
+    },
+    "filters": {
+      "all": "All",
+      "income": "Income",
+      "expenses": "Expenses"
+    },
+    "fields": {
+      "category": "Category",
+      "amount": "Amount",
+      "transactionDate": "Date",
+      "reference": "Reference",
+      "description": "Description",
+      "notes": "Notes",
+      "status": "Status",
+      "ledgerEffect": "Direction",
+      "rejectionReason": "Rejection reason",
+      "from": "From",
+      "to": "To"
+    },
+    "category": {
+      "OTHER_INCOME": "Other income",
+      "GENERAL_EXPENSE": "General expense",
+      "INTEREST_EXPENSE": "Interest expense",
+      "ADJUSTMENT": "Adjustment"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected"
+    },
+    "ledgerEffect": {
+      "CREDIT": "Credit (increase funds)",
+      "DEBIT": "Debit (decrease funds)"
+    },
+    "create": {
+      "title": "Create transaction",
+      "description": "Record other income, general/interest expenses, or an adjustment. Entries stay pending until approved.",
+      "submit": "Create transaction",
+      "success": "Transaction created",
+      "pendingHint": "Approved transactions cannot be edited. Use a new adjustment if a correction is needed.",
+      "selectCategory": "Select category",
+      "selectDirection": "Select direction",
+      "adjustmentHint": "Adjustments require a credit or debit direction for the ledger.",
+      "supportingFile": "Supporting document",
+      "uploadSupporting": "Upload document",
+      "supportingOptional": "Optional — PDF, image, or Excel"
+    },
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "approveSuccess": "Transaction approved",
+      "rejectSuccess": "Transaction rejected",
+      "confirmApproveTitle": "Approve this transaction?",
+      "confirmApproveMessage": "Approve and post this transaction to the ledger? Approved entries cannot be edited.",
+      "confirmRejectTitle": "Reject this transaction?"
+    }
+  },
+  "ledger": {
+    "selectCooperativeTitle": "Select a cooperative",
+    "selectCooperativeDescription": "Choose a cooperative in the top bar to view the ledger.",
+    "adminOnlyTitle": "Admin access required",
+    "adminOnlyDescription": "The financial ledger is available to cooperative administrators.",
+    "emptyTitle": "No ledger entries",
+    "emptyDescription": "Approved financial movements will appear here.",
+    "fields": {
+      "transactionDate": "Date",
+      "transactionType": "Type",
+      "debit": "Debit",
+      "credit": "Credit",
+      "reference": "Reference",
+      "description": "Description",
+      "from": "From",
+      "to": "To"
+    },
+    "types": {
+      "REGULAR_CONTRIBUTION": "Regular contribution",
+      "SPECIAL_CONTRIBUTION": "Special contribution",
+      "LOAN_DISBURSEMENT": "Loan disbursement",
+      "LOAN_PRINCIPAL_REPAYMENT": "Loan principal repayment",
+      "LOAN_INTEREST_PAYMENT": "Loan interest payment",
+      "FINE_PAYMENT": "Fine payment",
+      "SOCIAL_CONTRIBUTION": "Social contribution",
+      "SOCIAL_DISBURSEMENT": "Social disbursement",
+      "INVESTMENT_OUTFLOW": "Investment outflow",
+      "INVESTMENT_CAPITAL_RETURN": "Investment capital return",
+      "INVESTMENT_PROFIT": "Investment profit",
+      "OTHER_INCOME": "Other income",
+      "GENERAL_EXPENSE": "General expense",
+      "INTEREST_EXPENSE": "Interest expense",
+      "MEMBER_PAYOUT": "Member payout",
+      "ADJUSTMENT": "Adjustment",
+      "REVERSAL": "Reversal"
+    }
+  },
+  "notifications": {
+    "unreadOnly": "Unread only",
+    "unread": "Unread",
+    "read": "Read",
+    "markRead": "Mark read",
+    "markAllRead": "Mark all read",
+    "markReadSuccess": "Notification marked as read",
+    "markAllReadSuccess": "All notifications marked as read",
+    "emptyTitle": "No notifications",
+    "emptyDescription": "You will see alerts about loans, fines, payouts, and security here.",
+    "fields": {
+      "title": "Title",
+      "type": "Type",
+      "status": "Status",
+      "createdAt": "When"
+    },
+    "types": {
+      "ACCOUNT": "Account",
+      "CONTRIBUTION": "Contribution",
+      "LOAN": "Loan",
+      "FINE": "Fine",
+      "SOCIAL": "Social fund",
+      "INVESTMENT": "Investment",
+      "PAYOUT": "Payout",
+      "SECURITY": "Security",
+      "SYSTEM": "System"
+    }
+  },
+  "auditLogs": {
+    "selectCooperativeTitle": "Select a cooperative",
+    "selectCooperativeDescription": "Choose a cooperative in the top bar to review its audit trail.",
+    "emptyTitle": "No audit entries",
+    "emptyDescription": "Filtered results are empty. Try widening the date range or clearing filters.",
+    "clearFilters": "Clear filters",
+    "detailTitle": "Audit entry",
+    "fields": {
+      "action": "Action",
+      "entityType": "Entity type",
+      "entityId": "Entity ID",
+      "userId": "User ID",
+      "createdAt": "When",
+      "from": "From",
+      "to": "To",
+      "ipAddress": "IP address",
+      "previousValues": "Previous values",
+      "newValues": "New values"
+    }
+  },
+  "settings": {
+    "selectCooperativeTitle": "Select a cooperative",
+    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage its settings.",
+    "formTitle": "Cooperative preferences",
+    "formDescription": "Timezone, locale, and in-app notification toggles for this cooperative.",
+    "notifySection": "Notification preferences",
+    "saveSuccess": "Settings saved",
+    "fields": {
+      "timezone": "Timezone",
+      "locale": "Locale",
+      "notifyContributions": "Notify on contributions",
+      "notifyLoans": "Notify on loans",
+      "notifyFines": "Notify on fines",
+      "notifyPayouts": "Notify on payouts"
+    },
+    "locales": {
+      "en": "English",
+      "rw": "Kinyarwanda"
+    }
+  },
+  "system": {
+    "publicHealthTitle": "Public health",
+    "infoTitle": "Authenticated system info",
+    "infoUnavailable": "System info unavailable",
+    "service": "Service",
+    "name": "Name",
+    "version": "Version",
+    "profiles": "Profiles",
+    "timestamp": "Timestamp",
+    "javaVersion": "Java version",
+    "dbReachable": "Database reachable",
+    "flywayVersion": "Flyway version"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Network error. Check your connection.",
+    "unauthorized": "Please sign in to continue.",
+    "notFound": "Page not found",
+    "loginFailed": "Invalid username or password."
+  },
+  "pages": {
+    "members": {
+      "title": "Members",
+      "description": "Register and manage cooperative members and their accounts."
+    },
+    "contributions": {
+      "title": "Contributions",
+      "description": "Track regular savings contributions and schedules."
+    },
+    "loans": {
+      "title": "Loans",
+      "description": "Originate, approve, and monitor member loans."
+    },
+    "fines": {
+      "title": "Fines",
+      "description": "Record and collect cooperative fines and penalties."
+    },
+    "finePayments": {
+      "title": "Fine Payment Queue",
+      "description": "Review, approve, or reject fine payments submitted by members across the cooperative."
+    },
+    "socialFund": {
+      "title": "Social Dashboard",
+      "description": "Track social contributions, disbursements, and available balance."
+    },
+    "investments": {
+      "title": "Investments",
+      "description": "Plan, activate, and track cooperative investment capital and returns."
+    },
+    "transactions": {
+      "title": "Transactions",
+      "description": "Record and approve other income, expenses, and adjustments."
+    },
+    "ledger": {
+      "title": "Ledger",
+      "description": "Read-only view of approved cooperative financial ledger entries."
+    },
+    "payouts": {
+      "title": "Group Share Out",
+      "description": "Preview and confirm cooperative share-out payouts."
+    },
+    "reports": {
+      "title": "Report Centre",
+      "description": "Export Excel reports and import monthly contributions from spreadsheets."
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Configure cooperative timezone, locale, and notification preferences."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Review alerts and system messages."
+    },
+    "auditLogs": {
+      "title": "Audit logs",
+      "description": "Inspect cooperative activity with filters and change details."
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "Your account details and security preferences."
+    },
+    "cooperatives": {
+      "title": "Cooperatives",
+      "description": "Super-admin management of cooperative tenants."
+    },
+    "system": {
+      "title": "System health",
+      "description": "Platform status and operational checks."
+    }
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "roles": {
+    "adminBadge": "ADMIN",
+    "memberBadge": "MEMBER"
+  }
+}

@@ -1,0 +1,214 @@
+import AddIcon from '@mui/icons-material/Add'
+import {
+  Box,
+  Button,
+  Chip,
+  MenuItem,
+  Stack,
+  TablePagination,
+  TextField,
+} from '@mui/material'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useSnackbar } from 'notistack'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
+import { CooperativeFormDialog } from '@/features/cooperatives/CooperativeFormDialog'
+import { createCooperative, fetchCooperatives } from '@/shared/api/cooperatives'
+import { getErrorMessage } from '@/shared/api/client'
+import { EmptyState } from '@/shared/components/EmptyState'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { LoadingState } from '@/shared/components/LoadingState'
+import { PageHeader } from '@/shared/components/PageHeader'
+import { ResponsiveTable, type TableColumn } from '@/shared/components/ResponsiveTable'
+import { ROUTES } from '@/shared/constants/routes'
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
+import type { Cooperative, CooperativeCreateRequest, CooperativeStatus } from '@/shared/types/cooperative'
+import { COOPERATIVE_STATUSES } from '@/shared/types/cooperative'
+import { formatMoney } from '@/shared/utils/formatMoney'
+
+function statusColor(
+  status: CooperativeStatus,
+): 'success' | 'default' | 'warning' | 'error' {
+  switch (status) {
+    case 'ACTIVE':
+      return 'success'
+    case 'SUSPENDED':
+      return 'warning'
+    case 'ARCHIVED':
+      return 'error'
+    default:
+      return 'default'
+  }
+}
+
+export function CooperativesPage() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { enqueueSnackbar } = useSnackbar()
+
+  const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 300)
+  const [status, setStatus] = useState('')
+  const [page, setPage] = useState(0)
+  const [size, setSize] = useState(10)
+  const [createOpen, setCreateOpen] = useState(false)
+
+  const query = useQuery({
+    queryKey: ['cooperatives', 'list', debouncedSearch, status, page, size],
+    queryFn: () =>
+      fetchCooperatives({
+        q: debouncedSearch || undefined,
+        status: status || undefined,
+        page,
+        size,
+      }),
+  })
+
+  const createMutation = useMutation({
+    mutationFn: (payload: CooperativeCreateRequest) => createCooperative(payload),
+    onSuccess: (created) => {
+      enqueueSnackbar(t('cooperatives.createSuccess'), { variant: 'success' })
+      setCreateOpen(false)
+      void queryClient.invalidateQueries({ queryKey: ['cooperatives'] })
+      navigate(ROUTES.cooperativeDetail(created.id))
+    },
+    onError: (error) => {
+      enqueueSnackbar(getErrorMessage(error, t('errors.generic')), { variant: 'error' })
+    },
+  })
+
+  const columns: TableColumn<Cooperative>[] = useMemo(
+    () => [
+      {
+        id: 'name',
+        label: t('cooperatives.fields.name'),
+        render: (row) => row.name,
+      },
+      {
+        id: 'status',
+        label: t('cooperatives.fields.status'),
+        render: (row) => (
+          <Chip size="small" color={statusColor(row.status)} label={t(`status.${row.status}`)} />
+        ),
+      },
+      {
+        id: 'currency',
+        label: t('cooperatives.fields.currency'),
+        render: (row) => row.currency,
+        hideOnMobile: true,
+      },
+      {
+        id: 'contribution',
+        label: t('cooperatives.fields.monthlyContributionAmount'),
+        render: (row) =>
+          formatMoney(row.monthlyContributionAmount ?? 0, { currency: row.currency || 'RWF' }),
+        hideOnMobile: true,
+      },
+      {
+        id: 'registration',
+        label: t('cooperatives.fields.registrationNumber'),
+        render: (row) => row.registrationNumber || '—',
+        hideOnMobile: true,
+      },
+    ],
+    [t],
+  )
+
+  const rows = query.data?.content ?? []
+
+  return (
+    <Box>
+      <PageHeader
+        title={t('pages.cooperatives.title')}
+        description={t('pages.cooperatives.description')}
+        actions={
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
+            {t('cooperatives.create')}
+          </Button>
+        }
+      />
+
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 2 }}>
+        <TextField
+          size="small"
+          label={t('common.search')}
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value)
+            setPage(0)
+          }}
+          fullWidth
+        />
+        <TextField
+          size="small"
+          select
+          label={t('cooperatives.fields.status')}
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value)
+            setPage(0)
+          }}
+          sx={{ minWidth: { sm: 180 } }}
+        >
+          <MenuItem value="">{t('common.all')}</MenuItem>
+          {COOPERATIVE_STATUSES.map((s) => (
+            <MenuItem key={s} value={s}>
+              {t(`status.${s}`)}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Stack>
+
+      {query.isLoading ? <LoadingState variant="skeleton" rows={5} /> : null}
+
+      {query.isError ? (
+        <ErrorState
+          message={getErrorMessage(query.error)}
+          onRetry={() => void query.refetch()}
+        />
+      ) : null}
+
+      {query.isSuccess && rows.length === 0 ? (
+        <EmptyState
+          title={t('cooperatives.emptyTitle')}
+          description={t('cooperatives.emptyDescription')}
+          actionLabel={t('cooperatives.create')}
+          onAction={() => setCreateOpen(true)}
+        />
+      ) : null}
+
+      {query.isSuccess && rows.length > 0 ? (
+        <>
+          <ResponsiveTable
+            columns={columns}
+            rows={rows}
+            getRowId={(row) => row.id}
+            onRowClick={(row) => navigate(ROUTES.cooperativeDetail(row.id))}
+          />
+          <TablePagination
+            component="div"
+            count={query.data?.totalElements ?? 0}
+            page={page}
+            onPageChange={(_, next) => setPage(next)}
+            rowsPerPage={size}
+            onRowsPerPageChange={(e) => {
+              setSize(Number(e.target.value))
+              setPage(0)
+            }}
+            rowsPerPageOptions={[5, 10, 25]}
+          />
+        </>
+      ) : null}
+
+      <CooperativeFormDialog
+        open={createOpen}
+        mode="create"
+        loading={createMutation.isPending}
+        onClose={() => setCreateOpen(false)}
+        onSubmit={(payload) => createMutation.mutate(payload)}
+      />
+    </Box>
+  )
+}

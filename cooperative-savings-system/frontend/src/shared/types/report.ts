@@ -1,0 +1,56 @@
+export const REPORT_TYPES = [
+  'MEMBERS',
+  'CONTRIBUTIONS',
+  'SPECIAL_CONTRIBUTIONS',
+  'LOANS',
+  'REPAYMENTS',
+  'FINES',
+  'FINE_PAYMENTS',
+  'SOCIAL_FUND',
+  'INVESTMENTS',
+  'INCOME',
+  'EXPENSES',
+  'PAYOUTS',
+  'FINANCIAL_LEDGER',
+  'AUDIT_LOGS',
+  'FULL_FINANCIAL',
+] as const
+
+export type ReportType = (typeof REPORT_TYPES)[number]
+
+export interface ReportTypeInfo {
+  type: ReportType | string
+  code?: string
+  label?: string
+  name?: string
+  description?: string
+  supportsFromDate?: boolean
+  supportsToDate?: boolean
+  supportsMember?: boolean
+  supportsStatus?: boolean
+  supportsYearMonth?: boolean
+  supportsTransactionType?: boolean
+}
+
+export interface ReportExportRequest {
+  reportType: ReportType | string
+  fromDate?: string | null
+  toDate?: string | null
+  memberUserId?: string | null
+  status?: string | null
+  transactionType?: string | null
+  year?: number | null
+  month?: number | null
+}
+
+export function mapReportTypeInfo(raw: ReportTypeInfo | string): ReportTypeInfo {
+  if (typeof raw === 'string') {
+    return { type: raw, label: raw }
+  }
+  const type = String(raw.type ?? raw.code ?? raw.name ?? '')
+  return {
+    ...raw,
+    type,
+    label: raw.label ?? raw.name ?? type,
+  }
+}

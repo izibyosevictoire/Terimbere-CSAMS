@@ -1,0 +1,331 @@
+package rw.terimbere.csams.modules.cooperative.service;
+
+import jakarta.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+import rw.terimbere.csams.modules.audit.service.AuditService;
+import rw.terimbere.csams.modules.cooperative.dto.CooperativeCreateRequest;
+import rw.terimbere.csams.modules.cooperative.dto.CooperativeResponse;
+import rw.terimbere.csams.modules.cooperative.dto.CooperativeStatusUpdateRequest;
+import rw.terimbere.csams.modules.cooperative.dto.CooperativeSummaryResponse;
+import rw.terimbere.csams.modules.cooperative.dto.CooperativeUpdateRequest;
+import rw.terimbere.csams.modules.cooperative.entity.Cooperative;
+import rw.terimbere.csams.modules.cooperative.entity.CooperativeStatus;
+import rw.terimbere.csams.modules.cooperative.repository.CooperativeRepository;
+import rw.terimbere.csams.modules.filemanagement.entity.StoredFile;
+import rw.terimbere.csams.modules.filemanagement.service.FileManagementService;
+import rw.terimbere.csams.modules.membership.entity.CooperativeMembership;
+import rw.terimbere.csams.modules.membership.repository.CooperativeMembershipRepository;
+import rw.terimbere.csams.security.CooperativeAuthorizationService;
+import rw.terimbere.csams.security.UserPrincipal;
+import rw.terimbere.csams.shared.auditing.AuditableAction;
+import rw.terimbere.csams.shared.common.dto.PageResponse;
+import rw.terimbere.csams.shared.exceptions.ConflictException;
+import rw.terimbere.csams.shared.exceptions.ForbiddenException;
+import rw.terimbere.csams.shared.exceptions.ResourceNotFoundException;
+import rw.terimbere.csams.shared.pagination.PageMapper;
+
+@Service
+@RequiredArgsConstructor
+public class CooperativeService {
+
+    private final CooperativeRepository cooperativeRepository;
+    private final CooperativeMembershipRepository membershipRepository;
+    private final CooperativeAuthorizationService authorizationService;
+    private final FileManagementService fileManagementService;
+    private final AuditService auditService;
+
+    @Transactional
+    public CooperativeResponse create(CooperativeCreateRequest request, HttpServletRequest httpRequest) {
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        if (!principal.hasRole(CooperativeAuthorizationService.SUPER_ADMIN)
+                || !principal.hasAuthority("COOPERATIVE_WRITE")) {
+            throw new ForbiddenException("Only SUPER_ADMIN with COOPERATIVE_WRITE may create cooperatives");
+        }
+
+        validateRegistrationNumber(request.getRegistrationNumber(), null);
+
+        Cooperative cooperative = Cooperative.builder()
+                .name(request.getName().trim())
+                .description(trimToNull(request.getDescription()))
+                .registrationNumber(trimToNull(request.getRegistrationNumber()))
+                .contactEmail(trimToNull(request.getContactEmail()))
+                .contactPhone(trimToNull(request.getContactPhone()))
+                .address(trimToNull(request.getAddress()))
+                .currency(StringUtils.hasText(request.getCurrency())
+                        ? request.getCurrency().trim().toUpperCase(Locale.ROOT)
+                        : "RWF")
+                .financialYearStartMonth(
+                        request.getFinancialYearStartMonth() != null ? request.getFinancialYearStartMonth() : 1)
+                .monthlyContributionAmount(
+                        request.getMonthlyContributionAmount() != null
+                                ? request.getMonthlyContributionAmount()
+                                : BigDecimal.ZERO)
+                .contributionDueDay(
+                        request.getContributionDueDay() != null ? request.getContributionDueDay() : 1)
+                .registrationDate(request.getRegistrationDate())
+                .status(CooperativeStatus.ACTIVE)
+                .createdBy(principal.getId())
+                .build();
+
+        Cooperative saved = cooperativeRepository.save(cooperative);
+        auditService.record(
+                principal.getId(),
+                saved.getId(),
+                AuditableAction.COOPERATIVE_CREATE,
+                "Cooperative",
+                saved.getId(),
+                null,
+                "{\"name\":\"" + escape(saved.getName()) + "\"}",
+                clientIp(httpRequest),
+                userAgent(httpRequest));
+        return toResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<CooperativeResponse> list(String q, CooperativeStatus status, Pageable pageable) {
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        boolean superAdmin = principal.hasRole(CooperativeAuthorizationService.SUPER_ADMIN);
+
+        Collection<UUID> ids;
+        boolean restrictIds;
+        if (superAdmin) {
+            ids = List.of(UUID.randomUUID()); // unused when restrictIds=false; JPQL needs non-null collection
+            restrictIds = false;
+        } else {
+            ids = activeMembershipCooperativeIds(principal.getId());
+            if (ids.isEmpty()) {
+                return PageResponse.<CooperativeResponse>builder()
+                        .content(List.of())
+                        .page(pageable.getPageNumber())
+                        .size(pageable.getPageSize())
+                        .totalElements(0)
+                        .totalPages(0)
+                        .first(true)
+                        .last(true)
+                        .build();
+            }
+            restrictIds = true;
+        }
+
+        Page<Cooperative> page = cooperativeRepository.search(
+                StringUtils.hasText(q) ? q.trim() : null, status, restrictIds, ids, pageable);
+        return PageMapper.toPageResponse(page, this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CooperativeSummaryResponse> listMine() {
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        if (principal.hasRole(CooperativeAuthorizationService.SUPER_ADMIN)) {
+            return cooperativeRepository.findAllByDeletedFalseAndStatus(CooperativeStatus.ACTIVE).stream()
+                    .map(this::toSummary)
+                    .toList();
+        }
+        Set<UUID> ids = activeMembershipCooperativeIds(principal.getId());
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return cooperativeRepository.findByIdInAndDeletedFalse(ids).stream()
+                .filter(c -> c.getStatus() != CooperativeStatus.ARCHIVED)
+                .map(this::toSummary)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CooperativeResponse getById(UUID id) {
+        authorizationService.requireMembership(id);
+        return toResponse(requireCooperative(id));
+    }
+
+    @Transactional
+    public CooperativeResponse update(UUID id, CooperativeUpdateRequest request, HttpServletRequest httpRequest) {
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        Cooperative cooperative = requireCooperative(id);
+        requireWriteAccess(principal, id);
+
+        validateRegistrationNumber(request.getRegistrationNumber(), id);
+
+        String previous = "{\"name\":\"" + escape(cooperative.getName()) + "\"}";
+        cooperative.setName(request.getName().trim());
+        cooperative.setDescription(trimToNull(request.getDescription()));
+        cooperative.setRegistrationNumber(trimToNull(request.getRegistrationNumber()));
+        cooperative.setContactEmail(trimToNull(request.getContactEmail()));
+        cooperative.setContactPhone(trimToNull(request.getContactPhone()));
+        cooperative.setAddress(trimToNull(request.getAddress()));
+        if (StringUtils.hasText(request.getCurrency())) {
+            cooperative.setCurrency(request.getCurrency().trim().toUpperCase(Locale.ROOT));
+        }
+        if (request.getFinancialYearStartMonth() != null) {
+            cooperative.setFinancialYearStartMonth(request.getFinancialYearStartMonth());
+        }
+        if (request.getMonthlyContributionAmount() != null) {
+            cooperative.setMonthlyContributionAmount(request.getMonthlyContributionAmount());
+        }
+        if (request.getContributionDueDay() != null) {
+            cooperative.setContributionDueDay(request.getContributionDueDay());
+        }
+        cooperative.setRegistrationDate(request.getRegistrationDate());
+
+        Cooperative saved = cooperativeRepository.save(cooperative);
+        auditService.record(
+                principal.getId(),
+                saved.getId(),
+                AuditableAction.COOPERATIVE_UPDATE,
+                "Cooperative",
+                saved.getId(),
+                previous,
+                "{\"name\":\"" + escape(saved.getName()) + "\"}",
+                clientIp(httpRequest),
+                userAgent(httpRequest));
+        return toResponse(saved);
+    }
+
+    @Transactional
+    public CooperativeResponse updateStatus(
+            UUID id, CooperativeStatusUpdateRequest request, HttpServletRequest httpRequest) {
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        if (!principal.hasRole(CooperativeAuthorizationService.SUPER_ADMIN)) {
+            throw new ForbiddenException("Only SUPER_ADMIN may change cooperative status");
+        }
+        Cooperative cooperative = requireCooperative(id);
+        CooperativeStatus previous = cooperative.getStatus();
+        cooperative.setStatus(request.getStatus());
+        Cooperative saved = cooperativeRepository.save(cooperative);
+        auditService.record(
+                principal.getId(),
+                saved.getId(),
+                AuditableAction.COOPERATIVE_STATUS_CHANGE,
+                "Cooperative",
+                saved.getId(),
+                "{\"status\":\"" + previous + "\"}",
+                "{\"status\":\"" + saved.getStatus() + "\"}",
+                clientIp(httpRequest),
+                userAgent(httpRequest));
+        return toResponse(saved);
+    }
+
+    @Transactional
+    public CooperativeResponse uploadLogo(UUID id, MultipartFile file, HttpServletRequest httpRequest) {
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        Cooperative cooperative = requireCooperative(id);
+        requireWriteAccess(principal, id);
+
+        StoredFile stored = fileManagementService.storeImage(
+                file,
+                FileManagementService.CATEGORY_COOPERATIVE_LOGO,
+                "cooperative-logos/" + id,
+                id,
+                principal.getId(),
+                clientIp(httpRequest),
+                userAgent(httpRequest));
+        cooperative.setLogoFileKey(stored.getStorageKey());
+        return toResponse(cooperativeRepository.save(cooperative));
+    }
+
+    private void requireWriteAccess(UserPrincipal principal, UUID cooperativeId) {
+        if (principal.hasRole(CooperativeAuthorizationService.SUPER_ADMIN)
+                && principal.hasAuthority("COOPERATIVE_WRITE")) {
+            return;
+        }
+        authorizationService.requireMembership(cooperativeId);
+        if (!principal.hasRole("COOPERATIVE_ADMIN") || !principal.hasAuthority("COOPERATIVE_WRITE")) {
+            throw new ForbiddenException("COOPERATIVE_ADMIN with COOPERATIVE_WRITE required");
+        }
+    }
+
+    private Cooperative requireCooperative(UUID id) {
+        return cooperativeRepository
+                .findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cooperative", id));
+    }
+
+    private void validateRegistrationNumber(String registrationNumber, UUID excludeId) {
+        String value = trimToNull(registrationNumber);
+        if (value == null) {
+            return;
+        }
+        boolean exists = excludeId == null
+                ? cooperativeRepository.existsByRegistrationNumberIgnoreCaseAndDeletedFalse(value)
+                : cooperativeRepository.existsByRegistrationNumberIgnoreCaseAndDeletedFalseAndIdNot(value, excludeId);
+        if (exists) {
+            throw new ConflictException("Registration number already in use");
+        }
+    }
+
+    private Set<UUID> activeMembershipCooperativeIds(UUID userId) {
+        return membershipRepository.findByUserIdAndMembershipStatus(userId, "ACTIVE").stream()
+                .map(CooperativeMembership::getCooperativeId)
+                .collect(Collectors.toSet());
+    }
+
+    private CooperativeResponse toResponse(Cooperative c) {
+        return CooperativeResponse.builder()
+                .id(c.getId())
+                .name(c.getName())
+                .description(c.getDescription())
+                .registrationNumber(c.getRegistrationNumber())
+                .contactEmail(c.getContactEmail())
+                .contactPhone(c.getContactPhone())
+                .address(c.getAddress())
+                .currency(c.getCurrency())
+                .financialYearStartMonth(c.getFinancialYearStartMonth())
+                .monthlyContributionAmount(c.getMonthlyContributionAmount())
+                .contributionDueDay(c.getContributionDueDay())
+                .logoFileKey(c.getLogoFileKey())
+                .logoUrl(fileManagementService.getPublicUrl(c.getLogoFileKey()))
+                .status(c.getStatus())
+                .registrationDate(c.getRegistrationDate())
+                .createdBy(c.getCreatedBy())
+                .createdAt(c.getCreatedAt())
+                .updatedAt(c.getUpdatedAt())
+                .build();
+    }
+
+    private CooperativeSummaryResponse toSummary(Cooperative c) {
+        return CooperativeSummaryResponse.builder()
+                .id(c.getId())
+                .name(c.getName())
+                .status(c.getStatus())
+                .currency(c.getCurrency())
+                .logoUrl(fileManagementService.getPublicUrl(c.getLogoFileKey()))
+                .build();
+    }
+
+    private static String trimToNull(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        return value.trim();
+    }
+
+    private static String escape(String value) {
+        return value == null ? "" : value.replace("\"", "\\\"");
+    }
+
+    private static String clientIp(HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (StringUtils.hasText(forwarded)) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
+    }
+
+    private static String userAgent(HttpServletRequest request) {
+        return request == null ? null : request.getHeader("User-Agent");
+    }
+}

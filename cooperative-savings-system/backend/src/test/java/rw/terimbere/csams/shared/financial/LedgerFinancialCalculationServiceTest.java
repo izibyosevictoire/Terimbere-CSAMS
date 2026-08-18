@@ -1,0 +1,104 @@
+package rw.terimbere.csams.shared.financial;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+
+import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import rw.terimbere.csams.modules.investment.repository.InvestmentRepository;
+import rw.terimbere.csams.modules.ledger.repository.LedgerEntryRepository;
+import rw.terimbere.csams.modules.loan.entity.LoanStatus;
+import rw.terimbere.csams.modules.loan.repository.LoanRepository;
+
+@ExtendWith(MockitoExtension.class)
+class LedgerFinancialCalculationServiceTest {
+
+    @Mock
+    private LedgerEntryRepository ledgerEntryRepository;
+
+    @Mock
+    private LoanRepository loanRepository;
+
+    @Mock
+    private InvestmentRepository investmentRepository;
+
+    @InjectMocks
+    private LedgerFinancialCalculationService service;
+
+    private UUID cooperativeId;
+
+    @BeforeEach
+    void setUp() {
+        cooperativeId = UUID.randomUUID();
+    }
+
+    @Test
+    void availableGroupFundAppliesPhase8Formula() {
+        when(ledgerEntryRepository.sumApprovedCredits(
+                        eq(cooperativeId),
+                        eq(EnumSet.of(
+                                LedgerTransactionType.REGULAR_CONTRIBUTION,
+                                LedgerTransactionType.SPECIAL_CONTRIBUTION))))
+                .thenReturn(new BigDecimal("10000.0000"));
+        when(ledgerEntryRepository.sumApprovedCredits(
+                        eq(cooperativeId), eq(EnumSet.of(LedgerTransactionType.FINE_PAYMENT))))
+                .thenReturn(new BigDecimal("300.0000"));
+        when(ledgerEntryRepository.sumApprovedCredits(
+                        eq(cooperativeId), eq(EnumSet.of(LedgerTransactionType.OTHER_INCOME))))
+                .thenReturn(new BigDecimal("200.0000"));
+        when(ledgerEntryRepository.sumApprovedCredits(
+                        eq(cooperativeId), eq(EnumSet.of(LedgerTransactionType.INVESTMENT_CAPITAL_RETURN))))
+                .thenReturn(new BigDecimal("500.0000"));
+        when(ledgerEntryRepository.sumApprovedCredits(
+                        eq(cooperativeId), eq(EnumSet.of(LedgerTransactionType.LOAN_INTEREST_PAYMENT))))
+                .thenReturn(new BigDecimal("100.0000"));
+        when(ledgerEntryRepository.sumApprovedCredits(
+                        eq(cooperativeId), eq(EnumSet.of(LedgerTransactionType.INVESTMENT_PROFIT))))
+                .thenReturn(new BigDecimal("50.0000"));
+        when(ledgerEntryRepository.sumApprovedDebits(
+                        eq(cooperativeId), eq(EnumSet.of(LedgerTransactionType.INTEREST_EXPENSE))))
+                .thenReturn(new BigDecimal("20.0000"));
+        when(loanRepository.sumOutstandingPrincipalByStatuses(
+                        eq(cooperativeId), eq(EnumSet.of(LoanStatus.ACTIVE, LoanStatus.OVERDUE))))
+                .thenReturn(new BigDecimal("2000.0000"));
+        when(ledgerEntryRepository.sumApprovedDebits(
+                        eq(cooperativeId), eq(EnumSet.of(LedgerTransactionType.INVESTMENT_OUTFLOW))))
+                .thenReturn(new BigDecimal("1000.0000"));
+        when(ledgerEntryRepository.sumApprovedDebits(
+                        eq(cooperativeId), eq(EnumSet.of(LedgerTransactionType.GENERAL_EXPENSE))))
+                .thenReturn(new BigDecimal("150.0000"));
+        when(ledgerEntryRepository.sumApprovedDebits(
+                        eq(cooperativeId), eq(EnumSet.of(LedgerTransactionType.MEMBER_PAYOUT))))
+                .thenReturn(new BigDecimal("400.0000"));
+
+        // contrib 10000 + fine 300 + other 200 + capitalReturn 500
+        // + availableInterest (100+50-20=130)
+        // − outstanding 2000 − outflow 1000 − expense 150 − payouts 400
+        // = 7580
+        BigDecimal available = service.calculateAvailableGroupFund(cooperativeId);
+        assertThat(available).isEqualByComparingTo("7580.00");
+        assertThat(service.calculateAvailableInterest(cooperativeId)).isEqualByComparingTo("130.00");
+    }
+
+    @Test
+    void socialFundTypesAreNotIncludedInAvailableFund() {
+        when(ledgerEntryRepository.sumApprovedCredits(eq(cooperativeId), any(Collection.class)))
+                .thenReturn(BigDecimal.ZERO);
+        when(ledgerEntryRepository.sumApprovedDebits(eq(cooperativeId), any(Collection.class)))
+                .thenReturn(BigDecimal.ZERO);
+        when(loanRepository.sumOutstandingPrincipalByStatuses(eq(cooperativeId), any(Collection.class)))
+                .thenReturn(BigDecimal.ZERO);
+
+        assertThat(service.calculateAvailableGroupFund(cooperativeId)).isEqualByComparingTo("0.00");
+    }
+}
