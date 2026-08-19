@@ -1,5 +1,6 @@
 package rw.terimbere.csams.configuration;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -17,7 +18,21 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource(CorsProperties corsProperties) {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(parseOrigins(corsProperties.getAllowedOrigins()));
+        List<String> exact = new ArrayList<>();
+        List<String> patterns = new ArrayList<>();
+        for (String origin : parseOrigins(corsProperties.getAllowedOrigins())) {
+            if (origin.contains("*")) {
+                patterns.add(origin);
+            } else {
+                exact.add(origin);
+            }
+        }
+        if (!exact.isEmpty()) {
+            configuration.setAllowedOrigins(exact);
+        }
+        if (!patterns.isEmpty()) {
+            configuration.setAllowedOriginPatterns(patterns);
+        }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("X-Request-Id", "Authorization"));

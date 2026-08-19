@@ -11,6 +11,7 @@ public class CorsProperties {
 
     /**
      * Comma-separated list of allowed origins.
+     * Exact hosts (https://app.example.com) and wildcard patterns (https://*.vercel.app) are both allowed.
      */
     private String allowedOrigins = "http://localhost:5173";
 }
