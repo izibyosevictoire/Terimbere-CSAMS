@@ -131,13 +131,12 @@ export function AppLayout() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
       <AppBar
         position="fixed"
-        color="inherit"
         elevation={0}
         sx={{
           borderBottom: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'rgba(255,255,255,0.92)',
-          backdropFilter: 'blur(10px)',
+          borderColor: 'rgba(255,255,255,0.12)',
+          bgcolor: '#0A0A0A',
+          color: '#FFFFFF',
         }}
       >
         <Toolbar sx={{ gap: { xs: 0.5, md: 1.5 }, minHeight: { xs: 56, sm: 64 } }}>
@@ -146,7 +145,7 @@ export function AppLayout() {
               edge="start"
               aria-label={t('common.openMenu')}
               onClick={() => setMobileOpen(true)}
-              sx={{ minWidth: 44, minHeight: 44 }}
+              sx={{ minWidth: 44, minHeight: 44, color: '#FFFFFF' }}
             >
               <MenuIcon />
             </IconButton>
@@ -175,7 +174,8 @@ export function AppLayout() {
               to={ROUTES.dashboard}
               sx={{
                 textDecoration: 'none',
-                color: 'text.primary',
+                color: '#FFFFFF',
+                fontFamily: 'var(--font-brand)',
                 fontWeight: 700,
                 fontSize: { xs: '1rem', sm: '1.15rem' },
                 whiteSpace: 'nowrap',
@@ -196,7 +196,7 @@ export function AppLayout() {
                   minHeight: 40,
                   color: location.pathname.startsWith(ROUTES.dashboard)
                     ? 'primary.main'
-                    : 'text.primary',
+                    : '#FFFFFF',
                 }}
               >
                 {t('nav.dashboard')}
@@ -209,10 +209,10 @@ export function AppLayout() {
 
           {isMdUp ? (
             <>
-              <LanguageSwitcher />
+              <LanguageSwitcher onDark />
               <ThemeSwitcher />
               <PwaInstallButton />
-              <CooperativeSelector />
+              <CooperativeSelector onDark />
             </>
           ) : (
             <PwaInstallButton />

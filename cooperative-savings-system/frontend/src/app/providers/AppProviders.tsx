@@ -46,6 +46,11 @@ function ThemedApp({ children }: { children: ReactNode }) {
     preference === 'system' ? (systemDark ? 'dark' : 'light') : resolveThemeMode(preference)
   const theme = useMemo(() => (mode === 'dark' ? darkTheme : lightTheme), [mode])
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = mode
+    document.documentElement.style.colorScheme = mode
+  }, [mode])
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />

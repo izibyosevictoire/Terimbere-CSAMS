@@ -1,5 +1,16 @@
 import { createTheme, type ThemeOptions } from '@mui/material/styles'
 
+/** Brand: Orange, Tangerine, Black, White, Blue. Fonts: Candara, Georgia, Tempus Sans ITC. */
+const ORANGE = '#FF7A00'
+const TANGERINE = '#FF5C00'
+const BLACK = '#0A0A0A'
+const WHITE = '#FFFFFF'
+const BLUE = '#1565C0'
+
+const fontBody = "Candara, Calibri, 'Segoe UI', sans-serif"
+const fontHeading = "Georgia, 'Times New Roman', serif"
+const fontBrand = "'Tempus Sans ITC', Georgia, 'Times New Roman', serif"
+
 const base: ThemeOptions = {
   breakpoints: {
     values: {
@@ -11,17 +22,33 @@ const base: ThemeOptions = {
     },
   },
   typography: {
-    fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-    h1: { fontFamily: "'DM Sans', 'Segoe UI', sans-serif", fontWeight: 700 },
-    h2: { fontFamily: "'DM Sans', 'Segoe UI', sans-serif", fontWeight: 700 },
-    h3: { fontFamily: "'DM Sans', 'Segoe UI', sans-serif", fontWeight: 650 },
-    h4: { fontFamily: "'DM Sans', 'Segoe UI', sans-serif", fontWeight: 650 },
-    h5: { fontFamily: "'DM Sans', 'Segoe UI', sans-serif", fontWeight: 650 },
-    h6: { fontFamily: "'DM Sans', 'Segoe UI', sans-serif", fontWeight: 600 },
-    button: { textTransform: 'none', fontWeight: 600 },
+    fontFamily: fontBody,
+    h1: { fontFamily: fontHeading, fontWeight: 700 },
+    h2: { fontFamily: fontHeading, fontWeight: 700 },
+    h3: { fontFamily: fontHeading, fontWeight: 650 },
+    h4: { fontFamily: fontHeading, fontWeight: 650 },
+    h5: { fontFamily: fontHeading, fontWeight: 650 },
+    h6: { fontFamily: fontBrand, fontWeight: 600 },
+    button: { textTransform: 'none', fontWeight: 600, fontFamily: fontBody },
   },
   shape: { borderRadius: 10 },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          fontFamily: fontBody,
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: BLACK,
+          color: WHITE,
+          backgroundImage: 'none',
+        },
+      },
+    },
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {
@@ -71,30 +98,30 @@ export const lightTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#0F5C5C',
-      dark: '#0A4242',
-      light: '#1A7A7A',
-      contrastText: '#FFFFFF',
+      main: ORANGE,
+      dark: '#CC5200',
+      light: '#FF9A3D',
+      contrastText: WHITE,
     },
     secondary: {
-      main: '#2563EB',
-      dark: '#1D4ED8',
-      light: '#3B82F6',
-      contrastText: '#FFFFFF',
+      main: BLUE,
+      dark: '#0D47A1',
+      light: '#42A5F5',
+      contrastText: WHITE,
     },
     background: {
-      default: '#F5F6F8',
-      paper: '#FFFFFF',
+      default: WHITE,
+      paper: WHITE,
     },
     text: {
-      primary: '#1E293B',
-      secondary: '#64748B',
+      primary: BLACK,
+      secondary: '#4A4A4A',
     },
-    divider: '#E5E7EB',
-    success: { main: '#16A34A' },
-    warning: { main: '#D97706' },
-    error: { main: '#DC2626' },
-    info: { main: '#0EA5E9' },
+    divider: '#EADFD4',
+    success: { main: '#2E7D32' },
+    warning: { main: TANGERINE },
+    error: { main: '#C62828' },
+    info: { main: BLUE },
   },
 })
 
@@ -103,27 +130,28 @@ export const darkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#4DB6AC',
-      dark: '#0F5C5C',
-      light: '#80CBC4',
-      contrastText: '#062525',
+      main: '#FF9A3D',
+      dark: ORANGE,
+      light: '#FFB56B',
+      contrastText: BLACK,
     },
     secondary: {
-      main: '#60A5FA',
-      contrastText: '#0F172A',
+      main: '#42A5F5',
+      dark: BLUE,
+      contrastText: BLACK,
     },
     background: {
-      default: '#0F1419',
-      paper: '#1A222D',
+      default: BLACK,
+      paper: '#161616',
     },
     text: {
-      primary: '#F1F5F9',
-      secondary: '#94A3B8',
+      primary: WHITE,
+      secondary: '#C4C4C4',
     },
-    divider: '#2A3441',
-    success: { main: '#22C55E' },
-    warning: { main: '#F59E0B' },
-    error: { main: '#EF4444' },
-    info: { main: '#38BDF8' },
+    divider: '#2E2E2E',
+    success: { main: '#66BB6A' },
+    warning: { main: TANGERINE },
+    error: { main: '#EF5350' },
+    info: { main: '#42A5F5' },
   },
 })

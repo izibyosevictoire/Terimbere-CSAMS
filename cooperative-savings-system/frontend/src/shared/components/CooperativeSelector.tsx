@@ -16,7 +16,7 @@ import { setSelectedCooperativeId } from '@/app/store/authSlice'
 import { fetchMyCooperatives } from '@/shared/api/cooperatives'
 import { getErrorMessage } from '@/shared/api/client'
 
-export function CooperativeSelector() {
+export function CooperativeSelector({ onDark = false }: { onDark?: boolean }) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const selected = useAppSelector((s) => s.auth.selectedCooperativeId)
@@ -83,7 +83,24 @@ export function CooperativeSelector() {
   }
 
   return (
-    <FormControl size="small" sx={{ minWidth: { xs: 140, sm: 200 }, maxWidth: { xs: 180, sm: 260 } }}>
+    <FormControl
+      size="small"
+      sx={{
+        minWidth: { xs: 140, sm: 200 },
+        maxWidth: { xs: 180, sm: 260 },
+        ...(onDark
+          ? {
+              '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.75)' },
+              '& .MuiOutlinedInput-root': {
+                color: '#FFFFFF',
+                '& fieldset': { borderColor: 'rgba(255,255,255,0.35)' },
+                '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.6)' },
+              },
+              '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.8)' },
+            }
+          : null),
+      }}
+    >
       <InputLabel id="coop-select-label">{t('common.selectCooperative')}</InputLabel>
       <Select
         labelId="coop-select-label"

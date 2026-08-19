@@ -2,7 +2,7 @@
  * PWA configuration notes (Phase 12 — vite-plugin-pwa).
  *
  * Enabled:
- * - Web app manifest (name, icons, theme-color #0F5C5C, display standalone)
+ * - Web app manifest (name, icons, theme-color #FF7A00, display standalone)
  * - Service worker caching for app shell / static assets only
  * - Install prompt UI (deferred install button)
  * - Offline fallback page explaining that financial ops require connectivity
@@ -18,6 +18,6 @@ export const pwaConfig = {
   phase: 12,
   cacheAppShellOnly: true,
   allowOfflineFinancialOps: false,
-  themeColor: '#0F5C5C',
-  backgroundColor: '#F5F1EA',
+  themeColor: '#FF7A00',
+  backgroundColor: '#FFFFFF',
 } as const

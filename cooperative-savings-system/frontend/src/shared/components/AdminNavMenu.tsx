@@ -43,7 +43,7 @@ export function AdminNavMenu() {
         onClick={(e) => setAnchor(e.currentTarget)}
         aria-haspopup="menu"
         aria-expanded={Boolean(anchor)}
-        sx={{ minHeight: 40, fontWeight: 600 }}
+        sx={{ minHeight: 40, fontWeight: 600, color: 'inherit' }}
       >
         {t('nav.adminSection')}
       </Button>

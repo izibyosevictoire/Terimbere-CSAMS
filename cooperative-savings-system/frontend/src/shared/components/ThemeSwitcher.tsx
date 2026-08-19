@@ -32,7 +32,7 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
         aria-haspopup="menu"
         aria-expanded={Boolean(anchor)}
         aria-label={t('theme.label')}
-        sx={{ minHeight: 36, textTransform: 'none', whiteSpace: 'nowrap' }}
+        sx={{ minHeight: 36, textTransform: 'none', whiteSpace: 'nowrap', color: 'inherit' }}
       >
         {compact ? null : t(current.labelKey)}
       </Button>

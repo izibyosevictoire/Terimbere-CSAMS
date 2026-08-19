@@ -1,20 +1,40 @@
 :root {
-  --color-primary: #0f5c5c;
-  --color-primary-dark: #0a4242;
-  --color-primary-light: #1a7a7a;
-  --color-secondary: #c4a574;
-  --color-bg: #f3efe6;
-  --color-bg-elevated: #faf7f1;
+  --color-orange: #ff7a00;
+  --color-tangerine: #ff5c00;
+  --color-black: #0a0a0a;
+  --color-white: #ffffff;
+  --color-blue: #1565c0;
+  --color-primary: #ff7a00;
+  --color-primary-dark: #cc5200;
+  --color-primary-light: #ff9a3d;
+  --color-secondary: #1565c0;
+  --color-bg: #ffffff;
+  --color-bg-elevated: #fff7f0;
   --color-surface: #ffffff;
-  --color-text: #1e293b;
-  --color-text-muted: #64748b;
-  --color-border: #e2ddd2;
-  --color-success: #2d6a4f;
-  --color-warning: #b45309;
-  --color-error: #b91c1c;
-  --font-brand: 'Fraunces', Georgia, 'Times New Roman', serif;
-  --font-body: 'DM Sans', 'Segoe UI', sans-serif;
+  --color-text: #0a0a0a;
+  --color-text-muted: #4a4a4a;
+  --color-border: #eadfd4;
+  --color-success: #2e7d32;
+  --color-warning: #ff5c00;
+  --color-error: #c62828;
+  --font-brand: 'Tempus Sans ITC', Georgia, 'Times New Roman', serif;
+  --font-heading: Georgia, 'Times New Roman', serif;
+  --font-body: Candara, Calibri, 'Segoe UI', sans-serif;
   --radius-sm: 6px;
   --radius-md: 12px;
-  --shadow-soft: 0 8px 28px rgba(15, 92, 92, 0.08);
+  --shadow-soft: 0 8px 28px rgba(255, 122, 0, 0.12);
+}
+
+html[data-theme='dark'] {
+  --color-primary: #ff9a3d;
+  --color-primary-dark: #ff7a00;
+  --color-primary-light: #ffb56b;
+  --color-secondary: #42a5f5;
+  --color-bg: #0a0a0a;
+  --color-bg-elevated: #161616;
+  --color-surface: #141414;
+  --color-text: #ffffff;
+  --color-text-muted: #c4c4c4;
+  --color-border: #2e2e2e;
+  --shadow-soft: 0 8px 28px rgba(0, 0, 0, 0.45);
 }

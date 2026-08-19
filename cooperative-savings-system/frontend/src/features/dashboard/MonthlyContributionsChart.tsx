@@ -101,7 +101,7 @@ export function MonthlyContributionsChart({
         <Box sx={{ width: '100%', height: 280 }}>
           <ResponsiveContainer>
             <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(15,92,92,0.12)" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,122,0,0.18)" />
               <XAxis dataKey="label" tickLine={false} axisLine={false} />
               <YAxis tickLine={false} axisLine={false} width={56} />
               <Tooltip
@@ -110,7 +110,7 @@ export function MonthlyContributionsChart({
                   t('dashboard.charts.paid'),
                 ]}
               />
-              <Bar dataKey="totalPaid" fill="#0F5C5C" radius={[4, 4, 0, 0]} maxBarSize={36} />
+              <Bar dataKey="totalPaid" fill="#FF7A00" radius={[4, 4, 0, 0]} maxBarSize={36} />
             </BarChart>
           </ResponsiveContainer>
         </Box>

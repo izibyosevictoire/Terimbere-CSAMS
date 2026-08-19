@@ -122,7 +122,7 @@ export function SignupPage() {
           border: '1px solid',
           borderColor: 'divider',
           boxShadow: 'var(--shadow-soft)',
-          bgcolor: 'rgba(255,255,255,0.78)',
+          bgcolor: 'background.paper',
           backdropFilter: 'blur(8px)',
         }}
       >
