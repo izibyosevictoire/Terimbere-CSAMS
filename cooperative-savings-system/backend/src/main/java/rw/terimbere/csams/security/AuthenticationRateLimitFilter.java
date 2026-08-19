@@ -45,6 +45,7 @@ public class AuthenticationRateLimitFilter extends OncePerRequestFilter {
         }
         String path = request.getRequestURI();
         return !(path.endsWith("/api/v1/auth/login")
+                || path.endsWith("/api/v1/auth/signup")
                 || path.endsWith("/api/v1/auth/bootstrap")
                 || path.contains("/api/v1/auth/password-reset/"));
     }

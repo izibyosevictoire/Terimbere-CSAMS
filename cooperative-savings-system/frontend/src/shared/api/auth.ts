@@ -7,6 +7,7 @@ import type {
   LoginResponse,
   PasswordResetConfirmRequest,
   PasswordResetRequest,
+  SignupRequest,
 } from '@/shared/types/auth'
 
 /** Unwrap the backend `{ success, message, data, timestamp }` envelope. */
@@ -19,6 +20,11 @@ export function unwrapApiData<T>(body: ApiResponse<T>): T {
 
 export async function login(payload: LoginRequest): Promise<LoginResponse> {
   const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/login', payload)
+  return unwrapApiData(response.data)
+}
+
+export async function signup(payload: SignupRequest): Promise<LoginResponse> {
+  const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/signup', payload)
   return unwrapApiData(response.data)
 }
 

@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { AppLayout } from '@/layouts/AppLayout'
 import { LoginPage } from '@/pages/LoginPage'
+import { SignupPage } from '@/pages/SignupPage'
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage'
 import { ChangePasswordPage } from '@/pages/ChangePasswordPage'
@@ -43,6 +44,7 @@ export function AppRouter() {
         <Routes>
           <Route element={<AuthLayout />}>
             <Route path={ROUTES.login} element={<LoginPage />} />
+            <Route path={ROUTES.signup} element={<SignupPage />} />
             <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
             <Route path={ROUTES.resetPassword} element={<ResetPasswordPage />} />
           </Route>

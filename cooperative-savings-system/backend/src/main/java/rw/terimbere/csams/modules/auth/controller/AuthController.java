@@ -25,6 +25,7 @@ import rw.terimbere.csams.modules.auth.dto.LoginResponse;
 import rw.terimbere.csams.modules.auth.dto.PasswordResetConfirmRequest;
 import rw.terimbere.csams.modules.auth.dto.PasswordResetRequest;
 import rw.terimbere.csams.modules.auth.dto.RefreshTokenRequest;
+import rw.terimbere.csams.modules.auth.dto.SignupRequest;
 import rw.terimbere.csams.modules.auth.service.AuthService;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.common.dto.ApiResponse;
@@ -43,6 +44,17 @@ public class AuthController {
             @Valid @RequestBody BootstrapAdminRequest request, HttpServletRequest httpRequest) {
         return ResponseEntity.ok(ApiResponse.ok(
                 "First administrator created", authService.bootstrapAdmin(request, httpRequest)));
+    }
+
+    @PostMapping("/signup")
+    @Operation(summary = "Create an account (first user becomes SUPER_ADMIN; later users are MEMBERs)")
+    public ResponseEntity<ApiResponse<LoginResponse>> signup(
+            @Valid @RequestBody SignupRequest request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
+        AuthResult result = authService.signup(request, httpRequest);
+        authService.writeRefreshCookie(httpResponse, result.getRefreshToken());
+        return ResponseEntity.ok(ApiResponse.ok("Account created", result.getResponse()));
     }
 
     @PostMapping("/login")

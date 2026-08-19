@@ -44,7 +44,22 @@
     "devPreviewWarning": "Development only — bypasses real authentication.",
     "foundation": "Foundation status",
     "foundationHint": "Verify the public health endpoint while you sign in.",
-    "checkHealth": "Check API health"
+    "checkHealth": "Check API health",
+    "noAccount": "Don't have an account?",
+    "createAccount": "Create account"
+  },
+  "signup": {
+    "title": "Create account",
+    "subtitle": "Register to access TERIMBERE CSAMS.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "submit": "Create account",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in"
   },
   "forgotPassword": {
     "title": "Forgot password",
@@ -1253,7 +1268,8 @@
     "network": "Network error. Check your connection.",
     "unauthorized": "Please sign in to continue.",
     "notFound": "Page not found",
-    "loginFailed": "Invalid username or password."
+    "loginFailed": "Invalid username or password.",
+    "signupFailed": "Could not create the account. Try a different username or email."
   },
   "pages": {
     "members": {

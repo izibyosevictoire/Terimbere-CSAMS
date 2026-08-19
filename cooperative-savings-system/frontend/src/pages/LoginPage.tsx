@@ -176,6 +176,12 @@ export function LoginPage() {
               >
                 {t('login.submit')}
               </Button>
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+                {t('login.noAccount')}{' '}
+                <MuiLink component={RouterLink} to={ROUTES.signup}>
+                  {t('login.createAccount')}
+                </MuiLink>
+              </Typography>
               {isPreviewLoginEnabled() ? (
                 <Stack spacing={1}>
                   <Alert severity="warning">{t('login.devPreviewWarning')}</Alert>

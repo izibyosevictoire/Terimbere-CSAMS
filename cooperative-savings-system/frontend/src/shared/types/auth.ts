@@ -17,6 +17,15 @@ export interface LoginRequest {
   password: string
 }
 
+export interface SignupRequest {
+  username: string
+  email: string
+  password: string
+  firstName: string
+  lastName: string
+  phone?: string
+}
+
 export interface LoginResponse {
   accessToken: string
   tokenType: string

@@ -44,7 +44,22 @@
     "devPreviewWarning": "Ku buryo bwa development gusa — ntabwo ari ukwinjira nyakuri.",
     "foundation": "Imiterere y'urubuga",
     "foundationHint": "Suzuma health endpoint ya API.",
-    "checkHealth": "Suzuma API"
+    "checkHealth": "Suzuma API",
+    "noAccount": "Nta konti ufite?",
+    "createAccount": "Fungura konti"
+  },
+  "signup": {
+    "title": "Fungura konti",
+    "subtitle": "Iyandikishe kugira ngo ukoreshe TERIMBERE CSAMS.",
+    "firstName": "Izina",
+    "lastName": "Izina ry'umuryango",
+    "username": "Izina ry'ukoresha",
+    "email": "Imeri",
+    "password": "Ijambo ry'ibanga",
+    "confirmPassword": "Emeza ijambo ry'ibanga",
+    "submit": "Fungura konti",
+    "haveAccount": "Usanzwe ufite konti?",
+    "signIn": "Injira"
   },
   "forgotPassword": {
     "title": "Wibagiwe ijambo ry'ibanga",
@@ -1233,7 +1248,8 @@
     "network": "Ikosa rya network.",
     "unauthorized": "Injira kugira ngo ukomeze.",
     "notFound": "Urupapuro ntirubonetse",
-    "loginFailed": "Izina cyangwa ijambo ry'ibanga ntabwo ari byo."
+    "loginFailed": "Izina cyangwa ijambo ry'ibanga ntabwo ari byo.",
+    "signupFailed": "Konti ntiyashoboye gufungurwa. Gerageza irindi zina cyangwa imeri."
   },
   "pages": {
     "members": {

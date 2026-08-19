@@ -265,6 +265,53 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    void signup_createsMemberAndReturnsAccessToken() throws Exception {
+        String username = "su" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        String email = username + "@test.local";
+
+        mockMvc.perform(post("/api/v1/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username":"%s",
+                                  "email":"%s",
+                                  "password":"SignupPass1!",
+                                  "firstName":"Self",
+                                  "lastName":"Signup"
+                                }
+                                """.formatted(username, email)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.user.username").value(username))
+                .andExpect(jsonPath("$.data.user.roles", org.hamcrest.Matchers.hasItem("MEMBER")));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username":"%s","password":"SignupPass1!"}
+                                """.formatted(username)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void signup_duplicateUsername_returnsConflict() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username":"superadmin",
+                                  "email":"another-admin@test.local",
+                                  "password":"SignupPass1!",
+                                  "firstName":"Dup",
+                                  "lastName":"User"
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Username already exists"));
+    }
+
+    @Test
     void passwordReset_confirm_updatesPassword() throws Exception {
         User user = lockoutUser;
         String rawToken = UUID.randomUUID().toString();

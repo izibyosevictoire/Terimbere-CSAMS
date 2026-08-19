@@ -33,6 +33,7 @@ import rw.terimbere.csams.modules.auth.dto.LoginRequest;
 import rw.terimbere.csams.modules.auth.dto.LoginResponse;
 import rw.terimbere.csams.modules.auth.dto.PasswordResetConfirmRequest;
 import rw.terimbere.csams.modules.auth.dto.PasswordResetRequest;
+import rw.terimbere.csams.modules.auth.dto.SignupRequest;
 import rw.terimbere.csams.modules.auth.entity.PasswordResetToken;
 import rw.terimbere.csams.modules.auth.entity.RefreshToken;
 import rw.terimbere.csams.modules.auth.repository.PasswordResetTokenRepository;
@@ -120,6 +121,58 @@ public class AuthService {
 
         log.info("Bootstrapped first SUPER_ADMIN username='{}'", username);
         return currentUser(admin.getId());
+    }
+
+    /**
+     * Public self-registration. The first account becomes SUPER_ADMIN; later accounts are MEMBERs.
+     */
+    @Transactional
+    public AuthResult signup(SignupRequest request, HttpServletRequest httpRequest) {
+        String username = request.getUsername().trim();
+        String email = request.getEmail().trim().toLowerCase(java.util.Locale.ROOT);
+
+        if (userRepository.existsByUsernameIgnoreCaseAndDeletedFalse(username)) {
+            throw new ConflictException("Username already exists");
+        }
+        if (userRepository.existsByEmailIgnoreCaseAndDeletedFalse(email)) {
+            throw new ConflictException("Email already exists");
+        }
+
+        boolean firstUser = userRepository.countByDeletedFalse() == 0;
+        String roleCode = firstUser ? "SUPER_ADMIN" : "MEMBER";
+        Role role = roleRepository
+                .findByCode(roleCode)
+                .orElseThrow(() -> new IllegalStateException(roleCode + " role not seeded"));
+
+        User user = User.builder()
+                .username(username)
+                .email(email)
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .firstName(request.getFirstName().trim())
+                .lastName(request.getLastName().trim())
+                .phone(StringUtils.hasText(request.getPhone()) ? request.getPhone().trim() : null)
+                .accountStatus(AccountStatus.ACTIVE)
+                .failedLoginAttempts(0)
+                .roles(new HashSet<>(Set.of(role)))
+                .build();
+
+        user = userRepository.save(user);
+
+        String ip = clientIp(httpRequest);
+        String userAgent = httpRequest.getHeader(HttpHeaders.USER_AGENT);
+        auditService.record(
+                user.getId(),
+                null,
+                AuditableAction.CREATE,
+                "User",
+                user.getId(),
+                null,
+                "{\"signup\":true,\"role\":\"" + roleCode + "\",\"username\":\"" + username + "\"}",
+                ip,
+                userAgent);
+
+        log.info("Signed up user='{}' role={}", username, roleCode);
+        return issueTokens(user, ip, userAgent);
     }
 
     @Transactional(noRollbackFor = UnauthorizedException.class)

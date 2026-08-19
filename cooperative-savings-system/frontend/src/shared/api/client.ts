@@ -28,7 +28,7 @@ function createRequestId(): string {
 }
 
 function isLoginUrl(url?: string): boolean {
-  return Boolean(url?.includes('/auth/login'))
+  return Boolean(url?.includes('/auth/login') || url?.includes('/auth/signup'))
 }
 
 function isRefreshUrl(url?: string): boolean {

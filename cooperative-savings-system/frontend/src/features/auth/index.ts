@@ -8,6 +8,7 @@ export {
   logout,
   refresh,
   requestPasswordReset,
+  signup,
   unwrapApiData,
 } from '@/shared/api/auth'
 export {
