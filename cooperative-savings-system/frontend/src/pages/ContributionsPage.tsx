@@ -11,6 +11,7 @@ import {
 } from '@/features/contributions'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { PageHeader } from '@/shared/components/PageHeader'
+import { ROUTES } from '@/shared/constants/routes'
 
 /** Resolve the `?tab=monthly|special|history` query param to a tab index for the current role. */
 function initialTabFromQuery(tabParam: string | null, isAdmin: boolean): number {
@@ -49,6 +50,7 @@ export function ContributionsPage() {
         <PageHeader
           title={t('pages.contributions.title')}
           description={t('contributions.campaigns.detailDescription')}
+          backTo={ROUTES.contributions}
         />
         <SpecialCampaignsPanel
           cooperativeId={cooperativeId}

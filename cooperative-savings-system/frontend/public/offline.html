@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#FF7A00" />
+    <meta name="theme-color" content="#1565C0" />
     <title>Offline — TERIMBERE CSAMS</title>
     <style>
       :root {
-        --orange: #ff7a00;
-        --sand: #fff7f0;
+        --blue: #1565c0;
+        --paper: #f4f8fd;
         --ink: #0a0a0a;
         --muted: #4a4a4a;
       }
@@ -24,8 +24,8 @@
         font-family: Candara, Calibri, Georgia, sans-serif;
         color: var(--ink);
         background:
-          radial-gradient(ellipse at 20% 0%, rgba(255, 122, 0, 0.16), transparent 50%),
-          linear-gradient(180deg, var(--sand) 0%, #ffe8d2 100%);
+          radial-gradient(ellipse at 20% 0%, rgba(21, 101, 192, 0.16), transparent 50%),
+          linear-gradient(180deg, #ffffff 0%, var(--paper) 100%);
       }
       .card {
         max-width: 28rem;
@@ -36,12 +36,15 @@
         height: 4rem;
         margin: 0 auto 1.25rem;
         border-radius: 0.85rem;
-        background: var(--orange);
+        background: var(--blue);
         color: #ffffff;
         display: grid;
         place-items: center;
-        font-size: 2rem;
-        font-weight: 700;
+      }
+      .mark svg {
+        width: 2.4rem;
+        height: 2.4rem;
+        fill: currentColor;
       }
       h1 {
         margin: 0 0 0.35rem;
@@ -61,7 +64,7 @@
         border: none;
         border-radius: 0.5rem;
         padding: 0.75rem 1.35rem;
-        background: var(--orange);
+        background: var(--blue);
         color: #ffffff;
         font-family: Candara, Calibri, sans-serif;
         font-size: 0.95rem;
@@ -72,14 +75,18 @@
         filter: brightness(1.08);
       }
       button:focus-visible {
-        outline: 3px solid rgba(255, 122, 0, 0.45);
+        outline: 3px solid rgba(21, 101, 192, 0.45);
         outline-offset: 2px;
       }
     </style>
   </head>
   <body>
     <main class="card">
-      <div class="mark" aria-hidden="true">T</div>
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16.48 10.41c-.39.39-1.04.39-1.43 0l-4.47-4.46-7.05 7.04-.66-.63c-1.17-1.17-1.17-3.07 0-4.24l4.24-4.24c1.17-1.17 3.07-1.17 4.24 0L16.48 9c.39.39.39 1.02 0 1.41m.7-2.12c.78.78.78 2.05 0 2.83-1.27 1.27-2.61.22-2.83 0l-3.76-3.76-5.57 5.57c-.39.39-.39 1.02 0 1.41s1.02.39 1.42 0l4.62-4.62.71.71-4.62 4.62c-.39.39-.39 1.02 0 1.41s1.02.39 1.42 0l4.62-4.62.71.71-4.62 4.62c-.39.39-.39 1.02 0 1.41s1.02.39 1.41 0l4.62-4.62.71.71-4.62 4.62c-.39.39-.39 1.02 0 1.41s1.02.39 1.41 0l8.32-8.34c1.17-1.17 1.17-3.07 0-4.24l-4.24-4.24c-1.15-1.15-3.01-1.17-4.18-.06z"/>
+        </svg>
+      </div>
       <h1>TERIMBERE</h1>
       <p>
         You are offline. Viewing cached pages may still work, but financial operations require an

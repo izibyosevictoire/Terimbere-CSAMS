@@ -265,6 +265,7 @@ export function LoanDetailPage() {
             : t('pages.loans.title')
         }
         description={t('loans.detailDescription')}
+        hideBack
       />
 
       {loanQuery.isLoading ? <LoadingState /> : null}

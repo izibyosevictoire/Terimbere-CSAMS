@@ -705,6 +705,7 @@ export function MemberDetailPage() {
       <PageHeader
         title={member ? memberDisplayName(member) : t('pages.members.title')}
         description={t('members.detailDescription')}
+        hideBack
         actions={
           member ? (
             <Button variant="contained" startIcon={<EditIcon />} onClick={() => setEditOpen(true)}>

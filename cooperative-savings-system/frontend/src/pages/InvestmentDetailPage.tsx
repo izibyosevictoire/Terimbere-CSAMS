@@ -264,6 +264,7 @@ export function InvestmentDetailPage() {
       <PageHeader
         title={investment.name}
         description={t('investments.detailDescription')}
+        hideBack
         actions={
           <Chip
             color={investmentStatusColor(status)}

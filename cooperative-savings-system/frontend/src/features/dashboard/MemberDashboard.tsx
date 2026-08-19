@@ -1,4 +1,5 @@
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import GavelIcon from '@mui/icons-material/Gavel'
 import PaymentsIcon from '@mui/icons-material/Payments'
@@ -77,7 +78,7 @@ export function MemberDashboard({ cooperativeId }: MemberDashboardProps) {
             label={t('dashboard.member.totalContributions')}
             value={money(summary?.actualContributions)}
             icon={<SavingsIcon fontSize="small" />}
-            accent="teal"
+            accent="blue"
             loading={loading}
           />
         </Grid>
@@ -150,6 +151,7 @@ export function MemberDashboard({ cooperativeId }: MemberDashboardProps) {
                   border: '1px solid',
                   borderColor: 'divider',
                   borderRadius: 2,
+                  minHeight: 44,
                   '&:hover': { borderColor: 'primary.main', color: 'primary.main' },
                 }}
               >
@@ -157,6 +159,7 @@ export function MemberDashboard({ cooperativeId }: MemberDashboardProps) {
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
                   {t(link.labelKey)}
                 </Typography>
+                <ChevronRightIcon fontSize="small" sx={{ ml: 0.25, opacity: 0.7 }} />
               </Paper>
             )
           })}

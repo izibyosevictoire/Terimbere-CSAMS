@@ -23,6 +23,7 @@ import { setCredentials, setSelectedCooperativeId } from '@/app/store/authSlice'
 import { login } from '@/shared/api/auth'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchHealth } from '@/shared/api/health'
+import { AuthBrand } from '@/shared/components/AuthBrand'
 import { ROUTES } from '@/shared/constants/routes'
 import { ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN } from '@/shared/types/auth'
 import { isPreviewLoginEnabled } from '@/shared/auth/previewLogin'
@@ -102,28 +103,11 @@ export function LoginPage() {
 
   return (
     <Stack spacing={3}>
-      <Box sx={{ textAlign: 'center' }}>
-        <Typography
-          component="p"
-          sx={{
-            fontFamily: 'var(--font-brand)',
-            fontSize: { xs: '2.75rem', sm: '3.5rem' },
-            fontWeight: 700,
-            letterSpacing: '-0.03em',
-            color: 'primary.main',
-            lineHeight: 1,
-            mb: 1,
-          }}
-        >
-          {t('app.name')}
-        </Typography>
-        <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 500 }}>
-          {t('app.tagline')}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-          {t('login.subtitle')}
-        </Typography>
-      </Box>
+      <AuthBrand
+        title={t('app.name')}
+        tagline={t('app.tagline')}
+        subtitle={t('login.subtitle')}
+      />
 
       <Card
         elevation={0}

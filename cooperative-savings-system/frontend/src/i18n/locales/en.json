@@ -26,6 +26,7 @@
     "cooperatives": "Cooperatives",
     "system": "System",
     "adminSection": "Admin",
+    "memberSection": "My account",
     "advanced": "Advanced",
     "myContributions": "My contributions",
     "myLoans": "My loans",
@@ -227,6 +228,8 @@
     "language": "Language",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
+    "back": "Back",
+    "backToDashboard": "Back to dashboard",
     "apply": "Apply",
     "clear": "Clear",
     "filter": "Filter"

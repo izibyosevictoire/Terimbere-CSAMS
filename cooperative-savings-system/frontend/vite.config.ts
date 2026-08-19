@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => {
           name: 'TERIMBERE CSAMS',
           short_name: 'TERIMBERE',
           description: 'Cooperative Savings Account Management System',
-          theme_color: '#FF7A00',
+          theme_color: '#1565C0',
           background_color: '#FFFFFF',
           display: 'standalone',
           start_url: '/',

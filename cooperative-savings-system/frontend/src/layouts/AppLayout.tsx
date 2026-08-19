@@ -1,3 +1,4 @@
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import MenuIcon from '@mui/icons-material/Menu'
 import {
   AppBar,
@@ -25,6 +26,8 @@ import { useAppSelector } from '@/app/store/hooks'
 import { fetchUnreadCount } from '@/shared/api/notifications'
 import { PwaInstallButton } from '@/pwa/PwaInstallButton'
 import { AdminNavMenu } from '@/shared/components/AdminNavMenu'
+import { BrandLogo } from '@/shared/components/BrandLogo'
+import { MemberNavMenu } from '@/shared/components/MemberNavMenu'
 import { CooperativeSelector } from '@/shared/components/CooperativeSelector'
 import { LanguageSwitcher } from '@/shared/components/LanguageSwitcher'
 import { OfflineBanner } from '@/shared/components/OfflineBanner'
@@ -93,20 +96,7 @@ export function AppLayout() {
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Toolbar sx={{ px: 2.5, gap: 1.5 }}>
-        <Box
-          sx={{
-            width: 36,
-            height: 36,
-            borderRadius: '10px',
-            bgcolor: 'primary.main',
-            color: 'primary.contrastText',
-            display: 'grid',
-            placeItems: 'center',
-            fontWeight: 700,
-          }}
-        >
-          T
-        </Box>
+        <BrandLogo size={36} />
         <Box>
           <Typography variant="h6" sx={{ lineHeight: 1.1, fontSize: '1.15rem' }}>
             {t('app.name')}
@@ -151,22 +141,20 @@ export function AppLayout() {
             </IconButton>
           ) : null}
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '8px',
-                bgcolor: 'primary.main',
-                color: 'primary.contrastText',
-                display: { xs: 'none', sm: 'grid' },
-                placeItems: 'center',
-                fontWeight: 700,
-                fontSize: 14,
-                flexShrink: 0,
-              }}
+          {!isMdUp && !isAdmin && location.pathname !== ROUTES.dashboard ? (
+            <IconButton
+              component={NavLink}
+              to={ROUTES.dashboard}
+              aria-label={t('common.backToDashboard')}
+              sx={{ minWidth: 44, minHeight: 44, color: '#FFFFFF' }}
             >
-              T
+              <ArrowBackIcon />
+            </IconButton>
+          ) : null}
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+              <BrandLogo size={32} />
             </Box>
             <Typography
               variant="h6"
@@ -194,14 +182,12 @@ export function AppLayout() {
                 sx={{
                   fontWeight: 600,
                   minHeight: 40,
-                  color: location.pathname.startsWith(ROUTES.dashboard)
-                    ? 'primary.main'
-                    : '#FFFFFF',
+                  color: location.pathname === ROUTES.dashboard ? 'primary.light' : '#FFFFFF',
                 }}
               >
                 {t('nav.dashboard')}
               </Button>
-              {isAdmin ? <AdminNavMenu /> : null}
+              {isAdmin ? <AdminNavMenu /> : <MemberNavMenu />}
             </Box>
           ) : null}
 

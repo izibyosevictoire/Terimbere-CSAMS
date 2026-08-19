@@ -293,6 +293,7 @@ export function FineDetailPage() {
             : t('pages.fines.title')
         }
         description={t('fines.detailDescription')}
+        hideBack
       />
 
       {fineQuery.isLoading ? <LoadingState /> : null}

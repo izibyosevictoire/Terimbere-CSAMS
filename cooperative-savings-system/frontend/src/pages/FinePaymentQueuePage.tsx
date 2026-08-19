@@ -278,7 +278,7 @@ export function FinePaymentQueuePage() {
                 ? formatMoney(summary.approvedFineIncome, { currency })
                 : '—'
             }
-            accent="teal"
+            accent="gold"
             loading={summaryQuery.isLoading}
           />
         </Grid>

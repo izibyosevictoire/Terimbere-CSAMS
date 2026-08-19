@@ -124,6 +124,7 @@ export function CooperativeDetailPage() {
       <PageHeader
         title={coop?.name ?? t('pages.cooperatives.title')}
         description={t('cooperatives.detailDescription')}
+        hideBack
         actions={
           coop ? (
             <Button variant="contained" startIcon={<EditIcon />} onClick={() => setEditOpen(true)}>

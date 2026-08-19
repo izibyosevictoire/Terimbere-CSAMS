@@ -1,6 +1,6 @@
 import { createTheme, type ThemeOptions } from '@mui/material/styles'
 
-/** Brand: Orange, Tangerine, Black, White, Blue. Fonts: Candara, Georgia, Tempus Sans ITC. */
+/** Brand: primary Blue / Black / White; secondary Orange / Tangerine. Fonts: Candara, Georgia, Tempus Sans ITC. */
 const ORANGE = '#FF7A00'
 const TANGERINE = '#FF5C00'
 const BLACK = '#0A0A0A'
@@ -98,15 +98,15 @@ export const lightTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: ORANGE,
-      dark: '#CC5200',
-      light: '#FF9A3D',
-      contrastText: WHITE,
-    },
-    secondary: {
       main: BLUE,
       dark: '#0D47A1',
       light: '#42A5F5',
+      contrastText: WHITE,
+    },
+    secondary: {
+      main: ORANGE,
+      dark: '#CC5200',
+      light: '#FF9A3D',
       contrastText: WHITE,
     },
     background: {
@@ -117,7 +117,7 @@ export const lightTheme = createTheme({
       primary: BLACK,
       secondary: '#4A4A4A',
     },
-    divider: '#EADFD4',
+    divider: '#D7E3F4',
     success: { main: '#2E7D32' },
     warning: { main: TANGERINE },
     error: { main: '#C62828' },
@@ -130,14 +130,14 @@ export const darkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#FF9A3D',
-      dark: ORANGE,
-      light: '#FFB56B',
+      main: '#42A5F5',
+      dark: BLUE,
+      light: '#90CAF9',
       contrastText: BLACK,
     },
     secondary: {
-      main: '#42A5F5',
-      dark: BLUE,
+      main: '#FF9A3D',
+      dark: ORANGE,
       contrastText: BLACK,
     },
     background: {

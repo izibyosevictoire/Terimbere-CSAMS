@@ -144,7 +144,7 @@ export function AdminDashboard({ cooperativeId }: AdminDashboardProps) {
             value={summary ? money(summary.actualContributionsTotal) : '—'}
             hint={t('dashboard.metrics.actualHint')}
             icon={<PaymentsIcon fontSize="small" />}
-            accent="teal"
+            accent="blue"
             loading={loading}
           />
         </Grid>
@@ -167,7 +167,7 @@ export function AdminDashboard({ cooperativeId }: AdminDashboardProps) {
             value={summary?.availableInterest != null ? money(summary.availableInterest) : '—'}
             hint={t('dashboard.metrics.availableInterestHint')}
             icon={<PercentIcon fontSize="small" />}
-            accent="teal"
+            accent="blue"
             loading={loading}
           />
         </Grid>

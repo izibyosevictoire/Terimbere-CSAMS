@@ -26,6 +26,7 @@
     "cooperatives": "Amakoperative",
     "system": "Sisitemu",
     "adminSection": "Admin",
+    "memberSection": "Konti yanjye",
     "advanced": "Advanced",
     "myContributions": "Amafaranga yanjye",
     "myLoans": "Inguzanyo zanjye",
@@ -222,7 +223,9 @@
     "logout": "Sohoka",
     "language": "Ururimi",
     "openMenu": "Fungura menu",
-    "closeMenu": "Funga menu"
+    "closeMenu": "Funga menu",
+    "back": "Subira inyuma",
+    "backToDashboard": "Subira ku mbonerahamwe"
   },
   "pwa": {
     "install": "Shyira porogaramu",

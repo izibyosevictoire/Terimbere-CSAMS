@@ -19,6 +19,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { requestPasswordReset } from '@/shared/api/auth'
 import { getErrorMessage } from '@/shared/api/client'
+import { AuthBrand } from '@/shared/components/AuthBrand'
 import { ROUTES } from '@/shared/constants/routes'
 
 interface ForgotPasswordFormValues {
@@ -63,25 +64,7 @@ export function ForgotPasswordPage() {
 
   return (
     <Stack spacing={3}>
-      <Box sx={{ textAlign: 'center' }}>
-        <Typography
-          component="p"
-          sx={{
-            fontFamily: 'var(--font-brand)',
-            fontSize: { xs: '2.25rem', sm: '2.75rem' },
-            fontWeight: 700,
-            letterSpacing: '-0.03em',
-            color: 'primary.main',
-            lineHeight: 1,
-            mb: 1,
-          }}
-        >
-          {t('app.name')}
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          {t('forgotPassword.subtitle')}
-        </Typography>
-      </Box>
+      <AuthBrand title={t('app.name')} subtitle={t('forgotPassword.subtitle')} />
 
       <Card
         elevation={0}

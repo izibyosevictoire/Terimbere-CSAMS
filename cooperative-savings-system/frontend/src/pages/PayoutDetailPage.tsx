@@ -251,6 +251,7 @@ export function PayoutDetailPage() {
       <PageHeader
         title={payoutRunDisplayName(run)}
         description={t('payouts.detailDescription')}
+        hideBack
         actions={
           <Chip
             color={payoutStatusColor(status)}

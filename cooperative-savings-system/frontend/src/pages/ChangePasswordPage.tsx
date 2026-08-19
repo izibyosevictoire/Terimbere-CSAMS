@@ -82,6 +82,7 @@ export function ChangePasswordPage() {
       <PageHeader
         title={t('changePassword.title')}
         description={t('changePassword.description')}
+        backTo={ROUTES.profile}
       />
       <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', maxWidth: 520 }}>
         <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
