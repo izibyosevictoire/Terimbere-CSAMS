@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
-export type ThemePreference = 'light' | 'dark' | 'system'
+export type ThemePreference = 'light' | 'dark'
 export type ThemeMode = 'light' | 'dark'
 
 const THEME_STORAGE_KEY = 'csams.theme'
@@ -8,7 +8,9 @@ const THEME_STORAGE_KEY = 'csams.theme'
 function readStoredTheme(): ThemePreference {
   try {
     const raw = localStorage.getItem(THEME_STORAGE_KEY)
-    if (raw === 'light' || raw === 'dark' || raw === 'system') return raw
+    if (raw === 'dark') return 'dark'
+    if (raw === 'light') return 'light'
+    // Legacy "system" followed the OS and usually looked like light.
   } catch {
     // ignore storage failures
   }
@@ -16,21 +18,7 @@ function readStoredTheme(): ThemePreference {
 }
 
 export function resolveThemeMode(preference: ThemePreference): ThemeMode {
-  if (preference === 'system') {
-    try {
-      if (
-        typeof window !== 'undefined' &&
-        typeof window.matchMedia === 'function' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches
-      ) {
-        return 'dark'
-      }
-    } catch {
-      // fall through to light
-    }
-    return 'light'
-  }
-  return preference
+  return preference === 'dark' ? 'dark' : 'light'
 }
 
 export interface UiState {

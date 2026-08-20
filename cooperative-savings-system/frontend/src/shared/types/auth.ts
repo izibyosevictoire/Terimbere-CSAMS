@@ -49,3 +49,13 @@ export interface PasswordResetConfirmRequest {
 
 export const ROLE_SUPER_ADMIN = 'SUPER_ADMIN'
 export const ROLE_COOPERATIVE_ADMIN = 'COOPERATIVE_ADMIN'
+export const ROLE_MEMBER = 'MEMBER'
+
+export type AppRole = typeof ROLE_SUPER_ADMIN | typeof ROLE_COOPERATIVE_ADMIN | typeof ROLE_MEMBER
+
+/** Highest-priority role for badges and home screens. */
+export function primaryRole(roles: string[]): AppRole {
+  if (roles.includes(ROLE_SUPER_ADMIN)) return ROLE_SUPER_ADMIN
+  if (roles.includes(ROLE_COOPERATIVE_ADMIN)) return ROLE_COOPERATIVE_ADMIN
+  return ROLE_MEMBER
+}

@@ -1,4 +1,5 @@
 export { AdminDashboard } from './AdminDashboard'
 export { MemberDashboard } from './MemberDashboard'
+export { SuperAdminDashboard } from './SuperAdminDashboard'
 export { MemberFinancialSummarySection } from './MemberFinancialSummarySection'
 export { MonthlyContributionsChart } from './MonthlyContributionsChart'

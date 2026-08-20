@@ -134,6 +134,15 @@
     "liveLater": "Amakuru azaza mu phases zikurikira",
     "selectCooperativeTitle": "Hitamo ikoperative",
     "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo urebe imbonerahamwe.",
+    "super": {
+      "title": "Imbonerahamwe y'urubuga",
+      "welcome": "Murakaza neza, {{name}}",
+      "description": "Ni wowe ucunga amakoperative ya TERIMBERE. Fungura amakoperative unashyireho abayobozi; umuyobozi w'ikoperative acunga abanyamuryango, ubwizigame, n'inguzanyo.",
+      "totalCooperatives": "Amakoperative",
+      "shownOnPage": "Aheruka kuvugururwa",
+      "listHint": "Amakoperative aheruka kuri uru rutonde",
+      "recentTitle": "Amakoperative"
+    },
     "admin": {
       "title": "Imbonerahamwe y'Umuyobozi",
       "adminChip": "ADMIN",
@@ -1325,13 +1334,16 @@
     }
   },
   "theme": {
-    "label": "Theme",
-    "light": "Light",
-    "dark": "Dark",
-    "system": "System"
+    "label": "Isura",
+    "light": "Urumuri",
+    "dark": "Umwijima"
   },
   "roles": {
     "adminBadge": "ADMIN",
-    "memberBadge": "MEMBER"
+    "memberBadge": "MEMBER",
+    "superAdminBadge": "SUPER ADMIN",
+    "SUPER_ADMIN": "Umuyobozi mukuru",
+    "COOPERATIVE_ADMIN": "Umuyobozi w'ikoperative",
+    "MEMBER": "Umunyamuryango"
   }
 }

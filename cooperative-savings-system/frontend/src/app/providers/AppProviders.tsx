@@ -1,7 +1,7 @@
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SnackbarProvider } from 'notistack'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, type ReactNode } from 'react'
 import { Provider } from 'react-redux'
 import { store } from '@/app/store/store'
 import { useAppSelector } from '@/app/store/hooks'
@@ -22,28 +22,9 @@ const queryClient = new QueryClient({
   },
 })
 
-function useSystemDark(): boolean {
-  const [isDark, setIsDark] = useState(() =>
-    typeof window !== 'undefined'
-      ? window.matchMedia('(prefers-color-scheme: dark)').matches
-      : false,
-  )
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = (event: MediaQueryListEvent) => setIsDark(event.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [])
-
-  return isDark
-}
-
 function ThemedApp({ children }: { children: ReactNode }) {
   const preference = useAppSelector((s) => s.ui.themePreference)
-  const systemDark = useSystemDark()
-  const mode =
-    preference === 'system' ? (systemDark ? 'dark' : 'light') : resolveThemeMode(preference)
+  const mode = resolveThemeMode(preference)
   const theme = useMemo(() => (mode === 'dark' ? darkTheme : lightTheme), [mode])
 
   useEffect(() => {

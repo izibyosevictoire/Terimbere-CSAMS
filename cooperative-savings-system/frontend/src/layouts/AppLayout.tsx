@@ -21,7 +21,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { selectIsCooperativeAdmin } from '@/app/store/authSlice'
+import { selectIsCooperativeAdmin, selectIsSuperAdmin } from '@/app/store/authSlice'
 import { useAppSelector } from '@/app/store/hooks'
 import { fetchUnreadCount } from '@/shared/api/notifications'
 import { PwaInstallButton } from '@/pwa/PwaInstallButton'
@@ -45,7 +45,9 @@ export function AppLayout() {
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'))
   const location = useLocation()
   const userRoles = useAppSelector((s) => s.auth.user?.roles ?? [])
-  const isAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const isCoopAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
+  const isMember = !isCoopAdmin && !isSuperAdmin
   const accessToken = useAppSelector((s) => s.auth.accessToken)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -110,7 +112,7 @@ export function AppLayout() {
       <Box sx={{ px: 2, py: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         <LanguageSwitcher />
         <ThemeSwitcher />
-        <CooperativeSelector />
+        {isCoopAdmin || isMember ? <CooperativeSelector /> : null}
       </Box>
       <Divider />
       <List sx={{ px: 1, py: 1.5, flex: 1, overflowY: 'auto' }}>{mobileItems.map(renderNavItem)}</List>
@@ -141,7 +143,7 @@ export function AppLayout() {
             </IconButton>
           ) : null}
 
-          {!isMdUp && !isAdmin && location.pathname !== ROUTES.dashboard ? (
+          {!isMdUp && isMember && location.pathname !== ROUTES.dashboard ? (
             <IconButton
               component={NavLink}
               to={ROUTES.dashboard}
@@ -187,7 +189,24 @@ export function AppLayout() {
               >
                 {t('nav.dashboard')}
               </Button>
-              {isAdmin ? <AdminNavMenu /> : <MemberNavMenu />}
+              {isSuperAdmin ? (
+                <Button
+                  component={NavLink}
+                  to={ROUTES.cooperatives}
+                  color="inherit"
+                  sx={{
+                    fontWeight: 600,
+                    minHeight: 40,
+                    color: location.pathname.startsWith(ROUTES.cooperatives)
+                      ? 'primary.light'
+                      : '#FFFFFF',
+                  }}
+                >
+                  {t('nav.cooperatives')}
+                </Button>
+              ) : null}
+              {isCoopAdmin ? <AdminNavMenu /> : null}
+              {isMember ? <MemberNavMenu /> : null}
             </Box>
           ) : null}
 
@@ -196,9 +215,9 @@ export function AppLayout() {
           {isMdUp ? (
             <>
               <LanguageSwitcher onDark />
-              <ThemeSwitcher />
+              <ThemeSwitcher onDark />
               <PwaInstallButton />
-              <CooperativeSelector onDark />
+              {isCoopAdmin || isMember ? <CooperativeSelector onDark /> : null}
             </>
           ) : (
             <PwaInstallButton />

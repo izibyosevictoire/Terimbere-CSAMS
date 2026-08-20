@@ -6,8 +6,4 @@ describe('resolveThemeMode', () => {
     expect(resolveThemeMode('light')).toBe('light')
     expect(resolveThemeMode('dark')).toBe('dark')
   })
-
-  it('resolves system preference without throwing', () => {
-    expect(['light', 'dark']).toContain(resolveThemeMode('system'))
-  })
 })

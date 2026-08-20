@@ -134,6 +134,15 @@
     "liveLater": "Live data in later phases",
     "selectCooperativeTitle": "Select a cooperative",
     "selectCooperativeDescription": "Choose a cooperative in the top bar to view its dashboard.",
+    "super": {
+      "title": "Platform dashboard",
+      "welcome": "Welcome, {{name}}",
+      "description": "You manage cooperatives across TERIMBERE. Create tenants and assign cooperative admins; each admin then runs members, savings, and loans for their cooperative.",
+      "totalCooperatives": "Cooperatives",
+      "shownOnPage": "Recently updated",
+      "listHint": "Latest cooperatives on this list",
+      "recentTitle": "Cooperatives"
+    },
     "admin": {
       "title": "Admin Dashboard",
       "adminChip": "ADMIN",
@@ -1347,11 +1356,14 @@
   "theme": {
     "label": "Theme",
     "light": "Light",
-    "dark": "Dark",
-    "system": "System"
+    "dark": "Dark"
   },
   "roles": {
     "adminBadge": "ADMIN",
-    "memberBadge": "MEMBER"
+    "memberBadge": "MEMBER",
+    "superAdminBadge": "SUPER ADMIN",
+    "SUPER_ADMIN": "Super Admin",
+    "COOPERATIVE_ADMIN": "Cooperative Admin",
+    "MEMBER": "Member"
   }
 }

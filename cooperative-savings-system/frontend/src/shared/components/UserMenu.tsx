@@ -15,7 +15,7 @@ import {
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { clearAuth, selectIsCooperativeAdmin } from '@/app/store/authSlice'
+import { clearAuth, selectIsCooperativeAdmin, selectIsSuperAdmin } from '@/app/store/authSlice'
 import { useAppDispatch, useAppSelector } from '@/app/store/hooks'
 import { logout as logoutRequest } from '@/shared/api/auth'
 import { ROUTES } from '@/shared/constants/routes'
@@ -25,7 +25,13 @@ export function UserMenu() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const user = useAppSelector((s) => s.auth.user)
-  const isAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const isCoopAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
+  const badgeLabel = isSuperAdmin
+    ? t('roles.superAdminBadge')
+    : isCoopAdmin
+      ? t('roles.adminBadge')
+      : t('roles.memberBadge')
   const [anchor, setAnchor] = useState<null | HTMLElement>(null)
   const [loggingOut, setLoggingOut] = useState(false)
 
@@ -57,9 +63,7 @@ export function UserMenu() {
           </Avatar>
         }
         endIcon={
-          isAdmin ? (
-            <Chip label={t('roles.adminBadge')} size="small" color="primary" sx={{ height: 22 }} />
-          ) : null
+          <Chip label={badgeLabel} size="small" color="primary" sx={{ height: 22, display: { xs: 'none', sm: 'inline-flex' } }} />
         }
         aria-haspopup="menu"
         aria-label={t('nav.profile')}

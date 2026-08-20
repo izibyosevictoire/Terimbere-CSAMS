@@ -1,6 +1,5 @@
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
-import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness'
 import { Button, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -10,10 +9,15 @@ import { setThemePreference, type ThemePreference } from '@/app/store/uiSlice'
 const OPTIONS: Array<{ value: ThemePreference; labelKey: string; icon: typeof LightModeOutlinedIcon }> = [
   { value: 'light', labelKey: 'theme.light', icon: LightModeOutlinedIcon },
   { value: 'dark', labelKey: 'theme.dark', icon: DarkModeOutlinedIcon },
-  { value: 'system', labelKey: 'theme.system', icon: SettingsBrightnessIcon },
 ]
 
-export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
+export function ThemeSwitcher({
+  compact = false,
+  onDark = false,
+}: {
+  compact?: boolean
+  onDark?: boolean
+}) {
   const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const preference = useAppSelector((s) => s.ui.themePreference)
@@ -32,7 +36,12 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
         aria-haspopup="menu"
         aria-expanded={Boolean(anchor)}
         aria-label={t('theme.label')}
-        sx={{ minHeight: 36, textTransform: 'none', whiteSpace: 'nowrap', color: 'inherit' }}
+        sx={{
+          minHeight: 36,
+          textTransform: 'none',
+          whiteSpace: 'nowrap',
+          color: onDark ? '#FFFFFF' : 'inherit',
+        }}
       >
         {compact ? null : t(current.labelKey)}
       </Button>

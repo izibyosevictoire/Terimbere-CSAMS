@@ -1,15 +1,20 @@
 import { Box } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectIsCooperativeAdmin } from '@/app/store/authSlice'
-import { AdminDashboard, MemberDashboard } from '@/features/dashboard'
+import { selectIsCooperativeAdmin, selectIsSuperAdmin } from '@/app/store/authSlice'
+import { AdminDashboard, MemberDashboard, SuperAdminDashboard } from '@/features/dashboard'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { PageHeader } from '@/shared/components/PageHeader'
 
 export function DashboardPage() {
   const { t } = useTranslation()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
-  const isAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const isCoopAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
+
+  if (isSuperAdmin && !isCoopAdmin) {
+    return <SuperAdminDashboard />
+  }
 
   if (!cooperativeId) {
     return (
@@ -23,7 +28,7 @@ export function DashboardPage() {
     )
   }
 
-  return isAdmin ? (
+  return isCoopAdmin ? (
     <AdminDashboard cooperativeId={cooperativeId} />
   ) : (
     <MemberDashboard cooperativeId={cooperativeId} />

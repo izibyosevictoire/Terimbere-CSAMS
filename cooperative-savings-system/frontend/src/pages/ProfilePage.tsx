@@ -11,7 +11,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectIsCooperativeAdmin } from '@/app/store/authSlice'
+import { selectIsCooperativeAdmin, selectIsSuperAdmin } from '@/app/store/authSlice'
 import { PageHeader } from '@/shared/components/PageHeader'
 import { ROUTES } from '@/shared/constants/routes'
 
@@ -31,7 +31,8 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 export function ProfilePage() {
   const { t } = useTranslation()
   const user = useAppSelector((s) => s.auth.user)
-  const isAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const isCoopAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
 
   return (
     <Box>
@@ -65,13 +66,20 @@ export function ProfilePage() {
                 </Typography>
                 <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
                   {user.roles.length ? (
-                    user.roles.map((role) => <Chip key={role} label={role} size="small" />)
+                    user.roles.map((role) => (
+                      <Chip
+                        key={role}
+                        label={t(`roles.${role}`, { defaultValue: role })}
+                        size="small"
+                        color="primary"
+                      />
+                    ))
                   ) : (
                     <Typography variant="body2">—</Typography>
                   )}
                 </Stack>
               </Box>
-              {isAdmin ? (
+              {isCoopAdmin || isSuperAdmin ? (
                 <Box>
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
                     {t('profile.permissions')}
