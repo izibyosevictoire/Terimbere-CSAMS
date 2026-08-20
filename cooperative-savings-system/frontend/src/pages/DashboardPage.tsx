@@ -9,14 +9,13 @@ import { PageHeader } from '@/shared/components/PageHeader'
 export function DashboardPage() {
   const { t } = useTranslation()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
-  const isCoopAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const canAdminister = useAppSelector(selectIsCooperativeAdmin)
   const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
 
-  if (isSuperAdmin && !isCoopAdmin) {
-    return <SuperAdminDashboard />
-  }
-
   if (!cooperativeId) {
+    if (isSuperAdmin) {
+      return <SuperAdminDashboard />
+    }
     return (
       <Box>
         <PageHeader title={t('dashboard.title')} description={t('dashboard.description')} />
@@ -28,7 +27,7 @@ export function DashboardPage() {
     )
   }
 
-  return isCoopAdmin ? (
+  return canAdminister ? (
     <AdminDashboard cooperativeId={cooperativeId} />
   ) : (
     <MemberDashboard cooperativeId={cooperativeId} />

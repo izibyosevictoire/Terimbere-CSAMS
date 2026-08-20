@@ -40,7 +40,7 @@ export async function fetchReportTypes(cooperativeId: string): Promise<ReportTyp
 export async function exportReport(
   cooperativeId: string,
   payload: ReportExportRequest,
-  fallbackFilename = 'report.xlsx',
+  fallbackFilename = 'report.pdf',
 ): Promise<{ filename: string }> {
   const response = await apiClient.post(
     `/cooperatives/${cooperativeId}/reports/export`,

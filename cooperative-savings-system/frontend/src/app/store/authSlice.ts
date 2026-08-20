@@ -66,7 +66,10 @@ export const selectIsAuthenticated = (state: { auth: AuthState }) =>
   state.auth.status === 'authenticated'
 export const selectIsSuperAdmin = (state: { auth: AuthState }) =>
   state.auth.user?.roles.includes(ROLE_SUPER_ADMIN) ?? false
+/** Super Admin or Cooperative Admin — may manage cooperative operations. */
 export const selectIsCooperativeAdmin = (state: { auth: AuthState }) =>
-  state.auth.user?.roles.includes(ROLE_COOPERATIVE_ADMIN) ?? false
+  state.auth.user?.roles.some(
+    (role) => role === ROLE_COOPERATIVE_ADMIN || role === ROLE_SUPER_ADMIN,
+  ) ?? false
 
 export default authSlice.reducer

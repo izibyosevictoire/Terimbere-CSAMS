@@ -22,12 +22,16 @@ import { LEDGER_TRANSACTION_TYPES } from '@/shared/types/ledger'
 import { memberDisplayName } from '@/shared/types/member'
 import {
   defaultExportFilename,
+  defaultReportFromDate,
+  defaultReportToDate,
   reportSupportsFromTo,
   reportSupportsMember,
   reportSupportsStatus,
   reportSupportsTransactionType,
   reportSupportsYearMonth,
   reportTypeLabelKey,
+  validateReportTimeline,
+  validateReportYearMonth,
 } from './reportHelpers'
 
 interface ReportsExportPanelProps {
@@ -41,14 +45,16 @@ export function ReportsExportPanel({
 }: ReportsExportPanelProps) {
   const { t } = useTranslation()
   const { enqueueSnackbar } = useSnackbar()
+  const today = dayjs()
+  const todayIso = today.format('YYYY-MM-DD')
 
   const [reportType, setReportType] = useState(initialReportType ?? '')
-  const [fromDate, setFromDate] = useState('')
-  const [toDate, setToDate] = useState('')
+  const [fromDate, setFromDate] = useState(defaultReportFromDate(today))
+  const [toDate, setToDate] = useState(defaultReportToDate(today))
   const [memberUserId, setMemberUserId] = useState('')
   const [status, setStatus] = useState('')
-  const [year, setYear] = useState(String(dayjs().year()))
-  const [month, setMonth] = useState(String(dayjs().month() + 1))
+  const [year, setYear] = useState('')
+  const [month, setMonth] = useState('')
   const [transactionType, setTransactionType] = useState('')
 
   const typesQuery = useQuery({
@@ -77,26 +83,52 @@ export function ReportsExportPanel({
     : false
 
   const yearOptions = useMemo(() => {
-    const current = dayjs().year()
+    const current = today.year()
     return Array.from({ length: 8 }, (_, i) => current - i)
-  }, [])
+  }, [today])
+
+  const monthOptions = useMemo(() => {
+    const selectedYear = year ? Number(year) : null
+    const maxMonth = selectedYear === today.year() ? today.month() + 1 : 12
+    return Array.from({ length: 12 }, (_, i) => i + 1).map((m) => ({
+      value: m,
+      disabled: selectedYear != null && m > maxMonth,
+    }))
+  }, [today, year])
+
+  const timelineIssue = validateReportTimeline(fromDate, toDate, today)
+  const yearMonthIssue = showYearMonth
+    ? validateReportYearMonth(year, month, today)
+    : null
+  const timelineValid = timelineIssue == null
 
   const exportMutation = useMutation({
-    mutationFn: () =>
-      exportReport(
+    mutationFn: ({ type, includeFilters }: { type: string; includeFilters: boolean }) => {
+      const issue = validateReportTimeline(fromDate, toDate, today)
+      if (issue) {
+        throw new Error(t(`reports.export.validation.${issue}`))
+      }
+      if (includeFilters && showYearMonth) {
+        const ymIssue = validateReportYearMonth(year, month, today)
+        if (ymIssue) {
+          throw new Error(t(`reports.export.validation.${ymIssue}`))
+        }
+      }
+      return exportReport(
         cooperativeId,
         {
-          reportType,
-          fromDate: showDates && fromDate ? fromDate : null,
-          toDate: showDates && toDate ? toDate : null,
-          memberUserId: showMember && memberUserId ? memberUserId : null,
-          status: showStatus && status ? status : null,
-          transactionType: showTxnType && transactionType ? transactionType : null,
-          year: showYearMonth && year ? Number(year) : null,
-          month: showYearMonth && month ? Number(month) : null,
+          reportType: type,
+          fromDate,
+          toDate,
+          memberUserId: includeFilters && showMember && memberUserId ? memberUserId : null,
+          status: includeFilters && showStatus && status ? status : null,
+          transactionType: includeFilters && showTxnType && transactionType ? transactionType : null,
+          year: includeFilters && showYearMonth && year ? Number(year) : null,
+          month: includeFilters && showYearMonth && month ? Number(month) : null,
         },
-        defaultExportFilename(reportType),
-      ),
+        defaultExportFilename(type),
+      )
+    },
     onSuccess: ({ filename }) => {
       enqueueSnackbar(t('reports.export.success', { filename }), { variant: 'success' })
     },
@@ -140,31 +172,72 @@ export function ReportsExportPanel({
   ] as const
 
   const runPrimary = (type: string) => {
-    setReportType(type)
-    exportReport(
-      cooperativeId,
-      {
-        reportType: type,
-        fromDate: fromDate || null,
-        toDate: toDate || null,
-        memberUserId: null,
-        status: null,
-        transactionType: null,
-        year: null,
-        month: null,
-      },
-      defaultExportFilename(type),
-    )
-      .then(({ filename }) => {
-        enqueueSnackbar(t('reports.export.success', { filename }), { variant: 'success' })
-      })
-      .catch((error) => {
-        enqueueSnackbar(getErrorMessage(error, t('errors.generic')), { variant: 'error' })
-      })
+    if (!timelineValid) {
+      enqueueSnackbar(t(`reports.export.validation.${timelineIssue}`), { variant: 'warning' })
+      return
+    }
+    exportMutation.mutate({ type, includeFilters: false })
   }
 
   return (
     <Box>
+      <Typography variant="h6" gutterBottom>
+        {t('reports.export.timelineTitle')}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, maxWidth: 720 }}>
+        {t('reports.export.timelineDescription')}
+      </Typography>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={2}
+        sx={{
+          mb: 3,
+          maxWidth: 720,
+          p: { xs: 2, sm: 2.5 },
+          border: '1px solid',
+          borderColor: timelineIssue ? 'warning.main' : 'divider',
+          borderRadius: 1,
+          bgcolor: 'background.paper',
+        }}
+      >
+        <TextField
+          type="date"
+          required
+          label={t('reports.export.fromDate')}
+          value={fromDate}
+          onChange={(e) => setFromDate(e.target.value)}
+          error={Boolean(timelineIssue && timelineIssue !== 'futureTo')}
+          helperText={
+            timelineIssue && timelineIssue !== 'futureTo'
+              ? t(`reports.export.validation.${timelineIssue}`)
+              : t('reports.export.timelineFromHint')
+          }
+          slotProps={{
+            inputLabel: { shrink: true },
+            htmlInput: { max: todayIso },
+          }}
+          fullWidth
+        />
+        <TextField
+          type="date"
+          required
+          label={t('reports.export.toDate')}
+          value={toDate}
+          onChange={(e) => setToDate(e.target.value)}
+          error={Boolean(timelineIssue && timelineIssue !== 'futureFrom')}
+          helperText={
+            timelineIssue && timelineIssue !== 'futureFrom'
+              ? t(`reports.export.validation.${timelineIssue}`)
+              : t('reports.export.timelineToHint')
+          }
+          slotProps={{
+            inputLabel: { shrink: true },
+            htmlInput: { max: todayIso, min: fromDate || undefined },
+          }}
+          fullWidth
+        />
+      </Stack>
+
       <Typography variant="h6" gutterBottom>
         {t('reports.primaryTitle')}
       </Typography>
@@ -191,15 +264,13 @@ export function ReportsExportPanel({
               {t(card.titleKey)}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
-              {t(card.descriptionKey, {
-                defaultValue: t('reports.export.description'),
-              })}
+              {t(card.descriptionKey)}
             </Typography>
             <Button
               variant="contained"
               size="small"
               onClick={() => runPrimary(card.type)}
-              disabled={exportMutation.isPending}
+              disabled={!timelineValid || exportMutation.isPending}
             >
               {t('reports.export.submit')}
             </Button>
@@ -214,10 +285,6 @@ export function ReportsExportPanel({
         {t('reports.export.description')}
       </Typography>
 
-      <Alert severity="info" sx={{ mb: 2.5, maxWidth: 720 }}>
-        {t('reports.export.pdfLater')}
-      </Alert>
-
       <Stack
         component="form"
         spacing={2}
@@ -230,8 +297,8 @@ export function ReportsExportPanel({
         }}
         onSubmit={(event) => {
           event.preventDefault()
-          if (!reportType) return
-          exportMutation.mutate()
+          if (!reportType || !timelineValid || yearMonthIssue) return
+          exportMutation.mutate({ type: reportType, includeFilters: true })
         }}
       >
         <TextField
@@ -258,24 +325,7 @@ export function ReportsExportPanel({
         </TextField>
 
         {showDates ? (
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField
-              type="date"
-              label={t('reports.export.fromDate')}
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              slotProps={{ inputLabel: { shrink: true } }}
-              fullWidth
-            />
-            <TextField
-              type="date"
-              label={t('reports.export.toDate')}
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              slotProps={{ inputLabel: { shrink: true } }}
-              fullWidth
-            />
-          </Stack>
+          <Alert severity="info">{t('reports.export.usesTimeline')}</Alert>
         ) : null}
 
         {showYearMonth ? (
@@ -284,9 +334,19 @@ export function ReportsExportPanel({
               select
               label={t('reports.export.year')}
               value={year}
-              onChange={(e) => setYear(e.target.value)}
+              onChange={(e) => {
+                setYear(e.target.value)
+                setMonth('')
+              }}
+              error={yearMonthIssue === 'incompleteYearMonth' || yearMonthIssue === 'futureYearMonth'}
+              helperText={
+                yearMonthIssue
+                  ? t(`reports.export.validation.${yearMonthIssue}`)
+                  : t('reports.export.yearMonthHint')
+              }
               fullWidth
             >
+              <MenuItem value="">{t('common.all')}</MenuItem>
               {yearOptions.map((y) => (
                 <MenuItem key={y} value={String(y)}>
                   {y}
@@ -298,11 +358,13 @@ export function ReportsExportPanel({
               label={t('reports.export.month')}
               value={month}
               onChange={(e) => setMonth(e.target.value)}
+              error={yearMonthIssue === 'incompleteYearMonth' || yearMonthIssue === 'futureYearMonth'}
               fullWidth
             >
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                <MenuItem key={m} value={String(m)}>
-                  {dayjs().month(m - 1).format('MMMM')}
+              <MenuItem value="">{t('common.all')}</MenuItem>
+              {monthOptions.map((m) => (
+                <MenuItem key={m.value} value={String(m.value)} disabled={m.disabled}>
+                  {dayjs().month(m.value - 1).format('MMMM')}
                 </MenuItem>
               ))}
             </TextField>
@@ -364,7 +426,7 @@ export function ReportsExportPanel({
           <Button
             type="submit"
             variant="contained"
-            disabled={!reportType || exportMutation.isPending}
+            disabled={!reportType || !timelineValid || Boolean(yearMonthIssue) || exportMutation.isPending}
           >
             {exportMutation.isPending
               ? t('reports.export.exporting')

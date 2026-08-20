@@ -137,6 +137,11 @@ public class ReportService {
             throw new ForbiddenException("REPORT_READ required");
         }
 
+        ReportTimelineValidator.validate(
+                request,
+                LocalDate.now(ReportTimelineValidator.ZONE),
+                cooperative.getRegistrationDate());
+
         Instant generatedAt = Instant.now();
         String period = formatPeriod(request);
         ReportHeaderMeta header = ReportHeaderMeta.builder()
@@ -172,7 +177,9 @@ public class ReportService {
                 + "_"
                 + type.name().toLowerCase(Locale.ROOT)
                 + "_"
-                + LocalDate.now(ZoneOffset.UTC)
+                + request.getFromDate()
+                + "_"
+                + request.getToDate()
                 + "."
                 + reportExporter.fileExtension();
 
@@ -998,18 +1005,16 @@ public class ReportService {
     }
 
     private static String formatPeriod(ReportExportRequest request) {
+        String range = request.getFromDate() + " to " + request.getToDate();
         if (request.getYear() != null && request.getMonth() != null) {
-            return request.getYear() + "-" + String.format(Locale.ROOT, "%02d", request.getMonth());
+            return range
+                    + " ("
+                    + request.getYear()
+                    + "-"
+                    + String.format(Locale.ROOT, "%02d", request.getMonth())
+                    + ")";
         }
-        if (request.getYear() != null) {
-            return String.valueOf(request.getYear());
-        }
-        if (request.getFromDate() != null || request.getToDate() != null) {
-            return (request.getFromDate() == null ? "…" : request.getFromDate())
-                    + " to "
-                    + (request.getToDate() == null ? "…" : request.getToDate());
-        }
-        return "All periods";
+        return range;
     }
 
     private static boolean inRange(LocalDate value, LocalDate from, LocalDate to) {

@@ -1,21 +1,18 @@
 package rw.terimbere.csams.modules.report.export;
 
 import java.util.List;
+import org.springframework.stereotype.Component;
 import rw.terimbere.csams.modules.report.dto.ReportHeaderMeta;
 import rw.terimbere.csams.modules.report.dto.ReportSheetData;
 
-/**
- * Excel workbook helper kept for contribution import templates. Report downloads use
- * {@link PdfReportExporter}.
- */
-public class ExcelReportExporter implements ReportExporter {
+@Component
+public class PdfReportExporter implements ReportExporter {
 
-    public static final String CONTENT_TYPE =
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    public static final String CONTENT_TYPE = "application/pdf";
 
     @Override
     public byte[] export(ReportHeaderMeta header, List<ReportSheetData> sheets) {
-        return ExcelReportWriter.write(header, sheets);
+        return PdfReportWriter.write(header, sheets);
     }
 
     @Override
@@ -25,6 +22,6 @@ public class ExcelReportExporter implements ReportExporter {
 
     @Override
     public String fileExtension() {
-        return "xlsx";
+        return "pdf";
     }
 }

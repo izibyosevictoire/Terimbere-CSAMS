@@ -137,7 +137,7 @@
     "super": {
       "title": "Platform dashboard",
       "welcome": "Welcome, {{name}}",
-      "description": "You manage cooperatives across TERIMBERE. Create tenants and assign cooperative admins; each admin then runs members, savings, and loans for their cooperative.",
+      "description": "You have full control of TERIMBERE: cooperatives, members, savings, loans, fines, and settings. Select a cooperative to operate it, or create a new one.",
       "totalCooperatives": "Cooperatives",
       "shownOnPage": "Recently updated",
       "listHint": "Latest cooperatives on this list",
@@ -992,8 +992,11 @@
     "openAll": "Open report centre",
     "primary": {
       "contributions": "Contributions",
+      "contributionsHint": "Download a PDF of contributions for the selected timeline.",
       "investments": "Investments",
-      "full": "Full financial report"
+      "investmentsHint": "Download a PDF of investments for the selected timeline.",
+      "full": "Full financial report",
+      "fullHint": "Download a PDF of the full financial summary for the selected timeline."
     },
     "tabs": {
       "reports": "Reports",
@@ -1017,9 +1020,14 @@
       "FULL_FINANCIAL": "Full financial"
     },
     "export": {
-      "title": "Export Excel report",
-      "description": "Choose a report type and optional filters, then download an Excel workbook for the selected cooperative.",
-      "pdfLater": "PDF export can be added later without changing this flow. Excel is available now.",
+      "title": "Export PDF report",
+      "description": "Choose a report type and optional filters. The PDF uses the timeline above.",
+      "timelineTitle": "Report timeline",
+      "timelineDescription": "Choose the period this report covers. You cannot generate a report for future dates.",
+      "timelineFromHint": "Start of the reporting period. Cannot be after today.",
+      "timelineToHint": "End of the reporting period. Cannot be after today.",
+      "usesTimeline": "This report uses the From / To dates selected in the timeline above.",
+      "yearMonthHint": "Optional extra filter. Leave both as All to use only the timeline.",
       "reportType": "Report type",
       "noTypes": "No report types available",
       "fromDate": "From date",
@@ -1029,9 +1037,18 @@
       "member": "Member",
       "status": "Status",
       "transactionType": "Transaction type",
-      "submit": "Export Excel",
+      "submit": "Export PDF",
       "exporting": "Exporting…",
-      "success": "Downloaded {{filename}}"
+      "success": "Downloaded {{filename}}",
+      "validation": {
+        "required": "From date and to date are required.",
+        "fromAfterTo": "From date must be on or before to date.",
+        "futureFrom": "You cannot start a report in the future.",
+        "futureTo": "You cannot generate a report that ends in the future.",
+        "rangeTooLong": "The report timeline cannot be longer than 5 years.",
+        "incompleteYearMonth": "Choose both year and month, or leave both as All.",
+        "futureYearMonth": "You cannot generate a report for a future month."
+      }
     },
     "import": {
       "title": "Contribution Excel import",
@@ -1326,7 +1343,7 @@
     },
     "reports": {
       "title": "Report Centre",
-      "description": "Export Excel reports and import monthly contributions from spreadsheets."
+      "description": "Export PDF reports and import monthly contributions from spreadsheets."
     },
     "settings": {
       "title": "Settings",

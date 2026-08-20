@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
+import dayjs from 'dayjs'
 import { parseContentDispositionFilename } from '@/shared/utils/download'
 import {
   canCancelImport,
   canConfirmImport,
   defaultExportFilename,
+  defaultReportFromDate,
+  defaultReportToDate,
   importRowValidityColor,
   importRowValidityLabelKey,
   importStatusColor,
@@ -12,6 +15,8 @@ import {
   reportSupportsTransactionType,
   reportSupportsYearMonth,
   reportTypeLabelKey,
+  validateReportTimeline,
+  validateReportYearMonth,
 } from './reportHelpers'
 
 describe('parseContentDispositionFilename', () => {
@@ -100,7 +105,42 @@ describe('reportTypeLabelKey', () => {
 })
 
 describe('defaultExportFilename', () => {
-  it('slugifies report type', () => {
-    expect(defaultExportFilename('SPECIAL_CONTRIBUTIONS')).toBe('special-contributions.xlsx')
+  it('slugifies report type as pdf', () => {
+    expect(defaultExportFilename('SPECIAL_CONTRIBUTIONS')).toBe('special-contributions.pdf')
+  })
+})
+
+describe('report timeline validation', () => {
+  const today = dayjs('2026-08-20')
+
+  it('defaults from start of year to today', () => {
+    expect(defaultReportFromDate(today)).toBe('2026-01-01')
+    expect(defaultReportToDate(today)).toBe('2026-08-20')
+  })
+
+  it('requires both dates', () => {
+    expect(validateReportTimeline('', '', today)).toBe('required')
+    expect(validateReportTimeline('2026-01-01', '', today)).toBe('required')
+  })
+
+  it('rejects future dates and inverted ranges', () => {
+    expect(validateReportTimeline('2026-08-21', '2026-08-21', today)).toBe('futureFrom')
+    expect(validateReportTimeline('2026-01-01', '2026-08-21', today)).toBe('futureTo')
+    expect(validateReportTimeline('2026-08-20', '2026-01-01', today)).toBe('fromAfterTo')
+  })
+
+  it('rejects ranges longer than five years', () => {
+    expect(validateReportTimeline('2020-01-01', '2026-01-02', today)).toBe('rangeTooLong')
+  })
+
+  it('accepts a valid past range', () => {
+    expect(validateReportTimeline('2026-01-01', '2026-08-20', today)).toBeNull()
+  })
+
+  it('rejects incomplete or future year/month filters', () => {
+    expect(validateReportYearMonth('2026', '', today)).toBe('incompleteYearMonth')
+    expect(validateReportYearMonth('2026', '9', today)).toBe('futureYearMonth')
+    expect(validateReportYearMonth('2026', '8', today)).toBeNull()
+    expect(validateReportYearMonth('', '', today)).toBeNull()
   })
 })

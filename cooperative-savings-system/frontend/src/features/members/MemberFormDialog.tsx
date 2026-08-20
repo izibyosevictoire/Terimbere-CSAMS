@@ -17,6 +17,8 @@ import {
 import { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
+import { useAppSelector } from '@/app/store/hooks'
+import { selectIsSuperAdmin } from '@/app/store/authSlice'
 import type { Member } from '@/shared/types/member'
 import { ROLES_IN_COOPERATIVE } from '@/shared/types/member'
 import {
@@ -72,6 +74,12 @@ export function MemberFormDialog({
 }: MemberFormDialogProps) {
   const { t } = useTranslation()
   const isCreate = mode === 'create'
+  const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
+  const roleOptions = isSuperAdmin
+    ? ROLES_IN_COOPERATIVE
+    : ROLES_IN_COOPERATIVE.filter(
+        (role) => role === 'MEMBER' || role === initial?.roleInCooperative,
+      )
 
   const {
     register,
@@ -170,7 +178,7 @@ export function MemberFormDialog({
                   label={t('members.fields.roleInCooperative')}
                   fullWidth
                 >
-                  {ROLES_IN_COOPERATIVE.map((role) => (
+                  {roleOptions.map((role) => (
                     <MenuItem key={role} value={role}>
                       {t(`members.roles.${role}`)}
                     </MenuItem>

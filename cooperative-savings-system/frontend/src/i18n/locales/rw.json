@@ -137,7 +137,7 @@
     "super": {
       "title": "Imbonerahamwe y'urubuga",
       "welcome": "Murakaza neza, {{name}}",
-      "description": "Ni wowe ucunga amakoperative ya TERIMBERE. Fungura amakoperative unashyireho abayobozi; umuyobozi w'ikoperative acunga abanyamuryango, ubwizigame, n'inguzanyo.",
+      "description": "Ufite ububasha bwose kuri TERIMBERE: amakoperative, abanyamuryango, ubwizigame, inguzanyo, amahane, n'igenamiterere. Hitamo ikoperative uyicunge, cyangwa ufungure nshya.",
       "totalCooperatives": "Amakoperative",
       "shownOnPage": "Aheruka kuvugururwa",
       "listHint": "Amakoperative aheruka kuri uru rutonde",
@@ -972,8 +972,11 @@
     "openAll": "Fungura ikigo cy'raporo",
     "primary": {
       "contributions": "Amafaranga ashyizweho",
+      "contributionsHint": "Manura PDF y'amafaranga ashyizweho ku gihe wahisemo.",
       "investments": "Ishoramari",
-      "full": "Raporo yuzuye y'imari"
+      "investmentsHint": "Manura PDF y'ishoramari ku gihe wahisemo.",
+      "full": "Raporo yuzuye y'imari",
+      "fullHint": "Manura PDF y'raporo yuzuye y'imari ku gihe wahisemo."
     },
     "tabs": {
       "reports": "Raporo",
@@ -997,9 +1000,14 @@
       "FULL_FINANCIAL": "Raporo yuzuye y'imari"
     },
     "export": {
-      "title": "Manura raporo ya Excel",
-      "description": "Hitamo ubwoko bwa raporo n'amayunguruzo, hanyuma umanure dosiye ya Excel y'ikoperative.",
-      "pdfLater": "PDF izashyirwaho nyuma. Excel irahari ubu.",
+      "title": "Manura raporo ya PDF",
+      "description": "Hitamo ubwoko bwa raporo n'amayunguruzo. PDF ikoresha igihe gisanzwe hejuru.",
+      "timelineTitle": "Igihe cya raporo",
+      "timelineDescription": "Hitamo italiki yo gutangiriraho n'iyo kurangiriraho. Ntushobora gukora raporo y'igihe kitageze.",
+      "timelineFromHint": "Itangira ry'igihe cya raporo. Ntishobora kuba nyuma y'uyu munsi.",
+      "timelineToHint": "Iherezo ry'igihe cya raporo. Ntishobora kuba nyuma y'uyu munsi.",
+      "usesTimeline": "Iyi raporo ikoresha italiki zo Kuva / Kugeza zahiswe hejuru.",
+      "yearMonthHint": "Ayandi mayunguruzo. Siga Byose niba ushaka gukoresha igihe gusa.",
       "reportType": "Ubwoko bwa raporo",
       "noTypes": "Nta bwoko bwa raporo buhari",
       "fromDate": "Kuva",
@@ -1009,9 +1017,18 @@
       "member": "Umunyamuryango",
       "status": "Imiterere",
       "transactionType": "Ubwoko bw'igikorwa",
-      "submit": "Manura Excel",
+      "submit": "Manura PDF",
       "exporting": "Birimo gumanurwa…",
-      "success": "Byamanuye {{filename}}"
+      "success": "Byamanuye {{filename}}",
+      "validation": {
+        "required": "Ugomba guhitamo italiki yo gutangiriraho n'iyo kurangiriraho.",
+        "fromAfterTo": "Italiki yo gutangiriraho igomba kuba mbere cyangwa ku ya kurangiriraho.",
+        "futureFrom": "Ntushobora gutangiza raporo mu gihe kitageze.",
+        "futureTo": "Ntushobora gukora raporo irangira mu gihe kitageze.",
+        "rangeTooLong": "Igihe cya raporo ntigishobora kurenza imyaka 5.",
+        "incompleteYearMonth": "Hitamo umwaka n'ukwezi, cyangwa usige byombi nk'uko biri.",
+        "futureYearMonth": "Ntushobora gukora raporo y'ukwezi kutageze."
+      }
     },
     "import": {
       "title": "Kwinjiza amafaranga muri Excel",
@@ -1306,7 +1323,7 @@
     },
     "reports": {
       "title": "Ikigo cy'raporo",
-      "description": "Manura raporo za Excel kandi winjize amafaranga ashyizweho."
+      "description": "Manura raporo za PDF kandi winjize amafaranga ashyizweho."
     },
     "settings": {
       "title": "Igenamiterere",

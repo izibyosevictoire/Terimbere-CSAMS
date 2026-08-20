@@ -5,11 +5,8 @@ import rw.terimbere.csams.modules.report.dto.ReportHeaderMeta;
 import rw.terimbere.csams.modules.report.dto.ReportSheetData;
 
 /**
- * Pluggable report binary exporter.
- *
- * <p>Excel is the default implementation ({@link ExcelReportExporter}). A {@code PdfReportExporter}
- * can be added later without redesigning {@code ReportService} — inject the desired exporter (or a
- * registry keyed by format) and keep data assembly in the service layer.
+ * Pluggable report binary exporter. PDF is the default implementation
+ * ({@link PdfReportExporter}). Excel remains available for contribution import templates.
  */
 public interface ReportExporter {
 

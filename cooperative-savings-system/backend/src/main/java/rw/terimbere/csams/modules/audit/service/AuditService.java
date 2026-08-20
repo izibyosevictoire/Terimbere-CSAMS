@@ -93,7 +93,7 @@ public class AuditService {
         return PageMapper.toPageResponse(page, this::toResponse);
     }
 
-    /** Used by Excel report export — Specification avoids PostgreSQL null Instant binding issues. */
+    /** Used by PDF report export — Specification avoids PostgreSQL null Instant binding issues. */
     @Transactional(readOnly = true)
     public List<AuditLog> listForExport(
             UUID cooperativeId, UUID userId, Instant from, Instant to) {

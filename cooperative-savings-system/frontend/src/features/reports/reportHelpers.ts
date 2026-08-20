@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import type { ContributionImportStatus } from '@/shared/types/contributionImport'
 import type { ReportTypeInfo } from '@/shared/types/report'
 
@@ -143,5 +144,54 @@ export function defaultExportFilename(reportType: string): string {
     .replace(/[^a-z0-9-]+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
-  return `${safe || 'report'}.xlsx`
+  return `${safe || 'report'}.pdf`
+}
+
+export type ReportTimelineIssue =
+  | 'required'
+  | 'fromAfterTo'
+  | 'futureFrom'
+  | 'futureTo'
+  | 'rangeTooLong'
+  | 'incompleteYearMonth'
+  | 'futureYearMonth'
+
+const MAX_RANGE_YEARS = 5
+
+export function defaultReportFromDate(today = dayjs()): string {
+  return today.startOf('year').format('YYYY-MM-DD')
+}
+
+export function defaultReportToDate(today = dayjs()): string {
+  return today.format('YYYY-MM-DD')
+}
+
+export function validateReportTimeline(
+  fromDate: string,
+  toDate: string,
+  today = dayjs(),
+): ReportTimelineIssue | null {
+  if (!fromDate || !toDate) return 'required'
+  const from = dayjs(fromDate)
+  const to = dayjs(toDate)
+  if (!from.isValid() || !to.isValid()) return 'required'
+  const todayDate = today.startOf('day')
+  if (from.isAfter(todayDate, 'day')) return 'futureFrom'
+  if (to.isAfter(todayDate, 'day')) return 'futureTo'
+  if (to.isBefore(from, 'day')) return 'fromAfterTo'
+  if (to.diff(from, 'year', true) > MAX_RANGE_YEARS) return 'rangeTooLong'
+  return null
+}
+
+export function validateReportYearMonth(
+  year: string,
+  month: string,
+  today = dayjs(),
+): ReportTimelineIssue | null {
+  if (!year && !month) return null
+  if (!year || !month) return 'incompleteYearMonth'
+  const selected = dayjs(`${year}-${String(month).padStart(2, '0')}-01`)
+  if (!selected.isValid()) return 'incompleteYearMonth'
+  if (selected.isAfter(today, 'month')) return 'futureYearMonth'
+  return null
 }

@@ -191,7 +191,7 @@ class ReportAndContributionImportIntegrationTest {
     }
 
     @Test
-    void exportContributions_returnsNonEmptyXlsxWithHeader() throws Exception {
+    void exportContributions_returnsNonEmptyPdfWithHeader() throws Exception {
         // seed a contribution via batch API
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put(
                                 "/api/v1/cooperatives/" + cooperativeId + "/contributions/period")
@@ -217,36 +217,58 @@ class ReportAndContributionImportIntegrationTest {
                         .header("Authorization", "Bearer " + superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"reportType":"CONTRIBUTIONS","year":2026,"month":6}
+                                {
+                                  "reportType":"CONTRIBUTIONS",
+                                  "fromDate":"2026-01-01",
+                                  "toDate":"2026-06-30",
+                                  "year":2026,
+                                  "month":6
+                                }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(header().string(
-                        "Content-Type",
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .andExpect(header().string("Content-Type", "application/pdf"))
                 .andExpect(header().exists("Content-Disposition"))
                 .andReturn();
 
         byte[] body = export.getResponse().getContentAsByteArray();
         assertThat(body.length).isGreaterThan(200);
-        try (Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(body))) {
-            assertThat(workbook.getNumberOfSheets()).isGreaterThanOrEqualTo(2);
-            Sheet headerSheet = workbook.getSheet("Report Header");
-            assertThat(headerSheet).isNotNull();
-            assertThat(headerSheet.getRow(0).getCell(0).getStringCellValue()).isEqualTo("Cooperative");
-            assertThat(headerSheet.getRow(1).getCell(1).getStringCellValue()).isEqualTo("Contributions");
+        assertThat(new String(body, 0, 4)).isEqualTo("%PDF");
+        assertThat(export.getResponse().getHeader("Content-Disposition")).contains(".pdf");
+    }
 
-            Sheet data = workbook.getSheet("Contributions");
-            assertThat(data).isNotNull();
-            // header meta then blank then column headers
-            boolean foundPaid = false;
-            for (Row row : data) {
-                if (row.getCell(0) != null && "Member".equals(row.getCell(0).getStringCellValue())) {
-                    foundPaid = true;
-                    break;
-                }
-            }
-            assertThat(foundPaid).isTrue();
-        }
+    @Test
+    void export_rejectsMissingAndFutureTimeline() throws Exception {
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/export")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"reportType":"CONTRIBUTIONS"}
+                                """))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/export")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reportType":"CONTRIBUTIONS",
+                                  "fromDate":"2099-01-01",
+                                  "toDate":"2099-12-31"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/export")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reportType":"CONTRIBUTIONS",
+                                  "fromDate":"2026-06-30",
+                                  "toDate":"2026-01-01"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -274,7 +296,13 @@ class ReportAndContributionImportIntegrationTest {
                         .header("Authorization", "Bearer " + superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"reportType":"CONTRIBUTIONS","year":2026,"month":7}
+                                {
+                                  "reportType":"CONTRIBUTIONS",
+                                  "fromDate":"2026-07-01",
+                                  "toDate":"2026-07-31",
+                                  "year":2026,
+                                  "month":7
+                                }
                                 """))
                 .andExpect(status().isOk())
                 .andReturn();

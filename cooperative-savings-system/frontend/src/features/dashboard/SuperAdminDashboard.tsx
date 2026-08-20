@@ -1,11 +1,13 @@
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import AddIcon from '@mui/icons-material/Add'
 import BusinessIcon from '@mui/icons-material/Business'
+import GroupsIcon from '@mui/icons-material/Groups'
 import { Box, Button, Chip, Grid, Paper, Stack, Typography } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAppSelector } from '@/app/store/hooks'
+import { useAppDispatch, useAppSelector } from '@/app/store/hooks'
+import { setSelectedCooperativeId } from '@/app/store/authSlice'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchCooperatives } from '@/shared/api/cooperatives'
 import { ErrorState } from '@/shared/components/ErrorState'
@@ -15,7 +17,13 @@ import { ROUTES } from '@/shared/constants/routes'
 export function SuperAdminDashboard() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
   const user = useAppSelector((s) => s.auth.user)
+
+  const openCooperative = (cooperativeId: string) => {
+    dispatch(setSelectedCooperativeId(cooperativeId))
+    navigate(ROUTES.dashboard)
+  }
 
   const query = useQuery({
     queryKey: ['cooperatives', 'list', 'super-home'],
@@ -49,11 +57,11 @@ export function SuperAdminDashboard() {
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
           <Button
             component={RouterLink}
-            to={ROUTES.cooperatives}
+            to={ROUTES.members}
             variant="outlined"
-            startIcon={<BusinessIcon />}
+            startIcon={<GroupsIcon />}
           >
-            {t('nav.cooperatives')}
+            {t('nav.members')}
           </Button>
           <Button
             component={RouterLink}
@@ -109,7 +117,7 @@ export function SuperAdminDashboard() {
               <Paper
                 key={coop.id}
                 elevation={0}
-                onClick={() => navigate(ROUTES.cooperativeDetail(coop.id))}
+                onClick={() => openCooperative(coop.id)}
                 sx={{
                   px: 2,
                   py: 1.5,

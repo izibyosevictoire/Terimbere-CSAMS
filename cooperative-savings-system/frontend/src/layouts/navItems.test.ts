@@ -20,7 +20,7 @@ const adminItem: NavItem = {
   labelKey: 'nav.members',
   path: '/members',
   icon: DashboardIcon,
-  roles: [ROLE_COOPERATIVE_ADMIN],
+  roles: [ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN],
 }
 
 const superItem: NavItem = {
@@ -36,13 +36,13 @@ describe('canAccessNavItem', () => {
     expect(canAccessNavItem(memberItem, [ROLE_MEMBER])).toBe(true)
   })
 
-  it('hides cooperative-admin menus from members and super admins', () => {
+  it('hides cooperative-admin menus from members', () => {
     expect(canAccessNavItem(adminItem, [ROLE_MEMBER])).toBe(false)
-    expect(canAccessNavItem(adminItem, [ROLE_SUPER_ADMIN])).toBe(false)
     expect(canAccessNavItem(adminItem, [ROLE_COOPERATIVE_ADMIN])).toBe(true)
+    expect(canAccessNavItem(adminItem, [ROLE_SUPER_ADMIN])).toBe(true)
   })
 
-  it('restricts super-admin items to SUPER_ADMIN', () => {
+  it('restricts super-admin-only items to SUPER_ADMIN', () => {
     expect(canAccessNavItem(superItem, [ROLE_COOPERATIVE_ADMIN])).toBe(false)
     expect(canAccessNavItem(superItem, [ROLE_MEMBER])).toBe(false)
     expect(canAccessNavItem(superItem, [ROLE_SUPER_ADMIN])).toBe(true)
@@ -59,7 +59,7 @@ describe('getMobileNavItems', () => {
     expect(isAdminUser([ROLE_MEMBER])).toBe(false)
   })
 
-  it('includes admin modules for cooperative admins only', () => {
+  it('includes admin modules for cooperative admins', () => {
     const items = getMobileNavItems([ROLE_COOPERATIVE_ADMIN])
     expect(items.some((i) => i.path === '/members')).toBe(true)
     expect(items.some((i) => i.path === '/fine-payments')).toBe(true)
@@ -68,11 +68,13 @@ describe('getMobileNavItems', () => {
     expect(isSuperAdminUser([ROLE_COOPERATIVE_ADMIN])).toBe(false)
   })
 
-  it('gives super admins cooperatives, not day-to-day admin modules', () => {
+  it('gives super admins full operational access plus cooperatives', () => {
     const items = getMobileNavItems([ROLE_SUPER_ADMIN])
     expect(items.some((i) => i.path === '/cooperatives')).toBe(true)
-    expect(items.some((i) => i.path === '/members')).toBe(false)
-    expect(items.some((i) => i.path === '/ledger')).toBe(false)
+    expect(items.some((i) => i.path === '/members')).toBe(true)
+    expect(items.some((i) => i.path === '/ledger')).toBe(true)
+    expect(items.some((i) => i.path === '/loans')).toBe(true)
     expect(isSuperAdminUser([ROLE_SUPER_ADMIN])).toBe(true)
+    expect(isAdminUser([ROLE_SUPER_ADMIN])).toBe(true)
   })
 })

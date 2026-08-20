@@ -28,7 +28,7 @@ import rw.terimbere.csams.shared.common.dto.ApiResponse;
 @RestController
 @RequestMapping("/api/v1/cooperatives/{cooperativeId}/reports")
 @RequiredArgsConstructor
-@Tag(name = "Reports", description = "Report centre Excel exports")
+@Tag(name = "Reports", description = "Report centre PDF exports")
 @SecurityRequirement(name = "bearerAuth")
 public class ReportController {
 
@@ -43,7 +43,7 @@ public class ReportController {
 
     @PostMapping("/export")
     @PreAuthorize("hasAuthority('REPORT_READ')")
-    @Operation(summary = "Export a report as Excel (XLSX binary download)")
+    @Operation(summary = "Export a report as PDF")
     public ResponseEntity<byte[]> export(
             @PathVariable UUID cooperativeId,
             @Valid @RequestBody ReportExportRequest request,

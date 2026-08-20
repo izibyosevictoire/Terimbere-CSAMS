@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link as RouterLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAppSelector } from '@/app/store/hooks'
+import { selectIsSuperAdmin } from '@/app/store/authSlice'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchMyCooperatives } from '@/shared/api/cooperatives'
 import { fetchDashboardSummary } from '@/shared/api/dashboard'
@@ -37,6 +38,7 @@ interface AdminDashboardProps {
 export function AdminDashboard({ cooperativeId }: AdminDashboardProps) {
   const { t } = useTranslation()
   const authStatus = useAppSelector((s) => s.auth.status)
+  const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
 
   const cooperativesQuery = useQuery({
     queryKey: ['cooperatives', 'mine'],
@@ -80,7 +82,9 @@ export function AdminDashboard({ cooperativeId }: AdminDashboardProps) {
               {t('dashboard.admin.title')}
             </Typography>
             <Chip
-              label={t('dashboard.admin.adminChip')}
+              label={
+                isSuperAdmin ? t('roles.superAdminBadge') : t('dashboard.admin.adminChip')
+              }
               color="primary"
               size="small"
               sx={{ fontWeight: 700, letterSpacing: 0.4 }}

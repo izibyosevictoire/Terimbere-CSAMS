@@ -29,7 +29,7 @@ export interface NavItem {
   group?: 'main' | 'advanced' | 'super'
 }
 
-const COOP_ADMIN_ROLES = [ROLE_COOPERATIVE_ADMIN]
+const STAFF_ROLES = [ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN]
 const SUPER_ADMIN_ROLES = [ROLE_SUPER_ADMIN]
 
 /** Top-level Dashboard link — all authenticated users. */
@@ -56,84 +56,84 @@ export const memberNavItems: NavItem[] = [
 
 /** Admin modules shown under Admin ▼ (and in mobile drawer for admins). */
 export const adminModuleNavItems: NavItem[] = [
-  { labelKey: 'nav.members', path: ROUTES.members, icon: GroupsIcon, roles: COOP_ADMIN_ROLES, group: 'main' },
+  { labelKey: 'nav.members', path: ROUTES.members, icon: GroupsIcon, roles: STAFF_ROLES, group: 'main' },
   {
     labelKey: 'nav.contributions',
     path: ROUTES.contributions,
     icon: SavingsIcon,
-    roles: COOP_ADMIN_ROLES,
+    roles: STAFF_ROLES,
     group: 'main',
   },
-  { labelKey: 'nav.loans', path: ROUTES.loans, icon: AccountBalanceWalletIcon, roles: COOP_ADMIN_ROLES, group: 'main' },
-  { labelKey: 'nav.fines', path: ROUTES.fines, icon: GavelIcon, roles: COOP_ADMIN_ROLES, group: 'main' },
+  { labelKey: 'nav.loans', path: ROUTES.loans, icon: AccountBalanceWalletIcon, roles: STAFF_ROLES, group: 'main' },
+  { labelKey: 'nav.fines', path: ROUTES.fines, icon: GavelIcon, roles: STAFF_ROLES, group: 'main' },
   {
     labelKey: 'nav.finePaymentQueue',
     path: ROUTES.finePayments,
     icon: GavelIcon,
-    roles: COOP_ADMIN_ROLES,
+    roles: STAFF_ROLES,
     group: 'main',
   },
   {
     labelKey: 'nav.socialDashboard',
     path: ROUTES.socialFund,
     icon: FavoriteIcon,
-    roles: COOP_ADMIN_ROLES,
+    roles: STAFF_ROLES,
     group: 'main',
   },
   {
     labelKey: 'nav.investments',
     path: ROUTES.investments,
     icon: ShowChartIcon,
-    roles: COOP_ADMIN_ROLES,
+    roles: STAFF_ROLES,
     group: 'main',
   },
   {
     labelKey: 'nav.shareOut',
     path: ROUTES.payouts,
     icon: PaymentsIcon,
-    roles: COOP_ADMIN_ROLES,
+    roles: STAFF_ROLES,
     group: 'main',
   },
   {
     labelKey: 'nav.transactions',
     path: ROUTES.transactions,
     icon: ReceiptLongIcon,
-    roles: COOP_ADMIN_ROLES,
+    roles: STAFF_ROLES,
     group: 'main',
   },
   {
     labelKey: 'nav.reports',
     path: ROUTES.reports,
     icon: AssessmentIcon,
-    roles: COOP_ADMIN_ROLES,
+    roles: STAFF_ROLES,
     group: 'main',
   },
   {
     labelKey: 'nav.notifications',
     path: ROUTES.notifications,
     icon: NotificationsIcon,
-    roles: COOP_ADMIN_ROLES,
+    roles: STAFF_ROLES,
     group: 'main',
   },
   {
     labelKey: 'nav.settings',
     path: ROUTES.settings,
     icon: SettingsIcon,
-    roles: COOP_ADMIN_ROLES,
+    roles: STAFF_ROLES,
     group: 'main',
   },
   {
     labelKey: 'nav.ledger',
     path: ROUTES.ledger,
     icon: MenuBookIcon,
-    roles: COOP_ADMIN_ROLES,
+    roles: STAFF_ROLES,
     group: 'advanced',
   },
   {
     labelKey: 'nav.auditLogs',
     path: ROUTES.auditLogs,
     icon: HistoryIcon,
-    roles: COOP_ADMIN_ROLES,
+    roles: STAFF_ROLES,
     group: 'advanced',
   },
   {
@@ -183,20 +183,8 @@ export function isAdminUser(userRoles: string[]): boolean {
   return isCooperativeAdminUser(userRoles) || isSuperAdminUser(userRoles)
 }
 
-export const superAdminNavItems: NavItem[] = [
-  dashboardNavItem,
-  {
-    labelKey: 'nav.cooperatives',
-    path: ROUTES.cooperatives,
-    icon: AccountBalanceIcon,
-    roles: SUPER_ADMIN_ROLES,
-  },
-  { labelKey: 'nav.notifications', path: ROUTES.notifications, icon: NotificationsIcon },
-  { labelKey: 'nav.profile', path: ROUTES.profile, icon: PersonIcon },
-]
-
 export function getMobileNavItems(userRoles: string[]): NavItem[] {
-  if (isCooperativeAdminUser(userRoles)) {
+  if (isAdminUser(userRoles)) {
     const items: NavItem[] = [
       dashboardNavItem,
       ...adminModuleNavItems.filter((item) => canAccessNavItem(item, userRoles)),
@@ -208,9 +196,6 @@ export function getMobileNavItems(userRoles: string[]): NavItem[] {
       seen.add(item.path)
       return true
     })
-  }
-  if (isSuperAdminUser(userRoles)) {
-    return superAdminNavItems.filter((item) => canAccessNavItem(item, userRoles))
   }
   return memberNavItems.filter((item) => canAccessNavItem(item, userRoles))
 }

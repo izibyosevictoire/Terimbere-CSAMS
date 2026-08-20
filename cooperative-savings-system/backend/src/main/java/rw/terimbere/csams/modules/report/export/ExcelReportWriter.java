@@ -19,7 +19,7 @@ import rw.terimbere.csams.modules.report.dto.ReportHeaderMeta;
 import rw.terimbere.csams.modules.report.dto.ReportSheetData;
 
 /**
- * Low-level Apache POI helper for report workbooks (header metadata + tabular data + totals).
+ * Apache POI helper for contribution import templates (and optional Excel report fallback).
  */
 public final class ExcelReportWriter {
 

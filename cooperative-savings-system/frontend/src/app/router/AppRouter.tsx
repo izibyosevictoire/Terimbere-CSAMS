@@ -54,7 +54,7 @@ export function AppRouter() {
               <Route path={ROUTES.dashboard} element={<DashboardPage />} />
               <Route
                 element={
-                  <RoleRoute roles={[ROLE_COOPERATIVE_ADMIN]} />
+                  <RoleRoute roles={[ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN]} />
                 }
               >
                 <Route path={ROUTES.members} element={<MembersPage />} />
@@ -71,7 +71,7 @@ export function AppRouter() {
               <Route path="/fines/:fineId" element={<FineDetailPage />} />
               <Route
                 element={
-                  <RoleRoute roles={[ROLE_COOPERATIVE_ADMIN]} />
+                  <RoleRoute roles={[ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN]} />
                 }
               >
                 <Route path={ROUTES.finePayments} element={<FinePaymentQueuePage />} />
@@ -79,7 +79,7 @@ export function AppRouter() {
               <Route path={ROUTES.socialFund} element={<SocialFundPage />} />
               <Route
                 element={
-                  <RoleRoute roles={[ROLE_COOPERATIVE_ADMIN]} />
+                  <RoleRoute roles={[ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN]} />
                 }
               >
                 <Route path={ROUTES.investments} element={<InvestmentsPage />} />
@@ -98,7 +98,7 @@ export function AppRouter() {
               <Route path={ROUTES.changePassword} element={<ChangePasswordPage />} />
               <Route
                 element={
-                  <RoleRoute roles={[ROLE_COOPERATIVE_ADMIN]} />
+                  <RoleRoute roles={[ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN]} />
                 }
               >
                 <Route path={ROUTES.settings} element={<SettingsPage />} />
