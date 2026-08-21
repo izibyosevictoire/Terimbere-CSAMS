@@ -31,7 +31,10 @@
     "myContributions": "My contributions",
     "myLoans": "My loans",
     "myFines": "My fines",
-    "mySocial": "My Social Contributions"
+    "mySocial": "My Social Contributions",
+    "loanApprovals": "Loan Approvals",
+    "contributionApprovals": "Regular Contribution Approvals",
+    "socialApprovals": "Social Contribution Approvals"
   },
   "login": {
     "title": "Sign in",
@@ -165,8 +168,12 @@
         "loans": "My loans",
         "fines": "My fines",
         "social": "My social fund",
-        "payouts": "My payouts"
-      }
+        "payouts": "My payouts",
+        "applyLoan": "Apply for Loan",
+        "submitContribution": "Submit Regular Contribution",
+        "submitSocial": "Submit Social Contribution"
+      },
+      "actionsTitle": "Quick actions"
     },
     "memberSummaries": {
       "title": "Member financial summaries",
@@ -242,6 +249,16 @@
     "apply": "Apply",
     "clear": "Clear",
     "filter": "Filter"
+  },
+  "approvals": {
+    "historyTitle": "Approval History / Audit Trail",
+    "historyHint": "Electronic approval record. These entries cannot be edited or deleted.",
+    "empty": "No approval actions recorded yet.",
+    "actions": {
+      "SUBMITTED": "Submitted by",
+      "APPROVED": "Approved by",
+      "REJECTED": "Rejected by"
+    }
   },
   "pwa": {
     "install": "Install app",
@@ -372,7 +389,9 @@
       "monthly": "Monthly entry",
       "history": "History",
       "mine": "My contributions",
-      "special": "Special campaigns"
+      "special": "Special campaigns",
+      "submit": "Submit Regular Contribution",
+      "approvals": "Regular Contribution Approvals"
     },
     "myContributions": "Showing your contributions",
     "savePeriod": "Save period",
@@ -406,6 +425,38 @@
       "PAID": "Paid",
       "WAIVED": "Waived",
       "CANCELLED": "Cancelled"
+    },
+    "reviewStatus": {
+      "PENDING": "Pending",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected"
+    },
+    "submit": {
+      "title": "Submit Regular Contribution",
+      "description": "Enter the amount you paid. The Accountant / Treasurer will review the proof before it is counted.",
+      "action": "Submit Regular Contribution",
+      "proof": "Payment proof",
+      "uploadProof": "Upload screenshot",
+      "proofHint": "Optional screenshot or receipt of the payment.",
+      "uploadFailed": "Could not upload the payment proof.",
+      "success": "Contribution submitted for Accountant review",
+      "amountRequired": "Amount is required",
+      "amountInvalid": "Enter a valid amount",
+      "dateRequired": "Date is required"
+    },
+    "approvals": {
+      "title": "Pending regular contributions",
+      "approve": "Approve",
+      "reject": "Reject",
+      "viewProof": "View proof",
+      "emptyTitle": "No pending contributions",
+      "emptyDescription": "Member submissions awaiting Accountant review will appear here.",
+      "approveSuccess": "Contribution approved",
+      "rejectSuccess": "Contribution rejected",
+      "confirmApproveTitle": "Approve this contribution?",
+      "confirmApproveMessage": "The amount will be added to the member's approved contribution records.",
+      "confirmRejectTitle": "Reject this contribution?",
+      "rejectionReason": "Rejection reason"
     },
     "campaignStatus": {
       "DRAFT": "Draft",
@@ -462,9 +513,10 @@
     "tabs": {
       "mine": "My loans",
       "all": "All loans",
-      "request": "Request loan",
+      "request": "Apply for Loan",
       "issue": "Issue loan",
-      "settings": "Loan settings"
+      "settings": "Loan settings",
+      "approvals": "Loan Approvals"
     },
     "emptyTitle": "No loans found",
     "emptyDescription": "Create a loan request or issue a loan to a member.",
@@ -496,7 +548,8 @@
       "rejectionReason": "Rejection reason"
     },
     "status": {
-      "PENDING": "Pending",
+      "PENDING": "Pending first approval",
+      "AWAITING_SECOND_APPROVAL": "Awaiting second approval",
       "APPROVED": "Approved",
       "ACTIVE": "Active",
       "OVERDUE": "Overdue",
@@ -511,6 +564,9 @@
     "request": {
       "requestTitle": "Request a loan",
       "requestDescription": "Submit a loan request for admin approval.",
+      "applyTitle": "Apply for Loan",
+      "applyDescription": "Enter only the loan amount and purpose. Your member profile fills the rest of the application.",
+      "apply": "Apply for Loan",
       "issueTitle": "Issue a loan",
       "issueDescription": "Create a loan for a member. It will still need approval before disbursement.",
       "submit": "Submit request",
@@ -519,6 +575,12 @@
       "issueSuccess": "Loan created",
       "memberRequestsDisabled": "Member loan requests are disabled for this cooperative.",
       "settingsHint": "Current settings: {{rate}}% {{type}}, max amount {{maxAmount}}, max term {{maxTerm}} months."
+    },
+    "application": {
+      "title": "Loan Application Form",
+      "description": "Completed from your member profile. This is the electronic application record.",
+      "cooperative": "Cooperative",
+      "member": "Applicant"
     },
     "settings": {
       "title": "Loan settings",
@@ -728,7 +790,9 @@
       "overview": "Overview",
       "contributions": "Contributions",
       "disbursements": "Disbursements",
-      "report": "Report"
+      "report": "Report",
+      "submit": "Submit Social Contribution",
+      "approvals": "Social Contribution Approvals"
     },
     "metrics": {
       "balance": "Social fund balance",
@@ -747,7 +811,8 @@
       "reference": "Reference",
       "reason": "Reason",
       "notes": "Notes",
-      "status": "Status"
+      "status": "Status",
+      "proof": "Payment proof"
     },
     "status": {
       "PENDING": "Pending",
@@ -769,10 +834,16 @@
       "unavailable": "Settings are not available yet for this cooperative."
     },
     "contributions": {
-      "hint": "Contributions stay pending until an admin approves them into the social fund.",
-      "submitTitle": "Submit social contribution",
-      "submitDescription": "Record a welfare contribution. It remains separate from regular savings.",
-      "submit": "Submit contribution",
+      "hint": "Contributions stay pending until the Accountant / Treasurer approves them into the social fund.",
+      "submitTitle": "Submit Social Contribution",
+      "submitDescription": "Enter the amount you paid. It remains pending until the Accountant / Treasurer reviews it.",
+      "submit": "Submit Social Contribution",
+      "submitAction": "Submit Social Contribution",
+      "uploadProof": "Upload screenshot",
+      "proofHint": "Optional screenshot or receipt of the payment.",
+      "uploadFailed": "Could not upload the payment proof.",
+      "viewProof": "View proof",
+      "rejectionReason": "Rejection reason",
       "submitSuccess": "Social contribution submitted",
       "memberOptional": "Leave blank to submit for yourself.",
       "selfSubmit": "Myself (current user)",

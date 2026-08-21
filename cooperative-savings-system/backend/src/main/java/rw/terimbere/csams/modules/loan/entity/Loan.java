@@ -6,8 +6,11 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -99,4 +102,17 @@ public class Loan extends BaseEntity {
 
     @Column(name = "disbursed_by")
     private UUID disbursedBy;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "application_snapshot", columnDefinition = "jsonb")
+    private String applicationSnapshot;
+
+    @Column(name = "first_approved_by")
+    private UUID firstApprovedBy;
+
+    @Column(name = "first_approved_at")
+    private Instant firstApprovedAt;
+
+    @Column(name = "first_approver_role", length = 64)
+    private String firstApproverRole;
 }

@@ -1,8 +1,9 @@
-import { Box, Tab, Tabs } from '@mui/material'
-import { useState } from 'react'
+import { Box, Button, Tab, Tabs } from '@mui/material'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectIsCooperativeAdmin } from '@/app/store/authSlice'
+import { selectCanWriteSocial, selectIsCooperativeAdmin } from '@/app/store/authSlice'
 import {
   SocialContributionsPanel,
   SocialDisbursementsPanel,
@@ -12,11 +13,34 @@ import {
 import { EmptyState } from '@/shared/components/EmptyState'
 import { PageHeader } from '@/shared/components/PageHeader'
 
+type SocialTab = 'overview' | 'submit' | 'approvals' | 'list' | 'disbursements' | 'report'
+
 export function SocialFundPage() {
   const { t } = useTranslation()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
   const isAdmin = useAppSelector(selectIsCooperativeAdmin)
-  const [tab, setTab] = useState(0)
+  const canWrite = useAppSelector(selectCanWriteSocial)
+
+  const tabs = useMemo<SocialTab[]>(() => {
+    const items: SocialTab[] = []
+    if (isAdmin) items.push('overview')
+    items.push('submit')
+    if (canWrite) items.push('approvals')
+    items.push('list', 'disbursements')
+    if (isAdmin) items.push('report')
+    return items
+  }, [canWrite, isAdmin])
+
+  const [searchParams] = useSearchParams()
+  const [tab, setTab] = useState(() => {
+    const requested = searchParams.get('tab')
+    if (requested === 'approvals') {
+      const index = tabs.indexOf('approvals')
+      return index >= 0 ? index : Math.max(0, tabs.indexOf('submit'))
+    }
+    return Math.max(0, tabs.indexOf('submit'))
+  })
+  const active = tabs[tab] ?? 'submit'
 
   if (!cooperativeId) {
     return (
@@ -33,12 +57,20 @@ export function SocialFundPage() {
     )
   }
 
-  // Tabs: Overview (0), Contributions (1), Disbursements (2), Report (3 — admin)
   return (
     <Box>
       <PageHeader
         title={t('pages.socialFund.title')}
         description={t('pages.socialFund.description')}
+        actions={
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => setTab(Math.max(0, tabs.indexOf('submit')))}
+          >
+            {t('socialFund.contributions.submitAction')}
+          </Button>
+        }
       />
 
       <Tabs
@@ -48,27 +80,58 @@ export function SocialFundPage() {
         allowScrollButtonsMobile
         sx={{ mb: 2.5, borderBottom: 1, borderColor: 'divider' }}
       >
-        <Tab label={t('socialFund.tabs.overview')} />
-        <Tab label={t('socialFund.tabs.contributions')} />
-        <Tab label={t('socialFund.tabs.disbursements')} />
-        {isAdmin ? <Tab label={t('socialFund.tabs.report')} /> : null}
+        {tabs.map((item) => (
+          <Tab
+            key={item}
+            label={
+              item === 'submit'
+                ? t('socialFund.tabs.submit')
+                : item === 'approvals'
+                  ? t('socialFund.tabs.approvals')
+                  : item === 'list'
+                    ? t('socialFund.tabs.contributions')
+                    : t(`socialFund.tabs.${item}`)
+            }
+          />
+        ))}
       </Tabs>
 
-      {tab === 0 ? (
+      {active === 'overview' ? (
         <SocialFundOverviewPanel cooperativeId={cooperativeId} isAdmin={isAdmin} />
       ) : null}
 
-      {tab === 1 ? (
-        <SocialContributionsPanel cooperativeId={cooperativeId} isAdmin={isAdmin} />
+      {active === 'submit' ? (
+        <SocialContributionsPanel
+          cooperativeId={cooperativeId}
+          isAdmin={isAdmin}
+          canWrite={canWrite}
+        />
       ) : null}
 
-      {tab === 2 ? (
+      {active === 'approvals' ? (
+        <SocialContributionsPanel
+          cooperativeId={cooperativeId}
+          isAdmin
+          canWrite={canWrite}
+          defaultStatus="PENDING"
+          hideSubmit
+        />
+      ) : null}
+
+      {active === 'list' ? (
+        <SocialContributionsPanel
+          cooperativeId={cooperativeId}
+          isAdmin={isAdmin}
+          canWrite={canWrite}
+          hideSubmit
+        />
+      ) : null}
+
+      {active === 'disbursements' ? (
         <SocialDisbursementsPanel cooperativeId={cooperativeId} isAdmin={isAdmin} />
       ) : null}
 
-      {isAdmin && tab === 3 ? (
-        <SocialFundReportPanel cooperativeId={cooperativeId} />
-      ) : null}
+      {active === 'report' ? <SocialFundReportPanel cooperativeId={cooperativeId} /> : null}
     </Box>
   )
 }

@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import rw.terimbere.csams.modules.contribution.entity.Contribution;
+import rw.terimbere.csams.modules.contribution.entity.ContributionReviewStatus;
 import rw.terimbere.csams.modules.contribution.entity.ContributionStatus;
 
 public interface ContributionRepository extends JpaRepository<Contribution, UUID> {
@@ -37,6 +38,9 @@ public interface ContributionRepository extends JpaRepository<Contribution, UUID
             UUID cooperativeId, UUID memberUserId);
 
     Optional<Contribution> findByIdAndCooperativeId(UUID id, UUID cooperativeId);
+
+    Page<Contribution> findByCooperativeIdAndReviewStatus(
+            UUID cooperativeId, ContributionReviewStatus reviewStatus, Pageable pageable);
 
     @Query(
             """

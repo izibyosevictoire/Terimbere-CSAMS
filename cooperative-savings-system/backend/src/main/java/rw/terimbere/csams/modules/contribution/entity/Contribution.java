@@ -6,6 +6,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -61,6 +62,31 @@ public class Contribution extends BaseEntity {
 
     @Column(name = "recorded_by")
     private UUID recordedBy;
+
+    @Column(name = "submitted_amount", precision = 19, scale = 4)
+    private BigDecimal submittedAmount;
+
+    @Column(name = "evidence_file_key", length = 512)
+    private String evidenceFileKey;
+
+    @Column(name = "submitted_by")
+    private UUID submittedBy;
+
+    @Column(name = "submitted_at")
+    private Instant submittedAt;
+
+    @Column(name = "reviewed_by")
+    private UUID reviewedBy;
+
+    @Column(name = "reviewed_at")
+    private Instant reviewedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "review_status", length = 32)
+    private ContributionReviewStatus reviewStatus;
+
+    @Column(name = "rejection_reason", length = 2000)
+    private String rejectionReason;
 
     @Builder.Default
     @Column(name = "ledger_revision", nullable = false)

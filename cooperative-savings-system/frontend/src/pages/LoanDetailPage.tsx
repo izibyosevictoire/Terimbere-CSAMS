@@ -21,11 +21,13 @@ import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
 import {
+  selectAuthUser,
   selectCanApproveLoans,
   selectCanAuthorizeFunds,
   selectCanRecordLoans,
 } from '@/app/store/authSlice'
 import {
+  LoanApplicationFormView,
   RepaymentDialog,
   canShowApprove,
   canShowDisburse,
@@ -52,6 +54,7 @@ import {
   rejectLoan,
   writeOffLoan,
 } from '@/shared/api/loans'
+import { ApprovalHistory } from '@/shared/components/ApprovalHistory'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
@@ -85,6 +88,7 @@ export function LoanDetailPage() {
   const canApproveLoans = useAppSelector(selectCanApproveLoans)
   const canRecordLoans = useAppSelector(selectCanRecordLoans)
   const canAuthorizeFunds = useAppSelector(selectCanAuthorizeFunds)
+  const currentUserId = useAppSelector(selectAuthUser)?.id
 
   const [confirmAction, setConfirmAction] = useState<
     'approve' | 'disburse' | 'writeOff' | null
@@ -243,6 +247,12 @@ export function LoanDetailPage() {
 
   const loan = loanQuery.data
   const status = loan ? String(loan.status) : ''
+  const canActOnApproval =
+    Boolean(loan) &&
+    ((status === 'PENDING' && canApproveLoans) ||
+      (status === 'AWAITING_SECOND_APPROVAL' &&
+        canAuthorizeFunds &&
+        currentUserId !== loan?.firstApprovedBy))
   const actionPending =
     approveMutation.isPending ||
     rejectMutation.isPending ||
@@ -381,7 +391,7 @@ export function LoanDetailPage() {
               useFlexGap
               sx={{ mt: 2.5, flexWrap: 'wrap' }}
             >
-              {canShowApprove(status, canApproveLoans) ? (
+              {canShowApprove(status, canActOnApproval) ? (
                 <Button
                   variant="contained"
                   onClick={() => {
@@ -398,7 +408,7 @@ export function LoanDetailPage() {
                   {t('loans.actions.approve')}
                 </Button>
               ) : null}
-              {canShowReject(status, canApproveLoans) ? (
+              {canShowReject(status, canActOnApproval) ? (
                 <Button
                   variant="outlined"
                   color="error"
@@ -428,6 +438,12 @@ export function LoanDetailPage() {
               ) : null}
             </Stack>
           </Paper>
+
+          {loan.applicationForm ? (
+            <LoanApplicationFormView form={loan.applicationForm} />
+          ) : null}
+
+          <ApprovalHistory events={loan.approvalHistory} />
 
           <Paper
             elevation={0}

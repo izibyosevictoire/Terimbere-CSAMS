@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import rw.terimbere.csams.modules.loan.dto.LoanApplicationFormResponse;
 import rw.terimbere.csams.modules.loan.dto.LoanApproveRequest;
 import rw.terimbere.csams.modules.loan.dto.LoanRejectRequest;
 import rw.terimbere.csams.modules.loan.dto.LoanRepaymentCreateRequest;
@@ -56,8 +57,10 @@ public class LoanController {
             @PathVariable UUID cooperativeId,
             @RequestParam(required = false) LoanStatus status,
             @RequestParam(required = false) UUID memberUserId,
+            @RequestParam(required = false, defaultValue = "false") boolean pendingApproval,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.ok(loanService.list(cooperativeId, status, memberUserId, pageable)));
+        return ResponseEntity.ok(
+                ApiResponse.ok(loanService.list(cooperativeId, status, memberUserId, pendingApproval, pageable)));
     }
 
     @GetMapping("/my")
@@ -65,6 +68,14 @@ public class LoanController {
     @Operation(summary = "List current user's loans")
     public ResponseEntity<ApiResponse<List<LoanResponse>>> myLoans(@PathVariable UUID cooperativeId) {
         return ResponseEntity.ok(ApiResponse.ok(loanService.myLoans(cooperativeId)));
+    }
+
+    @GetMapping("/application-preview")
+    @PreAuthorize("hasAuthority('LOAN_READ')")
+    @Operation(summary = "Populate the loan application form from the current member profile")
+    public ResponseEntity<ApiResponse<LoanApplicationFormResponse>> applicationPreview(
+            @PathVariable UUID cooperativeId) {
+        return ResponseEntity.ok(ApiResponse.ok(loanService.applicationPreview(cooperativeId)));
     }
 
     @GetMapping("/{loanId}")
@@ -76,8 +87,8 @@ public class LoanController {
     }
 
     @PostMapping("/{loanId}/approve")
-    @PreAuthorize("hasAuthority('LOAN_APPROVE')")
-    @Operation(summary = "Approve a pending loan")
+    @PreAuthorize("hasAuthority('LOAN_APPROVE') or hasAuthority('FUND_AUTHORIZE')")
+    @Operation(summary = "Record the next required loan approval (Loan Officer then President/Vice President)")
     public ResponseEntity<ApiResponse<LoanResponse>> approve(
             @PathVariable UUID cooperativeId,
             @PathVariable UUID loanId,
@@ -88,8 +99,8 @@ public class LoanController {
     }
 
     @PostMapping("/{loanId}/reject")
-    @PreAuthorize("hasAuthority('LOAN_APPROVE')")
-    @Operation(summary = "Reject a pending loan")
+    @PreAuthorize("hasAuthority('LOAN_APPROVE') or hasAuthority('FUND_AUTHORIZE')")
+    @Operation(summary = "Reject a loan awaiting first or second approval")
     public ResponseEntity<ApiResponse<LoanResponse>> reject(
             @PathVariable UUID cooperativeId,
             @PathVariable UUID loanId,

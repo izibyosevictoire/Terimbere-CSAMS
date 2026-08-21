@@ -18,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +27,8 @@ import org.springframework.web.bind.annotation.RestController;
 import rw.terimbere.csams.modules.contribution.dto.ContributionBatchRequest;
 import rw.terimbere.csams.modules.contribution.dto.ContributionPeriodSummaryResponse;
 import rw.terimbere.csams.modules.contribution.dto.ContributionResponse;
+import rw.terimbere.csams.modules.contribution.dto.ContributionReviewRequest;
+import rw.terimbere.csams.modules.contribution.dto.ContributionSubmitRequest;
 import rw.terimbere.csams.modules.contribution.dto.ContributionUpdateRequest;
 import rw.terimbere.csams.modules.contribution.entity.ContributionStatus;
 import rw.terimbere.csams.modules.contribution.service.ContributionService;
@@ -84,6 +87,48 @@ public class ContributionController {
     public ResponseEntity<ApiResponse<List<ContributionResponse>>> myContributions(
             @PathVariable UUID cooperativeId) {
         return ResponseEntity.ok(ApiResponse.ok(contributionService.getMyContributions(cooperativeId)));
+    }
+
+    @PostMapping("/submissions")
+    @PreAuthorize("hasAuthority('CONTRIBUTION_READ')")
+    @Operation(summary = "Member submits a regular contribution for Accountant review")
+    public ResponseEntity<ApiResponse<ContributionResponse>> submitMine(
+            @PathVariable UUID cooperativeId,
+            @Valid @RequestBody ContributionSubmitRequest request,
+            HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(ApiResponse.ok(contributionService.submitMine(cooperativeId, request, httpRequest)));
+    }
+
+    @GetMapping("/pending-review")
+    @PreAuthorize("hasAuthority('CONTRIBUTION_WRITE')")
+    @Operation(summary = "List member contribution submissions awaiting Accountant review")
+    public ResponseEntity<ApiResponse<PageResponse<ContributionResponse>>> pendingReview(
+            @PathVariable UUID cooperativeId,
+            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.ok(contributionService.pendingReview(cooperativeId, pageable)));
+    }
+
+    @PostMapping("/{id}/approve")
+    @PreAuthorize("hasAuthority('CONTRIBUTION_WRITE')")
+    @Operation(summary = "Approve a pending member contribution submission")
+    public ResponseEntity<ApiResponse<ContributionResponse>> approveSubmission(
+            @PathVariable UUID cooperativeId,
+            @PathVariable UUID id,
+            HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(
+                ApiResponse.ok(contributionService.approveSubmission(cooperativeId, id, httpRequest)));
+    }
+
+    @PostMapping("/{id}/reject")
+    @PreAuthorize("hasAuthority('CONTRIBUTION_WRITE')")
+    @Operation(summary = "Reject a pending member contribution submission")
+    public ResponseEntity<ApiResponse<ContributionResponse>> rejectSubmission(
+            @PathVariable UUID cooperativeId,
+            @PathVariable UUID id,
+            @Valid @RequestBody(required = false) ContributionReviewRequest request,
+            HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(
+                ApiResponse.ok(contributionService.rejectSubmission(cooperativeId, id, request, httpRequest)));
     }
 
     @GetMapping("/summary")

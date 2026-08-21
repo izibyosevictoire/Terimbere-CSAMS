@@ -1,11 +1,13 @@
-import { Box, Tab, Tabs } from '@mui/material'
+import { Box, Button, Tab, Tabs } from '@mui/material'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
 import { selectCanRecordContributions } from '@/app/store/authSlice'
 import {
+  ContributionApprovalsPanel,
   HistoryPanel,
+  MemberContributionSubmitPanel,
   MonthlyEntryPanel,
   SpecialCampaignsPanel,
 } from '@/features/contributions'
@@ -13,11 +15,17 @@ import { EmptyState } from '@/shared/components/EmptyState'
 import { PageHeader } from '@/shared/components/PageHeader'
 import { ROUTES } from '@/shared/constants/routes'
 
-/** Resolve the `?tab=monthly|special|history` query param to a tab index for the current role. */
 function initialTabFromQuery(tabParam: string | null, isAdmin: boolean): number {
-  if (tabParam === 'monthly') return isAdmin ? 0 : 0
-  if (tabParam === 'history') return isAdmin ? 1 : 0
-  if (tabParam === 'special') return isAdmin ? 2 : 1
+  if (isAdmin) {
+    if (tabParam === 'monthly') return 0
+    if (tabParam === 'approvals') return 1
+    if (tabParam === 'history') return 2
+    if (tabParam === 'special') return 3
+    return 1
+  }
+  if (tabParam === 'submit') return 0
+  if (tabParam === 'history' || tabParam === 'mine') return 1
+  if (tabParam === 'special') return 2
   return 0
 }
 
@@ -66,6 +74,17 @@ export function ContributionsPage() {
       <PageHeader
         title={t('pages.contributions.title')}
         description={t('pages.contributions.description')}
+        actions={
+          isAdmin ? (
+            <Button variant="outlined" size="small" onClick={() => setTab(1)}>
+              {t('contributions.tabs.approvals')}
+            </Button>
+          ) : (
+            <Button variant="contained" size="small" onClick={() => setTab(0)}>
+              {t('contributions.submit.action')}
+            </Button>
+          )
+        }
       />
 
       <Tabs
@@ -75,7 +94,10 @@ export function ContributionsPage() {
         allowScrollButtonsMobile
         sx={{ mb: 2.5, borderBottom: 1, borderColor: 'divider' }}
       >
-        {isAdmin ? <Tab label={t('contributions.tabs.monthly')} /> : null}
+        {isAdmin ? <Tab label={t('contributions.tabs.monthly')} /> : (
+          <Tab label={t('contributions.tabs.submit')} />
+        )}
+        {isAdmin ? <Tab label={t('contributions.tabs.approvals')} /> : null}
         <Tab label={isAdmin ? t('contributions.tabs.history') : t('contributions.tabs.mine')} />
         <Tab label={t('contributions.tabs.special')} />
       </Tabs>
@@ -83,12 +105,19 @@ export function ContributionsPage() {
       {isAdmin && tab === 0 ? (
         <MonthlyEntryPanel cooperativeId={cooperativeId} canWrite={isAdmin} />
       ) : null}
+      {!isAdmin && tab === 0 ? (
+        <MemberContributionSubmitPanel cooperativeId={cooperativeId} />
+      ) : null}
 
-      {((isAdmin && tab === 1) || (!isAdmin && tab === 0)) ? (
-        <HistoryPanel cooperativeId={cooperativeId} isAdmin={isAdmin} />
+      {isAdmin && tab === 1 ? (
+        <ContributionApprovalsPanel cooperativeId={cooperativeId} />
       ) : null}
 
       {((isAdmin && tab === 2) || (!isAdmin && tab === 1)) ? (
+        <HistoryPanel cooperativeId={cooperativeId} isAdmin={isAdmin} />
+      ) : null}
+
+      {((isAdmin && tab === 3) || (!isAdmin && tab === 2)) ? (
         <SpecialCampaignsPanel cooperativeId={cooperativeId} canWrite={isAdmin} />
       ) : null}
     </Box>

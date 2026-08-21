@@ -169,6 +169,7 @@ class FineControllerIntegrationTest {
                                 {
                                   "amount": 400.0000,
                                   "paymentDate": "2026-08-01",
+                                  "paymentMethod": "MOBILE_MONEY",
                                   "paymentReference": "FP-1"
                                 }
                                 """))
@@ -232,7 +233,8 @@ class FineControllerIntegrationTest {
                         .content("""
                                 {
                                   "amount": 200.0000,
-                                  "paymentDate": "2026-08-01"
+                                  "paymentDate": "2026-08-01",
+                                  "paymentMethod": "CASH"
                                 }
                                 """))
                 .andExpect(status().isOk())
@@ -280,7 +282,8 @@ class FineControllerIntegrationTest {
                         .content("""
                                 {
                                   "amount": 150.0000,
-                                  "paymentDate": "2026-08-01"
+                                  "paymentDate": "2026-08-01",
+                                  "paymentMethod": "CASH"
                                 }
                                 """))
                 .andExpect(status().isUnprocessableEntity());
@@ -374,7 +377,8 @@ class FineControllerIntegrationTest {
                         .content("""
                                 {
                                   "amount": 300.0000,
-                                  "paymentDate": "2026-08-02"
+                                  "paymentDate": "2026-08-02",
+                                  "paymentMethod": "BANK_TRANSFER"
                                 }
                                 """))
                 .andExpect(status().isOk())

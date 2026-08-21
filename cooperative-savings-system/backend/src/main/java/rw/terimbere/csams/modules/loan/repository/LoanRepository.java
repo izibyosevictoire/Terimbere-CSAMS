@@ -23,6 +23,9 @@ public interface LoanRepository extends JpaRepository<Loan, UUID> {
 
     Page<Loan> findByCooperativeIdAndStatus(UUID cooperativeId, LoanStatus status, Pageable pageable);
 
+    Page<Loan> findByCooperativeIdAndStatusIn(
+            UUID cooperativeId, Collection<LoanStatus> statuses, Pageable pageable);
+
     Page<Loan> findByCooperativeIdAndMemberUserId(UUID cooperativeId, UUID memberUserId, Pageable pageable);
 
     Page<Loan> findByCooperativeIdAndMemberUserIdAndStatus(

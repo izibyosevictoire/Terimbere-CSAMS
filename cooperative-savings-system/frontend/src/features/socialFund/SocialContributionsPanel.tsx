@@ -3,6 +3,11 @@ import {
   Box,
   Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Link,
   MenuItem,
   Stack,
   TablePagination,
@@ -17,6 +22,7 @@ import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchMembers } from '@/shared/api/members'
+import { fileDownloadPath, uploadCooperativeFile } from '@/shared/api/files'
 import {
   approveSocialContribution,
   createSocialContribution,
@@ -24,6 +30,7 @@ import {
   fetchSocialContributions,
   rejectSocialContribution,
 } from '@/shared/api/socialFund'
+import { ApprovalHistory } from '@/shared/components/ApprovalHistory'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { LoadingState } from '@/shared/components/LoadingState'
@@ -50,22 +57,32 @@ import {
 interface SocialContributionsPanelProps {
   cooperativeId: string
   isAdmin: boolean
+  canWrite?: boolean
+  defaultStatus?: string
+  hideSubmit?: boolean
 }
 
 export function SocialContributionsPanel({
   cooperativeId,
   isAdmin,
+  canWrite = isAdmin,
+  defaultStatus = '',
+  hideSubmit = false,
 }: SocialContributionsPanelProps) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const { enqueueSnackbar } = useSnackbar()
-  const [status, setStatus] = useState('')
+  const [status, setStatus] = useState(defaultStatus)
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(10)
   const [reviewTarget, setReviewTarget] = useState<{
     id: string
     action: 'approve' | 'reject'
   } | null>(null)
+  const [rejectReason, setRejectReason] = useState('')
+  const [uploadedName, setUploadedName] = useState<string | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const listQuery = useQuery({
     queryKey: ['social-fund', 'contributions', cooperativeId, isAdmin, status, page, size],
@@ -108,10 +125,27 @@ export function SocialContributionsPanel({
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<SocialContributionFormValues>({
     defaultValues: socialContributionDefaults,
     resolver: yupResolver(socialContributionSchema),
+  })
+
+  const evidenceKey = watch('evidenceFileKey')
+
+  const uploadMutation = useMutation({
+    mutationFn: (file: File) =>
+      uploadCooperativeFile(cooperativeId, file, 'SOCIAL_EVIDENCE'),
+    onSuccess: (file) => {
+      setValue('evidenceFileKey', file.storageKey)
+      setUploadedName(file.originalFilename)
+      setUploadError(null)
+    },
+    onError: (error) => {
+      setUploadError(getErrorMessage(error, t('socialFund.contributions.uploadFailed')))
+    },
   })
 
   const submitMutation = useMutation({
@@ -123,6 +157,7 @@ export function SocialContributionsPanel({
     onSuccess: () => {
       enqueueSnackbar(t('socialFund.contributions.submitSuccess'), { variant: 'success' })
       reset(socialContributionDefaults)
+      setUploadedName(null)
       void queryClient.invalidateQueries({ queryKey: ['social-fund'] })
       void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     },
@@ -136,7 +171,9 @@ export function SocialContributionsPanel({
       if (!reviewTarget) throw new Error('Missing review target')
       return reviewTarget.action === 'approve'
         ? approveSocialContribution(cooperativeId, reviewTarget.id)
-        : rejectSocialContribution(cooperativeId, reviewTarget.id)
+        : rejectSocialContribution(cooperativeId, reviewTarget.id, {
+            reviewNotes: rejectReason.trim(),
+          })
     },
     onSuccess: () => {
       enqueueSnackbar(
@@ -146,6 +183,7 @@ export function SocialContributionsPanel({
         { variant: 'success' },
       )
       setReviewTarget(null)
+      setRejectReason('')
       void queryClient.invalidateQueries({ queryKey: ['social-fund'] })
       void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     },
@@ -183,6 +221,18 @@ export function SocialContributionsPanel({
         hideOnMobile: true,
       },
       {
+        id: 'proof',
+        label: t('socialFund.fields.proof'),
+        render: (row: SocialContribution) =>
+          row.evidenceFileKey ? (
+            <Link href={fileDownloadPath(row.evidenceFileKey)} target="_blank" rel="noreferrer">
+              {t('socialFund.contributions.viewProof')}
+            </Link>
+          ) : (
+            '—'
+          ),
+      },
+      {
         id: 'status',
         label: t('socialFund.fields.status'),
         render: (row) => (
@@ -193,14 +243,14 @@ export function SocialContributionsPanel({
           />
         ),
       },
-      ...(isAdmin
+      ...(canWrite
         ? [
             {
               id: 'actions',
               label: t('common.actions'),
               render: (row: SocialContribution) => {
-                const canApprove = canApproveSocialContribution(String(row.status), isAdmin)
-                const canReject = canRejectSocialContribution(String(row.status), isAdmin)
+                const canApprove = canApproveSocialContribution(String(row.status), canWrite)
+                const canReject = canRejectSocialContribution(String(row.status), canWrite)
                 if (!canApprove && !canReject) return '—'
                 return (
                   <Stack direction="row" spacing={0.5} useFlexGap sx={{ flexWrap: 'wrap' }}>
@@ -224,6 +274,7 @@ export function SocialContributionsPanel({
                         color="error"
                         onClick={(e) => {
                           e.stopPropagation()
+                          setRejectReason('')
                           setReviewTarget({ id: row.id, action: 'reject' })
                         }}
                       >
@@ -237,13 +288,14 @@ export function SocialContributionsPanel({
           ]
         : []),
     ],
-    [isAdmin, t],
+    [canWrite, t],
   )
 
   return (
     <Stack spacing={2.5}>
       <Alert severity="info">{t('socialFund.contributions.hint')}</Alert>
 
+      {hideSubmit ? null : (
       <Box
         component="form"
         onSubmit={handleSubmit((values) => submitMutation.mutate(values))}
@@ -313,11 +365,40 @@ export function SocialContributionsPanel({
             {...register('notes')}
             fullWidth
           />
+          <Stack spacing={1}>
+            <Typography variant="subtitle2">{t('socialFund.fields.proof')}</Typography>
+            <Button variant="outlined" component="label" disabled={uploadMutation.isPending}>
+              {uploadMutation.isPending
+                ? t('common.loading')
+                : t('socialFund.contributions.uploadProof')}
+              <input
+                hidden
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) uploadMutation.mutate(file)
+                  e.target.value = ''
+                }}
+              />
+            </Button>
+            {uploadedName || evidenceKey ? (
+              <Typography variant="body2" color="text.secondary">
+                {uploadedName || evidenceKey}
+              </Typography>
+            ) : (
+              <Typography variant="caption" color="text.secondary">
+                {t('socialFund.contributions.proofHint')}
+              </Typography>
+            )}
+            {uploadError ? <Alert severity="error">{uploadError}</Alert> : null}
+          </Stack>
           <Button type="submit" variant="contained" disabled={submitMutation.isPending}>
             {t('socialFund.contributions.submit')}
           </Button>
         </Stack>
       </Box>
+      )}
 
       <Box>
         <Stack
@@ -364,6 +445,7 @@ export function SocialContributionsPanel({
               columns={columns}
               rows={listQuery.data?.content ?? []}
               getRowId={(row) => row.id}
+              onRowClick={(row) => setSelectedId(row.id)}
               emptyTitle={t('socialFund.contributions.emptyTitle')}
               emptyDescription={
                 isAdmin
@@ -383,26 +465,60 @@ export function SocialContributionsPanel({
               }}
               rowsPerPageOptions={[5, 10, 25]}
             />
+            {(reviewTarget?.id ?? selectedId) ? (
+              <Box sx={{ mt: 2 }}>
+                <ApprovalHistory
+                  events={
+                    (listQuery.data?.content ?? []).find(
+                      (row) => row.id === (reviewTarget?.id ?? selectedId),
+                    )?.approvalHistory
+                  }
+                />
+              </Box>
+            ) : null}
           </>
         ) : null}
       </Box>
 
       <ConfirmDialog
-        open={Boolean(reviewTarget)}
-        title={
-          reviewTarget?.action === 'approve'
-            ? t('socialFund.contributions.confirmApproveTitle')
-            : t('socialFund.contributions.confirmRejectTitle')
-        }
-        message={
-          reviewTarget?.action === 'approve'
-            ? t('socialFund.contributions.confirmApproveMessage')
-            : t('socialFund.contributions.confirmRejectMessage')
-        }
+        open={reviewTarget?.action === 'approve'}
+        title={t('socialFund.contributions.confirmApproveTitle')}
+        message={t('socialFund.contributions.confirmApproveMessage')}
         loading={reviewMutation.isPending}
         onCancel={() => setReviewTarget(null)}
         onConfirm={() => reviewMutation.mutate()}
       />
+
+      <Dialog
+        open={reviewTarget?.action === 'reject'}
+        onClose={() => setReviewTarget(null)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>{t('socialFund.contributions.confirmRejectTitle')}</DialogTitle>
+        <DialogContent>
+          <TextField
+            label={t('socialFund.contributions.rejectionReason')}
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            fullWidth
+            multiline
+            minRows={2}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setReviewTarget(null)}>{t('common.cancel')}</Button>
+          <Button
+            variant="contained"
+            color="error"
+            disabled={!rejectReason.trim() || reviewMutation.isPending}
+            onClick={() => reviewMutation.mutate()}
+          >
+            {t('socialFund.actions.reject')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   )
 }

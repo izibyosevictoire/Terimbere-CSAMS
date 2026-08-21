@@ -22,6 +22,9 @@ import { MonthlyContributionsChart } from './MonthlyContributionsChart'
 const METRIC_COLS = { xs: 12, sm: 6, md: 4, lg: 2.4 }
 
 const QUICK_LINKS = [
+  { labelKey: 'dashboard.member.links.submitContribution', path: `${ROUTES.contributions}?tab=submit`, icon: SavingsIcon },
+  { labelKey: 'dashboard.member.links.applyLoan', path: `${ROUTES.loans}?tab=request`, icon: AccountBalanceWalletIcon },
+  { labelKey: 'dashboard.member.links.submitSocial', path: `${ROUTES.socialFund}?tab=submit`, icon: FavoriteIcon },
   { labelKey: 'dashboard.member.links.contributions', path: ROUTES.contributions, icon: SavingsIcon },
   { labelKey: 'dashboard.member.links.loans', path: ROUTES.loans, icon: AccountBalanceWalletIcon },
   { labelKey: 'dashboard.member.links.fines', path: ROUTES.fines, icon: GavelIcon },
@@ -133,9 +136,9 @@ export function MemberDashboard({ cooperativeId }: MemberDashboardProps) {
         elevation={0}
         sx={{ p: { xs: 2.5, md: 3 }, mb: 3, border: '1px solid', borderColor: 'divider' }}
       >
-        <Typography variant="h6" gutterBottom>
-          {t('dashboard.member.quickLinksTitle')}
-        </Typography>
+          <Typography variant="h6" gutterBottom>
+            {t('dashboard.member.actionsTitle')}
+          </Typography>
         <Stack direction="row" spacing={1.5} sx={{ flexWrap: 'wrap' }} useFlexGap>
           {QUICK_LINKS.map((link) => {
             const Icon = link.icon

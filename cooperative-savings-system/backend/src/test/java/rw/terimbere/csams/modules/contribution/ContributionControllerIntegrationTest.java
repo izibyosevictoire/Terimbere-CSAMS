@@ -170,7 +170,8 @@ class ContributionControllerIntegrationTest {
                 .andExpect(jsonPath("$.data[0].status").value("PARTIALLY_PAID"))
                 .andExpect(jsonPath("$.data[0].outstandingAmount").value(599.5));
 
-        assertThat(contributionRepository.count()).isEqualTo(1);
+        assertThat(contributionRepository.findByCooperativeIdAndYearAndMonth(cooperativeId, 2026, 3))
+                .hasSize(1);
 
         mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/dashboard/summary")
                         .header("Authorization", "Bearer " + superAdminToken))
@@ -380,6 +381,87 @@ class ContributionControllerIntegrationTest {
                         .header("Authorization", "Bearer " + superAdminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.contributions[0].id").value(contributionId.toString()));
+    }
+
+    @Test
+    void memberSubmit_pendingThenAccountantApprove_postsLedgerAndRejectDoesNot() throws Exception {
+        String memberToken = loginAccessToken(memberUsername, memberPassword);
+
+        MvcResult submit = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/contributions/submissions")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "amount": 1000.0000,
+                                  "paymentDate": "2026-04-05",
+                                  "paymentReference": "MOMO-1",
+                                  "notes": "April savings"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.reviewStatus").value("PENDING"))
+                .andExpect(jsonPath("$.data.status").value("PENDING"))
+                .andExpect(jsonPath("$.data.paidAmount").value(0.0))
+                .andReturn();
+        UUID contributionId = UUID.fromString(objectMapper
+                .readTree(submit.getResponse().getContentAsString())
+                .path("data")
+                .path("id")
+                .asText());
+
+        mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/contributions/pending-review")
+                        .header("Authorization", "Bearer " + superAdminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].id").value(contributionId.toString()));
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/contributions/" + contributionId + "/approve")
+                        .header("Authorization", "Bearer " + memberToken))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/contributions/" + contributionId + "/approve")
+                        .header("Authorization", "Bearer " + superAdminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.reviewStatus").value("APPROVED"))
+                .andExpect(jsonPath("$.data.status").value("PAID"))
+                .andExpect(jsonPath("$.data.paidAmount").value(1000.0));
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/contributions/" + contributionId + "/approve")
+                        .header("Authorization", "Bearer " + superAdminToken))
+                .andExpect(status().isUnprocessableEntity());
+
+        long ledgerCredits = ledgerEntryRepository.findAll().stream()
+                .filter(e -> e.getSourceEntityId().equals(contributionId))
+                .filter(e -> e.getTransactionType() == LedgerTransactionType.REGULAR_CONTRIBUTION)
+                .filter(e -> e.getStatus() == LedgerEntryStatus.APPROVED)
+                .count();
+        assertThat(ledgerCredits).isEqualTo(1);
+
+        MvcResult second = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/contributions/submissions")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "amount": 500.0000,
+                                  "paymentDate": "2026-05-05",
+                                  "paymentReference": "MOMO-2"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.reviewStatus").value("PENDING"))
+                .andReturn();
+        UUID rejectedId = UUID.fromString(objectMapper
+                .readTree(second.getResponse().getContentAsString())
+                .path("data")
+                .path("id")
+                .asText());
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/contributions/" + rejectedId + "/reject")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"rejectionReason\":\"Unclear proof\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.reviewStatus").value("REJECTED"))
+                .andExpect(jsonPath("$.data.paidAmount").value(0.0));
     }
 
     private String loginAccessToken(String username, String password) throws Exception {

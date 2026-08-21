@@ -45,7 +45,9 @@ export function loanRequestSchema(requireMember: boolean): yup.ObjectSchema<Loan
         const n = Number(v)
         return Number.isInteger(n) && n > 0
       }),
-    purpose: yup.string().trim().max(500).default(''),
+    purpose: requireMember
+      ? yup.string().trim().max(500).default('')
+      : yup.string().trim().required('Loan purpose is required').max(500),
     notes: yup.string().trim().max(2000).default(''),
   })
 }

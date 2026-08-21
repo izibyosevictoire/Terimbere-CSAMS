@@ -1,5 +1,9 @@
+import type { ApprovalEvent } from './approval'
+import { mapApprovalEvent } from './approval'
+
 export type LoanStatus =
   | 'PENDING'
+  | 'AWAITING_SECOND_APPROVAL'
   | 'APPROVED'
   | 'ACTIVE'
   | 'OVERDUE'
@@ -11,6 +15,7 @@ export type InterestType = 'FLAT' | 'REDUCING'
 
 export const LOAN_STATUSES: LoanStatus[] = [
   'PENDING',
+  'AWAITING_SECOND_APPROVAL',
   'APPROVED',
   'ACTIVE',
   'OVERDUE',
@@ -50,10 +55,34 @@ export interface LoanSettingsUpdateRequest {
   lateFeeEnabled?: boolean
 }
 
+export interface LoanApplicationForm {
+  cooperativeId?: string
+  cooperativeName?: string | null
+  currency?: string | null
+  memberUserId?: string
+  memberFullName?: string | null
+  username?: string | null
+  email?: string | null
+  phone?: string | null
+  nationalId?: string | null
+  address?: string | null
+  membershipDate?: string | null
+  membershipStatus?: string | null
+  roleInCooperative?: string | null
+  requestedAmount?: string | number | null
+  purpose?: string | null
+  termMonths?: number | null
+  interestRatePercent?: string | number | null
+  interestType?: InterestType | string | null
+  requestDate?: string | null
+  submittedAt?: string | null
+}
+
 export interface Loan {
   id: string
   cooperativeId?: string
   memberUserId: string
+  memberName?: string | null
   fullName?: string
   username?: string
   requestedAmount: string | number
@@ -78,6 +107,11 @@ export interface Loan {
   requestedBy?: string | null
   approvedBy?: string | null
   disbursedBy?: string | null
+  firstApprovedBy?: string | null
+  firstApprovedAt?: string | null
+  firstApproverRole?: string | null
+  applicationForm?: LoanApplicationForm | null
+  approvalHistory?: ApprovalEvent[]
   createdAt?: string
   updatedAt?: string
   version?: number
@@ -129,6 +163,7 @@ export interface LoanListQuery {
   q?: string
   status?: string
   memberUserId?: string
+  pendingApproval?: boolean
   page?: number
   size?: number
   sort?: string
@@ -152,11 +187,14 @@ export function mapLoan(raw: Loan): Loan {
     id: String(raw.id),
     memberUserId: String(raw.memberUserId),
     cooperativeId: raw.cooperativeId != null ? String(raw.cooperativeId) : undefined,
+    fullName: raw.fullName || raw.memberName || undefined,
     requestedAmount: raw.requestedAmount ?? 0,
     termMonths: Number(raw.termMonths ?? 0),
     interestRatePercent: raw.interestRatePercent ?? 0,
     interestType: raw.interestType || 'FLAT',
     status: raw.status || 'PENDING',
+    firstApprovedBy: raw.firstApprovedBy != null ? String(raw.firstApprovedBy) : null,
+    approvalHistory: (raw.approvalHistory ?? []).map(mapApprovalEvent),
   }
 }
 

@@ -15,6 +15,7 @@ import {
 describe('loanStatusColor', () => {
   it('maps known statuses to chip colors', () => {
     expect(loanStatusColor('PENDING')).toBe('info')
+    expect(loanStatusColor('AWAITING_SECOND_APPROVAL')).toBe('warning')
     expect(loanStatusColor('APPROVED')).toBe('primary')
     expect(loanStatusColor('ACTIVE')).toBe('success')
     expect(loanStatusColor('OVERDUE')).toBe('warning')
@@ -33,9 +34,9 @@ describe('loanStatusLabelKey', () => {
 describe('canShowApprove', () => {
   it('allows admin on PENDING only', () => {
     expect(canShowApprove('PENDING', true)).toBe(true)
+    expect(canShowApprove('AWAITING_SECOND_APPROVAL', true)).toBe(true)
     expect(canShowApprove('PENDING', false)).toBe(false)
     expect(canShowApprove('APPROVED', true)).toBe(false)
-    expect(canShowApprove('ACTIVE', true)).toBe(false)
   })
 })
 

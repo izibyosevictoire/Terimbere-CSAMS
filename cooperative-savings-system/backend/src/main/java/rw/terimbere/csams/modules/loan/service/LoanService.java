@@ -2,11 +2,16 @@ package rw.terimbere.csams.modules.loan.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,12 +19,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import rw.terimbere.csams.modules.audit.entity.ApprovalAction;
+import rw.terimbere.csams.modules.audit.service.ApprovalTrailService;
 import rw.terimbere.csams.modules.audit.service.AuditService;
 import rw.terimbere.csams.modules.cooperative.entity.Cooperative;
 import rw.terimbere.csams.modules.notification.entity.NotificationType;
 import rw.terimbere.csams.modules.notification.service.NotificationFacade;
 import rw.terimbere.csams.modules.cooperative.repository.CooperativeRepository;
 import rw.terimbere.csams.modules.ledger.service.LedgerService;
+import rw.terimbere.csams.modules.loan.dto.LoanApplicationFormResponse;
 import rw.terimbere.csams.modules.loan.dto.LoanApproveRequest;
 import rw.terimbere.csams.modules.loan.dto.LoanRejectRequest;
 import rw.terimbere.csams.modules.loan.dto.LoanRepaymentCreateRequest;
@@ -67,7 +75,9 @@ public class LoanService {
     private final FinancialCalculationService financialCalculationService;
     private final LedgerService ledgerService;
     private final AuditService auditService;
+    private final ApprovalTrailService approvalTrailService;
     private final NotificationFacade notificationFacade;
+    private final ObjectMapper objectMapper;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void refreshOverdueStatuses(UUID cooperativeId) {
@@ -136,7 +146,19 @@ public class LoanService {
                 .purpose(trimToNull(request.getPurpose()))
                 .requestedBy(principal.getId())
                 .build();
+        loan.setApplicationSnapshot(writeSnapshot(buildApplicationForm(
+                cooperative, membership, memberUserId, loan, Instant.now())));
         loan = loanRepository.save(loan);
+
+        approvalTrailService.append(
+                cooperativeId,
+                ApprovalTrailService.ENTITY_LOAN,
+                loan.getId(),
+                principal,
+                ApprovalAction.SUBMITTED,
+                null,
+                LoanStatus.PENDING.name(),
+                trimToNull(request.getPurpose()));
 
         auditService.record(
                 principal.getId(),
@@ -148,18 +170,47 @@ public class LoanService {
                 "{\"amount\":\"" + amount + "\",\"status\":\"PENDING\"}",
                 clientIp(httpRequest),
                 userAgent(httpRequest));
-        return toResponse(loan, cooperative.getCurrency());
+        return toResponse(loan, cooperative.getCurrency(), true);
+    }
+
+    @Transactional(readOnly = true)
+    public LoanApplicationFormResponse applicationPreview(UUID cooperativeId) {
+        Cooperative cooperative = requireCooperative(cooperativeId);
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        authorizationService.requireMembership(cooperativeId);
+        CooperativeMembership membership = membershipRepository
+                .findByCooperativeIdAndUserId(cooperativeId, principal.getId())
+                .orElseThrow(() -> new ValidationException("User is not a member of this cooperative"));
+        LoanSettings settings = loanSettingsService.requireSettings(cooperativeId);
+        Loan draft = Loan.builder()
+                .cooperativeId(cooperativeId)
+                .memberUserId(principal.getId())
+                .interestRatePercent(settings.getInterestRatePercent())
+                .interestType(settings.getInterestType() == null ? InterestType.FLAT : settings.getInterestType())
+                .termMonths(resolveTermMonths(null, settings))
+                .requestDate(LocalDate.now())
+                .build();
+        return buildApplicationForm(cooperative, membership, principal.getId(), draft, Instant.now());
     }
 
     @Transactional
     public PageResponse<LoanResponse> list(
-            UUID cooperativeId, LoanStatus status, UUID memberUserId, Pageable pageable) {
+            UUID cooperativeId,
+            LoanStatus status,
+            UUID memberUserId,
+            boolean pendingApproval,
+            Pageable pageable) {
         requireCooperative(cooperativeId);
         authorizationService.requireMembership(cooperativeId);
         loanRepository.markOverdue(cooperativeId, LocalDate.now());
 
         Page<Loan> page;
-        if (status != null && memberUserId != null) {
+        if (pendingApproval) {
+            page = loanRepository.findByCooperativeIdAndStatusIn(
+                    cooperativeId,
+                    EnumSet.of(LoanStatus.PENDING, LoanStatus.AWAITING_SECOND_APPROVAL),
+                    pageable);
+        } else if (status != null && memberUserId != null) {
             page = loanRepository.findByCooperativeIdAndMemberUserIdAndStatus(
                     cooperativeId, memberUserId, status, pageable);
         } else if (status != null) {
@@ -182,7 +233,7 @@ public class LoanService {
                 .findByCooperativeIdAndMemberUserIdOrderByRequestDateDescCreatedAtDesc(
                         cooperativeId, principal.getId())
                 .stream()
-                .map(this::toResponse)
+                .map(loan -> toResponse(loan, null, true))
                 .toList();
     }
 
@@ -191,7 +242,7 @@ public class LoanService {
         requireCooperative(cooperativeId);
         authorizationService.requireMembership(cooperativeId);
         loanRepository.markOverdue(cooperativeId, LocalDate.now());
-        return toResponse(requireLoan(cooperativeId, loanId));
+        return toResponse(requireLoan(cooperativeId, loanId), null, true);
     }
 
     @Transactional
@@ -211,56 +262,47 @@ public class LoanService {
         requireCooperative(cooperativeId);
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
-        CooperativeOfficerRoles.requireLoanApprove(principal);
         Loan loan = requireLoan(cooperativeId, loanId);
-        if (loan.getStatus() != LoanStatus.PENDING) {
-            throw new BusinessException("Only PENDING loans can be approved");
-        }
+        String previousStatus = loan.getStatus().name();
 
-        LoanSettings settings = loanSettingsService.requireSettings(cooperativeId);
-        BigDecimal approvedAmount = request != null && request.getApprovedAmount() != null
-                ? MoneyUtils.scaleForStorage(request.getApprovedAmount())
-                : loan.getRequestedAmount();
-        MoneyUtils.assertPositive(approvedAmount);
-        if (settings.getMaxLoanAmount() != null && approvedAmount.compareTo(settings.getMaxLoanAmount()) > 0) {
-            throw new BusinessException("Approved amount exceeds maximum loan amount");
-        }
-
-        if (request != null && request.getTermMonths() != null) {
-            int term = request.getTermMonths();
-            if (settings.getMaxTermMonths() != null && term > settings.getMaxTermMonths()) {
-                throw new BusinessException("Term exceeds maximum allowed months");
+        if (loan.getStatus() == LoanStatus.PENDING) {
+            CooperativeOfficerRoles.requireLoanApprove(principal);
+            applyFirstApproval(loan, request, principal);
+        } else if (loan.getStatus() == LoanStatus.AWAITING_SECOND_APPROVAL) {
+            CooperativeOfficerRoles.requireFundAuthorize(principal);
+            if (principal.getId().equals(loan.getFirstApprovedBy())) {
+                throw new ForbiddenException("The same person cannot give both loan approvals");
             }
-            loan.setTermMonths(term);
+            applySecondApproval(loan, request, principal);
+        } else {
+            throw new BusinessException("This loan is not waiting for approval");
         }
 
-        BigDecimal interest = LoanInterestCalculator.computeInterest(
-                approvedAmount, loan.getInterestRatePercent(), loan.getInterestType());
-
-        loan.setApprovedAmount(approvedAmount);
-        loan.setInterestAmount(interest);
-        loan.setApprovalDate(LocalDate.now());
-        loan.setApprovedBy(principal.getId());
-        loan.setStatus(LoanStatus.APPROVED);
-        if (request != null && request.getDueDate() != null) {
-            if (request.getDueDate().isBefore(loan.getApprovalDate())) {
-                throw new ValidationException("dueDate must be on or after the approval date");
-            }
-            loan.setDueDate(request.getDueDate());
-        }
         loan = loanRepository.save(loan);
-
+        approvalTrailService.append(
+                cooperativeId,
+                ApprovalTrailService.ENTITY_LOAN,
+                loan.getId(),
+                principal,
+                ApprovalAction.APPROVED,
+                previousStatus,
+                loan.getStatus().name(),
+                null);
         auditService.record(
                 principal.getId(),
                 cooperativeId,
                 AuditableAction.APPROVE,
                 "Loan",
                 loan.getId(),
-                "{\"status\":\"PENDING\"}",
-                "{\"status\":\"APPROVED\",\"approvedAmount\":\"" + approvedAmount + "\"}",
+                "{\"status\":\"" + previousStatus + "\"}",
+                "{\"status\":\""
+                        + loan.getStatus()
+                        + "\",\"approvedAmount\":\""
+                        + loan.getApprovedAmount()
+                        + "\"}",
                 clientIp(httpRequest),
                 userAgent(httpRequest));
-        return toResponse(loan);
+        return toResponse(loan, null, true);
     }
 
     @Transactional
@@ -269,32 +311,48 @@ public class LoanService {
         requireCooperative(cooperativeId);
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
-        CooperativeOfficerRoles.requireLoanApprove(principal);
         Loan loan = requireLoan(cooperativeId, loanId);
-        if (loan.getStatus() != LoanStatus.PENDING) {
-            throw new BusinessException("Only PENDING loans can be rejected");
+        if (loan.getStatus() == LoanStatus.PENDING) {
+            CooperativeOfficerRoles.requireLoanApprove(principal);
+        } else if (loan.getStatus() == LoanStatus.AWAITING_SECOND_APPROVAL) {
+            CooperativeOfficerRoles.requireFundAuthorize(principal);
+            if (principal.getId().equals(loan.getFirstApprovedBy())) {
+                throw new ForbiddenException("The same person cannot give both loan approvals");
+            }
+        } else {
+            throw new BusinessException("Only loans awaiting approval can be rejected");
         }
         if (request == null || !StringUtils.hasText(request.getRejectionReason())) {
             throw new ValidationException("Rejection reason is required");
         }
 
+        String previousStatus = loan.getStatus().name();
         loan.setStatus(LoanStatus.REJECTED);
         loan.setRejectionReason(request.getRejectionReason().trim());
         loan.setApprovedBy(principal.getId());
         loan.setApprovalDate(LocalDate.now());
         loan = loanRepository.save(loan);
 
+        approvalTrailService.append(
+                cooperativeId,
+                ApprovalTrailService.ENTITY_LOAN,
+                loan.getId(),
+                principal,
+                ApprovalAction.REJECTED,
+                previousStatus,
+                LoanStatus.REJECTED.name(),
+                request.getRejectionReason().trim());
         auditService.record(
                 principal.getId(),
                 cooperativeId,
                 AuditableAction.REJECT,
                 "Loan",
                 loan.getId(),
-                "{\"status\":\"PENDING\"}",
+                "{\"status\":\"" + previousStatus + "\"}",
                 "{\"status\":\"REJECTED\"}",
                 clientIp(httpRequest),
                 userAgent(httpRequest));
-        return toResponse(loan);
+        return toResponse(loan, null, true);
     }
 
     @Transactional
@@ -615,15 +673,74 @@ public class LoanService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cooperative", cooperativeId));
     }
 
+    private void applyFirstApproval(Loan loan, LoanApproveRequest request, UserPrincipal principal) {
+        LoanSettings settings = loanSettingsService.requireSettings(loan.getCooperativeId());
+        BigDecimal approvedAmount = request != null && request.getApprovedAmount() != null
+                ? MoneyUtils.scaleForStorage(request.getApprovedAmount())
+                : loan.getRequestedAmount();
+        MoneyUtils.assertPositive(approvedAmount);
+        if (settings.getMaxLoanAmount() != null && approvedAmount.compareTo(settings.getMaxLoanAmount()) > 0) {
+            throw new BusinessException("Approved amount exceeds maximum loan amount");
+        }
+        if (request != null && request.getTermMonths() != null) {
+            int term = request.getTermMonths();
+            if (settings.getMaxTermMonths() != null && term > settings.getMaxTermMonths()) {
+                throw new BusinessException("Term exceeds maximum allowed months");
+            }
+            loan.setTermMonths(term);
+        }
+        BigDecimal interest = LoanInterestCalculator.computeInterest(
+                approvedAmount, loan.getInterestRatePercent(), loan.getInterestType());
+        loan.setApprovedAmount(approvedAmount);
+        loan.setInterestAmount(interest);
+        loan.setFirstApprovedBy(principal.getId());
+        loan.setFirstApprovedAt(Instant.now());
+        loan.setFirstApproverRole(CooperativeOfficerRoles.displayRole(principal));
+        loan.setStatus(LoanStatus.AWAITING_SECOND_APPROVAL);
+        applyDueDate(loan, request);
+    }
+
+    private void applySecondApproval(Loan loan, LoanApproveRequest request, UserPrincipal principal) {
+        if (request != null && request.getApprovedAmount() != null) {
+            MoneyUtils.assertPositive(request.getApprovedAmount());
+            loan.setApprovedAmount(MoneyUtils.scaleForStorage(request.getApprovedAmount()));
+            loan.setInterestAmount(LoanInterestCalculator.computeInterest(
+                    loan.getApprovedAmount(), loan.getInterestRatePercent(), loan.getInterestType()));
+        }
+        loan.setApprovedBy(principal.getId());
+        loan.setApprovalDate(LocalDate.now());
+        loan.setStatus(LoanStatus.APPROVED);
+        applyDueDate(loan, request);
+    }
+
+    private static void applyDueDate(Loan loan, LoanApproveRequest request) {
+        if (request == null || request.getDueDate() == null) {
+            return;
+        }
+        LocalDate reference = loan.getApprovalDate() == null ? LocalDate.now() : loan.getApprovalDate();
+        if (request.getDueDate().isBefore(reference)) {
+            throw new ValidationException("dueDate must be on or after the approval date");
+        }
+        loan.setDueDate(request.getDueDate());
+    }
+
     private LoanResponse toResponse(Loan loan) {
-        return toResponse(loan, null);
+        return toResponse(loan, null, false);
     }
 
     private LoanResponse toResponse(Loan loan, String ignoredCurrency) {
+        return toResponse(loan, ignoredCurrency, false);
+    }
+
+    private LoanResponse toResponse(Loan loan, String ignoredCurrency, boolean includeHistory) {
         String memberName = userRepository
                 .findByIdAndDeletedFalse(loan.getMemberUserId())
                 .map(this::formatName)
                 .orElse(null);
+        LoanApplicationFormResponse form = parseSnapshot(loan.getApplicationSnapshot());
+        if (form == null) {
+            form = buildApplicationFormFromLoan(loan);
+        }
         return LoanResponse.builder()
                 .id(loan.getId())
                 .cooperativeId(loan.getCooperativeId())
@@ -653,9 +770,109 @@ public class LoanService {
                 .requestedBy(loan.getRequestedBy())
                 .approvedBy(loan.getApprovedBy())
                 .disbursedBy(loan.getDisbursedBy())
+                .firstApprovedBy(loan.getFirstApprovedBy())
+                .firstApprovedAt(loan.getFirstApprovedAt())
+                .firstApproverRole(loan.getFirstApproverRole())
+                .applicationForm(form)
+                .approvalHistory(
+                        includeHistory
+                                ? approvalTrailService.list(
+                                        loan.getCooperativeId(),
+                                        ApprovalTrailService.ENTITY_LOAN,
+                                        loan.getId())
+                                : List.of())
                 .createdAt(loan.getCreatedAt())
                 .updatedAt(loan.getUpdatedAt())
                 .build();
+    }
+
+    private LoanApplicationFormResponse buildApplicationFormFromLoan(Loan loan) {
+        Cooperative cooperative = cooperativeRepository
+                .findByIdAndDeletedFalse(loan.getCooperativeId())
+                .orElse(null);
+        CooperativeMembership membership = membershipRepository
+                .findByCooperativeIdAndUserId(loan.getCooperativeId(), loan.getMemberUserId())
+                .orElse(null);
+        return buildApplicationForm(
+                cooperative,
+                membership,
+                loan.getMemberUserId(),
+                loan,
+                loan.getCreatedAt());
+    }
+
+    private LoanApplicationFormResponse buildApplicationForm(
+            Cooperative cooperative,
+            CooperativeMembership membership,
+            UUID memberUserId,
+            Loan loan,
+            Instant submittedAt) {
+        User member = userRepository.findByIdAndDeletedFalse(memberUserId).orElse(null);
+        return LoanApplicationFormResponse.builder()
+                .cooperativeId(cooperative == null ? loan.getCooperativeId() : cooperative.getId())
+                .cooperativeName(cooperative == null ? null : cooperative.getName())
+                .currency(cooperative == null ? null : cooperative.getCurrency())
+                .memberUserId(memberUserId)
+                .memberFullName(member == null ? null : formatName(member))
+                .username(member == null ? null : member.getUsername())
+                .email(member == null ? null : member.getEmail())
+                .phone(member == null ? null : member.getPhone())
+                .nationalId(member == null ? null : member.getNationalId())
+                .address(member == null ? null : member.getAddress())
+                .membershipDate(membership == null ? null : membership.getMembershipDate())
+                .membershipStatus(membership == null ? null : membership.getMembershipStatus())
+                .roleInCooperative(membership == null ? null : membership.getRoleInCooperative())
+                .requestedAmount(scaleOrNull(loan.getRequestedAmount()))
+                .purpose(loan.getPurpose())
+                .termMonths(loan.getTermMonths() == 0 ? null : loan.getTermMonths())
+                .interestRatePercent(
+                        loan.getInterestRatePercent() == null
+                                ? null
+                                : MoneyUtils.scale(loan.getInterestRatePercent()))
+                .interestType(loan.getInterestType())
+                .requestDate(loan.getRequestDate())
+                .submittedAt(submittedAt)
+                .build();
+    }
+
+    private String writeSnapshot(LoanApplicationFormResponse form) {
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("cooperativeId", form.getCooperativeId());
+            payload.put("cooperativeName", form.getCooperativeName());
+            payload.put("currency", form.getCurrency());
+            payload.put("memberUserId", form.getMemberUserId());
+            payload.put("memberFullName", form.getMemberFullName());
+            payload.put("username", form.getUsername());
+            payload.put("email", form.getEmail());
+            payload.put("phone", form.getPhone());
+            payload.put("nationalId", form.getNationalId());
+            payload.put("address", form.getAddress());
+            payload.put("membershipDate", form.getMembershipDate());
+            payload.put("membershipStatus", form.getMembershipStatus());
+            payload.put("roleInCooperative", form.getRoleInCooperative());
+            payload.put("requestedAmount", form.getRequestedAmount());
+            payload.put("purpose", form.getPurpose());
+            payload.put("termMonths", form.getTermMonths());
+            payload.put("interestRatePercent", form.getInterestRatePercent());
+            payload.put("interestType", form.getInterestType());
+            payload.put("requestDate", form.getRequestDate());
+            payload.put("submittedAt", form.getSubmittedAt());
+            return objectMapper.writeValueAsString(payload);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Unable to snapshot loan application", ex);
+        }
+    }
+
+    private LoanApplicationFormResponse parseSnapshot(String snapshot) {
+        if (!StringUtils.hasText(snapshot)) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(snapshot, LoanApplicationFormResponse.class);
+        } catch (JsonProcessingException ex) {
+            return null;
+        }
     }
 
     private LoanRepaymentResponse toRepaymentResponse(LoanRepayment repayment) {

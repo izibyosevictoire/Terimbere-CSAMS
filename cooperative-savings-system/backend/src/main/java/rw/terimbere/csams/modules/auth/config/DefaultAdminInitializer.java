@@ -8,6 +8,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import rw.terimbere.csams.modules.role.entity.Role;
@@ -21,6 +22,7 @@ import rw.terimbere.csams.modules.user.repository.UserRepository;
  * via {@code app.seed.default-admin=true}. Prefer {@code POST /api/v1/auth/bootstrap} for first admin.
  */
 @Component
+@Order(50)
 @ConditionalOnProperty(name = "app.seed.default-admin", havingValue = "true")
 @RequiredArgsConstructor
 public class DefaultAdminInitializer implements ApplicationRunner {

@@ -24,7 +24,7 @@ import { loanStatusColor } from './loanHelpers'
 
 interface LoansListPanelProps {
   cooperativeId: string
-  mode: 'mine' | 'all'
+  mode: 'mine' | 'all' | 'approvals'
 }
 
 export function LoansListPanel({ cooperativeId, mode }: LoansListPanelProps) {
@@ -37,6 +37,7 @@ export function LoansListPanel({ cooperativeId, mode }: LoansListPanelProps) {
   const [size, setSize] = useState(10)
 
   const isAll = mode === 'all'
+  const isApprovals = mode === 'approvals'
 
   const query = useQuery({
     queryKey: [
@@ -51,19 +52,22 @@ export function LoansListPanel({ cooperativeId, mode }: LoansListPanelProps) {
     queryFn: () => {
       const params = {
         q: debouncedSearch || undefined,
-        status: status || undefined,
+        status: isApprovals ? undefined : status || undefined,
+        pendingApproval: isApprovals ? true : undefined,
         page,
         size,
         sort: 'createdAt,desc',
       }
-      return isAll ? fetchLoans(cooperativeId, params) : fetchMyLoans(cooperativeId, params)
+      return isAll || isApprovals
+        ? fetchLoans(cooperativeId, params)
+        : fetchMyLoans(cooperativeId, params)
     },
     enabled: Boolean(cooperativeId),
   })
 
   const columns: TableColumn<Loan>[] = useMemo(
     () => [
-      ...(isAll
+      ...(isAll || isApprovals
         ? [
             {
               id: 'member',
@@ -111,7 +115,7 @@ export function LoansListPanel({ cooperativeId, mode }: LoansListPanelProps) {
         hideOnMobile: true,
       },
     ],
-    [isAll, t],
+    [isAll, isApprovals, t],
   )
 
   if (query.isLoading) return <LoadingState variant="skeleton" rows={4} />
@@ -146,6 +150,7 @@ export function LoansListPanel({ cooperativeId, mode }: LoansListPanelProps) {
             sx={{ minWidth: 180 }}
           />
         ) : null}
+        {isApprovals ? null : (
         <TextField
           select
           size="small"
@@ -164,6 +169,7 @@ export function LoansListPanel({ cooperativeId, mode }: LoansListPanelProps) {
             </MenuItem>
           ))}
         </TextField>
+        )}
       </Stack>
 
       <ResponsiveTable

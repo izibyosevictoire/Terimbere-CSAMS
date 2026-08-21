@@ -31,7 +31,10 @@
     "myContributions": "Amafaranga yanjye",
     "myLoans": "Inguzanyo zanjye",
     "myFines": "Amahane yanjye",
-    "mySocial": "My Social Contributions"
+    "mySocial": "Amafaranga y'imibereho",
+    "loanApprovals": "Kwemeza inguzanyo",
+    "contributionApprovals": "Kwemeza amafaranga y'ukwezi",
+    "socialApprovals": "Kwemeza amafaranga y'imibereho"
   },
   "login": {
     "title": "Injira",
@@ -165,7 +168,10 @@
         "loans": "Inguzanyo zanjye",
         "fines": "Amahane yanjye",
         "social": "Ikigega cyanjye",
-        "payouts": "Kwishyura kwanjye"
+        "payouts": "Kwishyura kwanjye",
+        "applyLoan": "Saba inguzanyo",
+        "submitContribution": "Tanga amafaranga y'ukwezi",
+        "submitSocial": "Tanga amafaranga y'imibereho"
       }
     },
     "memberSummaries": {
@@ -235,6 +241,16 @@
     "closeMenu": "Funga menu",
     "back": "Subira inyuma",
     "backToDashboard": "Subira ku mbonerahamwe"
+  },
+  "approvals": {
+    "historyTitle": "Amateka yo kwemeza",
+    "historyHint": "Inyandiko y'uburyo bwa elektroniki. Izi nyandiko ntizihindurwa cyangwa zisibwe.",
+    "empty": "Nta gikorwa cyo kwemeza kiranditswe.",
+    "actions": {
+      "SUBMITTED": "Byatanzwe na",
+      "APPROVED": "Byemejwe na",
+      "REJECTED": "Byanzwe na"
+    }
   },
   "pwa": {
     "install": "Shyira porogaramu",
@@ -365,7 +381,9 @@
       "monthly": "Kwandika ukwezi",
       "history": "Amateka",
       "mine": "Amafaranga yanjye",
-      "special": "Ibikorwa byihariye"
+      "special": "Ibikorwa byihariye",
+      "submit": "Tanga amafaranga y'ukwezi",
+      "approvals": "Kwemeza amafaranga y'ukwezi"
     },
     "myContributions": "Amafaranga yawe",
     "savePeriod": "Bika ukwezi",
@@ -399,6 +417,38 @@
       "PAID": "Byishyuwe",
       "WAIVED": "Byarekuwe",
       "CANCELLED": "Byahagaritswe"
+    },
+    "reviewStatus": {
+      "PENDING": "Bitegereje",
+      "APPROVED": "Byemejwe",
+      "REJECTED": "Byanzwe"
+    },
+    "submit": {
+      "title": "Tanga amafaranga y'ukwezi",
+      "description": "Andika amafaranga wishyuye. Umubitsi / Treasurer azasuzuma icyemezo mbere y'uko bibarwa.",
+      "action": "Tanga amafaranga y'ukwezi",
+      "proof": "Icyemezo cyo kwishyura",
+      "uploadProof": "Shyira ifoto",
+      "proofHint": "Ifoto cyangwa recu y'ubwishyu (bitari ngombwa).",
+      "uploadFailed": "Ntibishoboye kohereza icyemezo.",
+      "success": "Amafaranga yoherejwe kugira ngo umubitsi ayasuzume",
+      "amountRequired": "Amafaranga arakenewe",
+      "amountInvalid": "Andika umubare wemewe",
+      "dateRequired": "Itariki irakenewe"
+    },
+    "approvals": {
+      "title": "Amafaranga y'ukwezi ategereje",
+      "approve": "Emera",
+      "reject": "Anga",
+      "viewProof": "Reba icyemezo",
+      "emptyTitle": "Nta mafaranga ategereje",
+      "emptyDescription": "Ibyatanzwe n'abanyamuryango bitegereje umubitsi bizagaragara hano.",
+      "approveSuccess": "Amafaranga yemejwe",
+      "rejectSuccess": "Amafaranga yanzwe",
+      "confirmApproveTitle": "Emera aya mafaranga?",
+      "confirmApproveMessage": "Amafaranga azongerwa ku mateka yemejwe y'umunyamuryango.",
+      "confirmRejectTitle": "Anga aya mafaranga?",
+      "rejectionReason": "Impamvu yo kwanga"
     },
     "campaignStatus": {
       "DRAFT": "Inyandiko",
@@ -457,7 +507,8 @@
       "all": "Inguzanyo zose",
       "request": "Saba inguzanyo",
       "issue": "Tanga inguzanyo",
-      "settings": "Igenamiterere"
+      "settings": "Igenamiterere",
+      "approvals": "Kwemeza inguzanyo"
     },
     "emptyTitle": "Nta nguzanyo zibonetse",
     "emptyDescription": "Saba cyangwa utange inguzanyo ku munyamuryango.",
@@ -489,7 +540,8 @@
       "rejectionReason": "Impamvu yo kwanga"
     },
     "status": {
-      "PENDING": "Bitegereje",
+      "PENDING": "Bitegereje kwemezwa bwa mbere",
+      "AWAITING_SECOND_APPROVAL": "Bitegereje kwemezwa bwa kabiri",
       "APPROVED": "Byemejwe",
       "ACTIVE": "Bikora",
       "OVERDUE": "Byatinze",
@@ -504,6 +556,9 @@
     "request": {
       "requestTitle": "Saba inguzanyo",
       "requestDescription": "Ohereza icyifuzo cy'inguzanyo kugira ngo cyemezwe.",
+      "applyTitle": "Saba inguzanyo",
+      "applyDescription": "Andika gusa umubare n'intego. Umwirondoro wawe wuzuza iyindi myirondoro.",
+      "apply": "Saba inguzanyo",
       "issueTitle": "Tanga inguzanyo",
       "issueDescription": "Kora inguzanyo ku munyamuryango. Izasaba kwemezwa mbere yo gutangwa.",
       "submit": "Ohereza icyifuzo",
@@ -512,6 +567,12 @@
       "issueSuccess": "Inguzanyo yarakozwe",
       "memberRequestsDisabled": "Gusaba inguzanyo ntibyemewe muri iki koperative.",
       "settingsHint": "Igenamiterere: {{rate}}% {{type}}, ntarengwa {{maxAmount}}, amezi {{maxTerm}}."
+    },
+    "application": {
+      "title": "Ifishi yo gusaba inguzanyo",
+      "description": "Yuzuwe ukoresheje umwirondoro w'umunyamuryango. Iyi ni inyandiko ya elektroniki.",
+      "cooperative": "Ikoperative",
+      "member": "Usaba"
     },
     "settings": {
       "title": "Igenamiterere ry'inguzanyo",
@@ -710,7 +771,9 @@
       "overview": "Incamake",
       "contributions": "Amafaranga ashyizweho",
       "disbursements": "Amafaranga yatanzwe",
-      "report": "Raporo"
+      "report": "Raporo",
+      "submit": "Tanga amafaranga y'imibereho",
+      "approvals": "Kwemeza amafaranga y'imibereho"
     },
     "metrics": {
       "balance": "Umubare w'ikigega cy'imibereho",
@@ -729,7 +792,8 @@
       "reference": "Referansi",
       "reason": "Impamvu",
       "notes": "Inyandiko",
-      "status": "Imiterere"
+      "status": "Imiterere",
+      "proof": "Icyemezo cyo kwishyura"
     },
     "status": {
       "PENDING": "Bitegereje",
@@ -751,11 +815,17 @@
       "unavailable": "Igenamiterere ntirihari kuri iki koperative."
     },
     "contributions": {
-      "hint": "Amafaranga aguma ategereje kugeza umuyobozi ayemeza mu kigega cy'imibereho.",
-      "submitTitle": "Shyira amafaranga ku kigega",
-      "submitDescription": "Andika amafaranga y'imibereho. Atavangwa n'ubwizigame busanzwe.",
-      "submit": "Ohereza",
-      "submitSuccess": "Amafaranga yoherejwe",
+      "hint": "Amafaranga aguma ategereje kugeza Umubitsi / Treasurer ayemeza mu kigega cy'imibereho.",
+      "submitTitle": "Tanga amafaranga y'imibereho",
+      "submitDescription": "Andika amafaranga wishyuye. Aguma ategereje kugeza Umubitsi / Treasurer ayasuzuma.",
+      "submit": "Tanga amafaranga y'imibereho",
+      "submitAction": "Tanga amafaranga y'imibereho",
+      "uploadProof": "Shyira ifoto",
+      "proofHint": "Ifoto cyangwa recu y'ubwishyu (bitari ngombwa).",
+      "uploadFailed": "Ntibishoboye kohereza icyemezo.",
+      "viewProof": "Reba icyemezo",
+      "rejectionReason": "Impamvu yo kwanga",
+      "submitSuccess": "Amafaranga y'imibereho yoherejwe",
       "memberOptional": "Siga ubusa niba ushyira ku bwawe.",
       "selfSubmit": "Jyewe (ukoresha ubu)",
       "myTitle": "Amafaranga yanjye y'ikigega",

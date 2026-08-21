@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import rw.terimbere.csams.modules.audit.entity.ApprovalAction;
+import rw.terimbere.csams.modules.audit.service.ApprovalTrailService;
 import rw.terimbere.csams.modules.audit.service.AuditService;
 import rw.terimbere.csams.modules.cooperative.entity.Cooperative;
 import rw.terimbere.csams.modules.notification.entity.NotificationType;
@@ -32,6 +34,8 @@ import rw.terimbere.csams.modules.socialfund.entity.SocialDisbursement;
 import rw.terimbere.csams.modules.socialfund.entity.SocialDisbursementStatus;
 import rw.terimbere.csams.modules.socialfund.repository.SocialContributionRepository;
 import rw.terimbere.csams.modules.socialfund.repository.SocialDisbursementRepository;
+import rw.terimbere.csams.modules.user.entity.User;
+import rw.terimbere.csams.modules.user.repository.UserRepository;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
 import rw.terimbere.csams.security.CooperativeOfficerRoles;
 import rw.terimbere.csams.security.UserPrincipal;
@@ -54,9 +58,11 @@ public class SocialFundService {
     private final SocialFundBalanceService balanceService;
     private final CooperativeRepository cooperativeRepository;
     private final CooperativeMembershipRepository membershipRepository;
+    private final UserRepository userRepository;
     private final CooperativeAuthorizationService authorizationService;
     private final LedgerService ledgerService;
     private final AuditService auditService;
+    private final ApprovalTrailService approvalTrailService;
     private final NotificationFacade notificationFacade;
 
     @Transactional(readOnly = true)
@@ -143,6 +149,15 @@ public class SocialFundService {
                 .build();
         contribution = contributionRepository.save(contribution);
 
+        approvalTrailService.append(
+                cooperativeId,
+                ApprovalTrailService.ENTITY_SOCIAL_CONTRIBUTION,
+                contribution.getId(),
+                principal,
+                ApprovalAction.SUBMITTED,
+                null,
+                SocialContributionStatus.PENDING.name(),
+                trimToNull(request.getNotes()));
         auditService.record(
                 principal.getId(),
                 cooperativeId,
@@ -167,11 +182,11 @@ public class SocialFundService {
         authorizationService.requireMembership(cooperativeId);
 
         SocialContribution contribution = requireContribution(cooperativeId, contributionId);
-        if (contribution.getStatus() == SocialContributionStatus.APPROVED) {
-            return toContributionResponse(contribution, cooperative.getCurrency());
-        }
         if (contribution.getStatus() != SocialContributionStatus.PENDING) {
             throw new BusinessException("Only PENDING social contributions can be approved");
+        }
+        if (principal.getId().equals(contribution.getMemberUserId())) {
+            throw new ForbiddenException("You cannot approve your own social contribution");
         }
 
         contribution.setStatus(SocialContributionStatus.APPROVED);
@@ -196,6 +211,16 @@ public class SocialFundService {
                 .approvedBy(principal.getId())
                 .idempotencyKey(LedgerService.socialContributionKey(contribution.getId()))
                 .build());
+
+        approvalTrailService.append(
+                cooperativeId,
+                ApprovalTrailService.ENTITY_SOCIAL_CONTRIBUTION,
+                contribution.getId(),
+                principal,
+                ApprovalAction.APPROVED,
+                SocialContributionStatus.PENDING.name(),
+                SocialContributionStatus.APPROVED.name(),
+                request == null ? null : trimToNull(request.getReviewNotes()));
 
         auditService.record(
                 principal.getId(),
@@ -224,12 +249,28 @@ public class SocialFundService {
         if (contribution.getStatus() != SocialContributionStatus.PENDING) {
             throw new BusinessException("Only PENDING social contributions can be rejected");
         }
+        if (principal.getId().equals(contribution.getMemberUserId())) {
+            throw new ForbiddenException("You cannot reject your own social contribution");
+        }
+        if (request == null || !StringUtils.hasText(request.getReviewNotes())) {
+            throw new ValidationException("Rejection reason is required");
+        }
 
         contribution.setStatus(SocialContributionStatus.REJECTED);
         contribution.setReviewedBy(principal.getId());
         contribution.setReviewedAt(Instant.now());
-        contribution.setReviewNotes(request == null ? null : trimToNull(request.getReviewNotes()));
+        contribution.setReviewNotes(trimToNull(request.getReviewNotes()));
         contribution = contributionRepository.save(contribution);
+
+        approvalTrailService.append(
+                cooperativeId,
+                ApprovalTrailService.ENTITY_SOCIAL_CONTRIBUTION,
+                contribution.getId(),
+                principal,
+                ApprovalAction.REJECTED,
+                SocialContributionStatus.PENDING.name(),
+                SocialContributionStatus.REJECTED.name(),
+                request.getReviewNotes().trim());
 
         auditService.record(
                 principal.getId(),
@@ -539,6 +580,7 @@ public class SocialFundService {
                 .id(c.getId())
                 .cooperativeId(c.getCooperativeId())
                 .memberUserId(c.getMemberUserId())
+                .memberName(userName(c.getMemberUserId()))
                 .amount(MoneyUtils.scale(c.getAmount()))
                 .contributionDate(c.getContributionDate())
                 .paymentReference(c.getPaymentReference())
@@ -546,13 +588,29 @@ public class SocialFundService {
                 .evidenceFileKey(c.getEvidenceFileKey())
                 .status(c.getStatus())
                 .submittedBy(c.getSubmittedBy())
+                .submittedByName(userName(c.getSubmittedBy()))
                 .reviewedBy(c.getReviewedBy())
+                .reviewedByName(userName(c.getReviewedBy()))
                 .reviewedAt(c.getReviewedAt())
                 .reviewNotes(c.getReviewNotes())
+                .approvalHistory(
+                        c.getId() == null
+                                ? List.of()
+                                : approvalTrailService.list(
+                                        c.getCooperativeId(),
+                                        ApprovalTrailService.ENTITY_SOCIAL_CONTRIBUTION,
+                                        c.getId()))
                 .currency(currency)
                 .createdAt(c.getCreatedAt())
                 .updatedAt(c.getUpdatedAt())
                 .build();
+    }
+
+    private String userName(UUID userId) {
+        if (userId == null) {
+            return null;
+        }
+        return userRepository.findByIdAndDeletedFalse(userId).map(User::getFullName).orElse(null);
     }
 
     private SocialDisbursementResponse toDisbursementResponse(SocialDisbursement d, String currency) {

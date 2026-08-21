@@ -13,6 +13,8 @@ export function loanStatusColor(status: string): ChipColor {
   switch (status) {
     case 'PENDING':
       return 'info'
+    case 'AWAITING_SECOND_APPROVAL':
+      return 'warning'
     case 'APPROVED':
       return 'primary'
     case 'ACTIVE':
@@ -34,12 +36,12 @@ export function loanStatusLabelKey(status: string): string {
   return `loans.status.${status}`
 }
 
-export function canShowApprove(status: string, isAdmin: boolean): boolean {
-  return isAdmin && status === 'PENDING'
+export function canShowApprove(status: string, canAct: boolean): boolean {
+  return canAct && (status === 'PENDING' || status === 'AWAITING_SECOND_APPROVAL')
 }
 
-export function canShowReject(status: string, isAdmin: boolean): boolean {
-  return isAdmin && status === 'PENDING'
+export function canShowReject(status: string, canAct: boolean): boolean {
+  return canAct && (status === 'PENDING' || status === 'AWAITING_SECOND_APPROVAL')
 }
 
 export function canShowDisburse(status: string, isAdmin: boolean): boolean {

@@ -11,6 +11,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchContributions, fetchMyContributions } from '@/shared/api/contributions'
+import { ApprovalHistory } from '@/shared/components/ApprovalHistory'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { LoadingState } from '@/shared/components/LoadingState'
@@ -35,6 +36,7 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
   const [month, setMonth] = useState('')
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(10)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const query = useQuery({
     queryKey: [
@@ -101,11 +103,23 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
         id: 'status',
         label: t('contributions.fields.status'),
         render: (row) => (
-          <Chip
-            size="small"
-            color={contributionStatusColor(String(row.status))}
-            label={t(`contributions.status.${row.status}`, { defaultValue: row.status })}
-          />
+          <Stack direction="row" spacing={0.5} useFlexGap sx={{ flexWrap: 'wrap' }}>
+            <Chip
+              size="small"
+              color={contributionStatusColor(String(row.status))}
+              label={t(`contributions.status.${row.status}`, { defaultValue: row.status })}
+            />
+            {row.reviewStatus ? (
+              <Chip
+                size="small"
+                variant="outlined"
+                color={contributionStatusColor(String(row.reviewStatus))}
+                label={t(`contributions.reviewStatus.${row.reviewStatus}`, {
+                  defaultValue: String(row.reviewStatus),
+                })}
+              />
+            ) : null}
+          </Stack>
         ),
       },
       {
@@ -226,6 +240,7 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
             columns={columns}
             rows={rows}
             getRowId={(row) => row.id}
+            onRowClick={(row) => setSelectedId(row.id)}
           />
           <TablePagination
             component="div"
@@ -239,6 +254,13 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
             }}
             rowsPerPageOptions={[5, 10, 25]}
           />
+          {selectedId ? (
+            <Box sx={{ mt: 2 }}>
+              <ApprovalHistory
+                events={rows.find((row) => row.id === selectedId)?.approvalHistory}
+              />
+            </Box>
+          ) : null}
         </>
       )}
     </Box>

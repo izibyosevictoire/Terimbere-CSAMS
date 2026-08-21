@@ -2,6 +2,7 @@ import { Box, Button, Grid, Tab, Tabs } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
 import { selectCanManageLoans } from '@/app/store/authSlice'
 import {
@@ -19,7 +20,13 @@ export function LoansPage() {
   const { t } = useTranslation()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
   const isAdmin = useAppSelector(selectCanManageLoans)
-  const [tab, setTab] = useState(0)
+  const [searchParams] = useSearchParams()
+  const [tab, setTab] = useState(() => {
+    const requested = searchParams.get('tab')
+    if (requested === 'approvals' && isAdmin) return 1
+    if (requested === 'request') return isAdmin ? 3 : 1
+    return 0
+  })
 
   const summaryQuery = useQuery({
     queryKey: ['dashboard', 'summary', cooperativeId],
@@ -29,7 +36,7 @@ export function LoansPage() {
 
   const pendingQuery = useQuery({
     queryKey: ['loans', cooperativeId, 'count-pending'],
-    queryFn: () => fetchLoans(cooperativeId!, { status: 'PENDING', size: 1 }),
+    queryFn: () => fetchLoans(cooperativeId!, { pendingApproval: true, size: 1 }),
     enabled: Boolean(cooperativeId) && isAdmin,
   })
 
@@ -67,10 +74,14 @@ export function LoansPage() {
         description={t('pages.loans.description')}
         actions={
           isAdmin ? (
-            <Button variant="outlined" size="small" onClick={() => setTab(2)}>
+            <Button variant="outlined" size="small" onClick={() => setTab(3)}>
               {t('loans.tabs.issue')}
             </Button>
-          ) : null
+          ) : (
+            <Button variant="contained" size="small" onClick={() => setTab(1)}>
+              {t('loans.request.apply')}
+            </Button>
+          )
         }
       />
 
@@ -135,6 +146,7 @@ export function LoansPage() {
         sx={{ mb: 2.5, borderBottom: 1, borderColor: 'divider' }}
       >
         <Tab label={t('loans.tabs.mine')} />
+        {isAdmin ? <Tab label={t('loans.tabs.approvals')} /> : null}
         {isAdmin ? <Tab label={t('loans.tabs.all')} /> : null}
         <Tab label={isAdmin ? t('loans.tabs.issue') : t('loans.tabs.request')} />
         {isAdmin ? <Tab label={t('loans.tabs.settings')} /> : null}
@@ -145,14 +157,18 @@ export function LoansPage() {
       ) : null}
 
       {isAdmin && tab === 1 ? (
+        <LoansListPanel cooperativeId={cooperativeId} mode="approvals" />
+      ) : null}
+
+      {isAdmin && tab === 2 ? (
         <LoansListPanel cooperativeId={cooperativeId} mode="all" />
       ) : null}
 
-      {((isAdmin && tab === 2) || (!isAdmin && tab === 1)) ? (
+      {((isAdmin && tab === 3) || (!isAdmin && tab === 1)) ? (
         <LoanRequestPanel cooperativeId={cooperativeId} isAdmin={isAdmin} />
       ) : null}
 
-      {isAdmin && tab === 3 ? (
+      {isAdmin && tab === 4 ? (
         <LoanSettingsPanel cooperativeId={cooperativeId} />
       ) : null}
     </Box>

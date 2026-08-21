@@ -3,6 +3,7 @@ import { unwrapApiData } from './auth'
 import type { ApiResponse, PageResponse } from '@/shared/types/api'
 import type {
   Loan,
+  LoanApplicationForm,
   LoanApproveRequest,
   LoanCreateRequest,
   LoanListQuery,
@@ -17,6 +18,7 @@ function toListParams(query: LoanListQuery = {}) {
   if (query.q?.trim()) params.q = query.q.trim()
   if (query.status) params.status = query.status
   if (query.memberUserId) params.memberUserId = query.memberUserId
+  if (query.pendingApproval) params.pendingApproval = 'true'
   if (query.page != null) params.page = query.page
   if (query.size != null) params.size = query.size
   if (query.sort) params.sort = query.sort
@@ -42,15 +44,35 @@ export async function fetchMyLoans(
   cooperativeId: string,
   query: LoanListQuery = {},
 ): Promise<PageResponse<Loan>> {
-  const response = await apiClient.get<ApiResponse<PageResponse<Loan>>>(
+  const response = await apiClient.get<ApiResponse<PageResponse<Loan> | Loan[]>>(
     `/cooperatives/${cooperativeId}/loans/my`,
     { params: toListParams(query) },
   )
-  const page = unwrapApiData(response.data)
-  return {
-    ...page,
-    content: (page.content ?? []).map(mapLoan),
+  const data = unwrapApiData(response.data)
+  if (Array.isArray(data)) {
+    return {
+      content: data.map(mapLoan),
+      page: 0,
+      size: data.length,
+      totalElements: data.length,
+      totalPages: 1,
+      first: true,
+      last: true,
+    }
   }
+  return {
+    ...data,
+    content: (data.content ?? []).map(mapLoan),
+  }
+}
+
+export async function fetchLoanApplicationPreview(
+  cooperativeId: string,
+): Promise<LoanApplicationForm> {
+  const response = await apiClient.get<ApiResponse<LoanApplicationForm>>(
+    `/cooperatives/${cooperativeId}/loans/application-preview`,
+  )
+  return unwrapApiData(response.data)
 }
 
 export async function fetchLoan(cooperativeId: string, loanId: string): Promise<Loan> {

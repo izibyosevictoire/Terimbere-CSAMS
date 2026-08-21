@@ -7,6 +7,8 @@ import type {
   ContributionPeriodGrid,
   ContributionPeriodLine,
   ContributionPeriodSaveRequest,
+  ContributionReviewRequest,
+  ContributionSubmitRequest,
   ContributionSummary,
   ContributionUpdateRequest,
 } from '@/shared/types/contribution'
@@ -100,8 +102,45 @@ export async function fetchMyContributions(
   cooperativeId: string,
   query: ContributionListQuery = {},
 ): Promise<PageResponse<Contribution>> {
-  const response = await apiClient.get<ApiResponse<PageResponse<Contribution>>>(
+  const response = await apiClient.get<ApiResponse<PageResponse<Contribution> | Contribution[]>>(
     `/cooperatives/${cooperativeId}/contributions/my`,
+    { params: toListParams(query) },
+  )
+  const data = unwrapApiData(response.data)
+  if (Array.isArray(data)) {
+    return {
+      content: data.map(mapContribution),
+      page: 0,
+      size: data.length,
+      totalElements: data.length,
+      totalPages: 1,
+      first: true,
+      last: true,
+    }
+  }
+  return {
+    ...data,
+    content: (data.content ?? []).map(mapContribution),
+  }
+}
+
+export async function submitRegularContribution(
+  cooperativeId: string,
+  payload: ContributionSubmitRequest,
+): Promise<Contribution> {
+  const response = await apiClient.post<ApiResponse<Contribution>>(
+    `/cooperatives/${cooperativeId}/contributions/submissions`,
+    payload,
+  )
+  return mapContribution(unwrapApiData(response.data))
+}
+
+export async function fetchPendingContributionReviews(
+  cooperativeId: string,
+  query: ContributionListQuery = {},
+): Promise<PageResponse<Contribution>> {
+  const response = await apiClient.get<ApiResponse<PageResponse<Contribution>>>(
+    `/cooperatives/${cooperativeId}/contributions/pending-review`,
     { params: toListParams(query) },
   )
   const page = unwrapApiData(response.data)
@@ -109,6 +148,28 @@ export async function fetchMyContributions(
     ...page,
     content: (page.content ?? []).map(mapContribution),
   }
+}
+
+export async function approveContributionSubmission(
+  cooperativeId: string,
+  contributionId: string,
+): Promise<Contribution> {
+  const response = await apiClient.post<ApiResponse<Contribution>>(
+    `/cooperatives/${cooperativeId}/contributions/${contributionId}/approve`,
+  )
+  return mapContribution(unwrapApiData(response.data))
+}
+
+export async function rejectContributionSubmission(
+  cooperativeId: string,
+  contributionId: string,
+  payload: ContributionReviewRequest,
+): Promise<Contribution> {
+  const response = await apiClient.post<ApiResponse<Contribution>>(
+    `/cooperatives/${cooperativeId}/contributions/${contributionId}/reject`,
+    payload,
+  )
+  return mapContribution(unwrapApiData(response.data))
 }
 
 export async function fetchContribution(

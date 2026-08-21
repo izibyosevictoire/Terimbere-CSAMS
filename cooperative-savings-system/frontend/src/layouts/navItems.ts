@@ -1,6 +1,7 @@
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet'
 import AssessmentIcon from '@mui/icons-material/Assessment'
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import GavelIcon from '@mui/icons-material/Gavel'
@@ -19,6 +20,7 @@ import type { SvgIconComponent } from '@mui/icons-material'
 import { ROUTES } from '@/shared/constants/routes'
 import {
   FINANCE_ACCESS_ROLES,
+  LOAN_COMMITTEE_ROLES,
   LOAN_OPS_ROLES,
   ROLE_SUPER_ADMIN,
   SECRETARY_ACCESS_ROLES,
@@ -76,7 +78,21 @@ export const adminModuleNavItems: NavItem[] = [
     roles: FINANCE_ACCESS_ROLES,
     group: 'main',
   },
+  {
+    labelKey: 'nav.contributionApprovals',
+    path: `${ROUTES.contributions}?tab=approvals`,
+    icon: AssignmentTurnedInIcon,
+    roles: FINANCE_ACCESS_ROLES,
+    group: 'main',
+  },
   { labelKey: 'nav.loans', path: ROUTES.loans, icon: AccountBalanceWalletIcon, roles: LOAN_OPS_ROLES, group: 'main' },
+  {
+    labelKey: 'nav.loanApprovals',
+    path: `${ROUTES.loans}?tab=approvals`,
+    icon: AssignmentTurnedInIcon,
+    roles: LOAN_COMMITTEE_ROLES,
+    group: 'main',
+  },
   { labelKey: 'nav.fines', path: ROUTES.fines, icon: GavelIcon, roles: FINANCE_ACCESS_ROLES, group: 'main' },
   {
     labelKey: 'nav.finePaymentQueue',
@@ -89,6 +105,13 @@ export const adminModuleNavItems: NavItem[] = [
     labelKey: 'nav.socialDashboard',
     path: ROUTES.socialFund,
     icon: FavoriteIcon,
+    roles: FINANCE_ACCESS_ROLES,
+    group: 'main',
+  },
+  {
+    labelKey: 'nav.socialApprovals',
+    path: `${ROUTES.socialFund}?tab=approvals`,
+    icon: AssignmentTurnedInIcon,
     roles: FINANCE_ACCESS_ROLES,
     group: 'main',
   },

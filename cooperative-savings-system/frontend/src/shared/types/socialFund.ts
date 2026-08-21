@@ -1,3 +1,6 @@
+import type { ApprovalEvent } from './approval'
+import { mapApprovalEvent } from './approval'
+
 export type SocialContributionStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
 export type SocialDisbursementStatus =
@@ -57,9 +60,12 @@ export interface SocialContribution {
   evidenceFileKey?: string | null
   status: SocialContributionStatus | string
   submittedBy?: string | null
+  submittedByName?: string | null
   reviewedBy?: string | null
+  reviewedByName?: string | null
   reviewedAt?: string | null
   reviewNotes?: string | null
+  approvalHistory?: ApprovalEvent[]
   currency?: string
   createdAt?: string
   updatedAt?: string
@@ -167,6 +173,7 @@ export function mapSocialContribution(raw: SocialContribution): SocialContributi
     status: raw.status || 'PENDING',
     submittedBy: raw.submittedBy != null ? String(raw.submittedBy) : null,
     reviewedBy: raw.reviewedBy != null ? String(raw.reviewedBy) : null,
+    approvalHistory: (raw.approvalHistory ?? []).map(mapApprovalEvent),
   }
 }
 

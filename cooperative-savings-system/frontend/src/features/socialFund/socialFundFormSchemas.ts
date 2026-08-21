@@ -21,6 +21,7 @@ export type SocialContributionFormValues = {
   paymentReference: string
   notes: string
   memberUserId: string
+  evidenceFileKey: string
 }
 
 export const socialContributionDefaults: SocialContributionFormValues = {
@@ -29,6 +30,7 @@ export const socialContributionDefaults: SocialContributionFormValues = {
   paymentReference: '',
   notes: '',
   memberUserId: '',
+  evidenceFileKey: '',
 }
 
 export const socialContributionSchema: yup.ObjectSchema<SocialContributionFormValues> =
@@ -38,6 +40,7 @@ export const socialContributionSchema: yup.ObjectSchema<SocialContributionFormVa
     paymentReference: yup.string().trim().max(128).default(''),
     notes: yup.string().trim().max(2000).default(''),
     memberUserId: yup.string().trim().default(''),
+    evidenceFileKey: yup.string().trim().max(512).default(''),
   })
 
 export function toSocialContributionPayload(
@@ -49,6 +52,7 @@ export function toSocialContributionPayload(
     contributionDate: values.contributionDate.trim() || undefined,
     paymentReference: values.paymentReference.trim() || undefined,
     notes: values.notes.trim() || undefined,
+    evidenceFileKey: values.evidenceFileKey.trim() || undefined,
   }
   if (options?.includeMember && values.memberUserId.trim()) {
     payload.memberUserId = values.memberUserId.trim()

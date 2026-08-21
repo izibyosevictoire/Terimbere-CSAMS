@@ -2,6 +2,7 @@ package rw.terimbere.csams.modules.contribution.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -17,14 +18,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import rw.terimbere.csams.modules.audit.entity.ApprovalAction;
+import rw.terimbere.csams.modules.audit.service.ApprovalTrailService;
 import rw.terimbere.csams.modules.audit.service.AuditService;
 import rw.terimbere.csams.modules.contribution.dto.ContributionBatchRequest;
 import rw.terimbere.csams.modules.contribution.dto.ContributionLineRequest;
 import rw.terimbere.csams.modules.contribution.dto.ContributionPeriodSummaryResponse;
 import rw.terimbere.csams.modules.contribution.dto.ContributionResponse;
+import rw.terimbere.csams.modules.contribution.dto.ContributionReviewRequest;
+import rw.terimbere.csams.modules.contribution.dto.ContributionSubmitRequest;
 import rw.terimbere.csams.modules.contribution.dto.ContributionUpdateRequest;
 import rw.terimbere.csams.modules.contribution.dto.MonthlyContributionChartPoint;
 import rw.terimbere.csams.modules.contribution.entity.Contribution;
+import rw.terimbere.csams.modules.contribution.entity.ContributionReviewStatus;
 import rw.terimbere.csams.modules.contribution.entity.ContributionStatus;
 import rw.terimbere.csams.modules.contribution.repository.ContributionRepository;
 import rw.terimbere.csams.modules.cooperative.entity.Cooperative;
@@ -38,6 +44,8 @@ import rw.terimbere.csams.security.CooperativeAuthorizationService;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.auditing.AuditableAction;
 import rw.terimbere.csams.shared.common.dto.PageResponse;
+import rw.terimbere.csams.shared.exceptions.BusinessException;
+import rw.terimbere.csams.shared.exceptions.ForbiddenException;
 import rw.terimbere.csams.shared.exceptions.ResourceNotFoundException;
 import rw.terimbere.csams.shared.exceptions.ValidationException;
 import rw.terimbere.csams.shared.financial.LedgerTransactionType;
@@ -55,6 +63,7 @@ public class ContributionService {
     private final CooperativeAuthorizationService authorizationService;
     private final LedgerService ledgerService;
     private final AuditService auditService;
+    private final ApprovalTrailService approvalTrailService;
 
     @Transactional(readOnly = true)
     public List<ContributionResponse> getOrBuildPeriodGrid(UUID cooperativeId, int year, int month) {
@@ -77,7 +86,7 @@ public class ContributionService {
         for (CooperativeMembership membership : activeMembers) {
             Contribution saved = existing.get(membership.getUserId());
             if (saved != null) {
-                rows.add(toResponse(saved, names.get(membership.getUserId()), true));
+                rows.add(toResponse(saved, names.get(membership.getUserId()), true, false));
             } else {
                 rows.add(ContributionResponse.builder()
                         .cooperativeId(cooperativeId)
@@ -149,6 +158,10 @@ public class ContributionService {
         Contribution contribution = contributionRepository
                 .findByIdAndCooperativeId(contributionId, cooperativeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contribution", contributionId));
+        if (contribution.getReviewStatus() == ContributionReviewStatus.PENDING) {
+            throw new BusinessException(
+                    "This contribution is awaiting Accountant review and cannot be edited until it is approved or rejected");
+        }
 
         String previous = toAuditJson(contribution);
 
@@ -254,6 +267,208 @@ public class ContributionService {
     public List<ContributionResponse> getMyContributions(UUID cooperativeId) {
         UserPrincipal principal = authorizationService.currentPrincipal();
         return getMemberContributionHistory(cooperativeId, principal.getId());
+    }
+
+    @Transactional
+    public ContributionResponse submitMine(
+            UUID cooperativeId, ContributionSubmitRequest request, HttpServletRequest httpRequest) {
+        Cooperative cooperative = requireCooperative(cooperativeId);
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        authorizationService.requireMembership(cooperativeId);
+        requireActiveMember(cooperativeId, principal.getId());
+
+        LocalDate paymentDate = request.getPaymentDate();
+        int year = paymentDate.getYear();
+        int month = paymentDate.getMonthValue();
+        BigDecimal submitted = MoneyUtils.scaleForStorage(request.getAmount());
+        MoneyUtils.assertPositive(submitted);
+
+        Contribution contribution = contributionRepository
+                .findByCooperativeIdAndMemberUserIdAndYearAndMonth(
+                        cooperativeId, principal.getId(), year, month)
+                .orElseGet(() -> Contribution.builder()
+                        .cooperativeId(cooperativeId)
+                        .memberUserId(principal.getId())
+                        .year(year)
+                        .month(month)
+                        .expectedAmount(MoneyUtils.scaleForStorage(cooperative.getMonthlyContributionAmount()))
+                        .paidAmount(BigDecimal.ZERO)
+                        .outstandingAmount(MoneyUtils.scaleForStorage(cooperative.getMonthlyContributionAmount()))
+                        .status(ContributionStatus.PENDING)
+                        .ledgerRevision(0)
+                        .build());
+
+        if (contribution.getStatus() == ContributionStatus.PAID
+                || contribution.getStatus() == ContributionStatus.WAIVED
+                || contribution.getStatus() == ContributionStatus.CANCELLED) {
+            throw new BusinessException("This period already has a recorded contribution");
+        }
+        if (contribution.getReviewStatus() == ContributionReviewStatus.PENDING) {
+            throw new BusinessException("A contribution for this period is already awaiting review");
+        }
+        if (contribution.getReviewStatus() == ContributionReviewStatus.APPROVED) {
+            throw new BusinessException("This period's contribution has already been approved");
+        }
+
+        contribution.setSubmittedAmount(submitted);
+        contribution.setPaymentDate(paymentDate);
+        contribution.setPaymentReference(trimToNull(request.getPaymentReference()));
+        contribution.setEvidenceFileKey(trimToNull(request.getEvidenceFileKey()));
+        contribution.setNotes(trimToNull(request.getNotes()));
+        contribution.setSubmittedBy(principal.getId());
+        contribution.setSubmittedAt(Instant.now());
+        contribution.setReviewedBy(null);
+        contribution.setReviewedAt(null);
+        contribution.setRejectionReason(null);
+        contribution.setReviewStatus(ContributionReviewStatus.PENDING);
+        contribution.setPaidAmount(BigDecimal.ZERO);
+        contribution.setOutstandingAmount(MoneyUtils.scaleForStorage(
+                contribution.getExpectedAmount().subtract(BigDecimal.ZERO).max(BigDecimal.ZERO)));
+        contribution.setStatus(ContributionStatus.PENDING);
+        contribution = contributionRepository.save(contribution);
+
+        approvalTrailService.append(
+                cooperativeId,
+                ApprovalTrailService.ENTITY_CONTRIBUTION,
+                contribution.getId(),
+                principal,
+                ApprovalAction.SUBMITTED,
+                null,
+                ContributionReviewStatus.PENDING.name(),
+                trimToNull(request.getNotes()));
+        auditService.record(
+                principal.getId(),
+                cooperativeId,
+                AuditableAction.CONTRIBUTION_SUBMIT,
+                "Contribution",
+                contribution.getId(),
+                null,
+                "{\"status\":\"PENDING\",\"amount\":\"" + submitted + "\"}",
+                clientIp(httpRequest),
+                userAgent(httpRequest));
+        return toResponse(contribution, principalName(principal.getId()), true);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<ContributionResponse> pendingReview(UUID cooperativeId, Pageable pageable) {
+        requireCooperative(cooperativeId);
+        authorizationService.requireMembership(cooperativeId);
+        Page<Contribution> page = contributionRepository.findByCooperativeIdAndReviewStatus(
+                cooperativeId, ContributionReviewStatus.PENDING, pageable);
+        Map<UUID, String> names = loadMemberNames(
+                page.getContent().stream().map(Contribution::getMemberUserId).distinct().toList());
+        return PageMapper.toPageResponse(page, c -> toResponse(c, names.get(c.getMemberUserId()), true));
+    }
+
+    @Transactional
+    public ContributionResponse approveSubmission(
+            UUID cooperativeId,
+            UUID contributionId,
+            HttpServletRequest httpRequest) {
+        Cooperative cooperative = requireCooperative(cooperativeId);
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        authorizationService.requireMembership(cooperativeId);
+        Contribution contribution = contributionRepository
+                .findByIdAndCooperativeId(contributionId, cooperativeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Contribution", contributionId));
+        if (contribution.getReviewStatus() != ContributionReviewStatus.PENDING) {
+            throw new BusinessException("Only PENDING contribution submissions can be approved");
+        }
+        if (principal.getId().equals(contribution.getMemberUserId())) {
+            throw new ForbiddenException("You cannot approve your own contribution");
+        }
+        BigDecimal paid = contribution.getSubmittedAmount() == null
+                ? BigDecimal.ZERO
+                : contribution.getSubmittedAmount();
+        MoneyUtils.assertPositive(paid);
+
+        String previous = contribution.getReviewStatus().name();
+        contribution.setPaidAmount(paid);
+        contribution.setOutstandingAmount(MoneyUtils.scaleForStorage(
+                contribution.getExpectedAmount().subtract(paid).max(BigDecimal.ZERO)));
+        contribution.setStatus(deriveStatus(contribution.getExpectedAmount(), paid));
+        contribution.setReviewedBy(principal.getId());
+        contribution.setReviewedAt(Instant.now());
+        contribution.setReviewStatus(ContributionReviewStatus.APPROVED);
+        contribution.setRejectionReason(null);
+        contribution.setRecordedBy(principal.getId());
+        contribution = contributionRepository.save(contribution);
+        syncLedger(contribution, principal.getId(), cooperative.getCurrency());
+
+        approvalTrailService.append(
+                cooperativeId,
+                ApprovalTrailService.ENTITY_CONTRIBUTION,
+                contribution.getId(),
+                principal,
+                ApprovalAction.APPROVED,
+                previous,
+                ContributionReviewStatus.APPROVED.name(),
+                null);
+        auditService.record(
+                principal.getId(),
+                cooperativeId,
+                AuditableAction.CONTRIBUTION_APPROVE,
+                "Contribution",
+                contribution.getId(),
+                "{\"reviewStatus\":\"" + previous + "\"}",
+                "{\"reviewStatus\":\"APPROVED\",\"paidAmount\":\"" + paid + "\"}",
+                clientIp(httpRequest),
+                userAgent(httpRequest));
+        return toResponse(contribution, principalName(contribution.getMemberUserId()), true);
+    }
+
+    @Transactional
+    public ContributionResponse rejectSubmission(
+            UUID cooperativeId,
+            UUID contributionId,
+            ContributionReviewRequest request,
+            HttpServletRequest httpRequest) {
+        requireCooperative(cooperativeId);
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        authorizationService.requireMembership(cooperativeId);
+        Contribution contribution = contributionRepository
+                .findByIdAndCooperativeId(contributionId, cooperativeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Contribution", contributionId));
+        if (contribution.getReviewStatus() != ContributionReviewStatus.PENDING) {
+            throw new BusinessException("Only PENDING contribution submissions can be rejected");
+        }
+        if (principal.getId().equals(contribution.getMemberUserId())) {
+            throw new ForbiddenException("You cannot reject your own contribution");
+        }
+        if (request == null || !StringUtils.hasText(request.getRejectionReason())) {
+            throw new ValidationException("Rejection reason is required");
+        }
+
+        String previous = contribution.getReviewStatus().name();
+        contribution.setReviewedBy(principal.getId());
+        contribution.setReviewedAt(Instant.now());
+        contribution.setReviewStatus(ContributionReviewStatus.REJECTED);
+        contribution.setRejectionReason(request.getRejectionReason().trim());
+        contribution.setPaidAmount(BigDecimal.ZERO);
+        contribution.setOutstandingAmount(MoneyUtils.scaleForStorage(contribution.getExpectedAmount()));
+        contribution.setStatus(ContributionStatus.PENDING);
+        contribution = contributionRepository.save(contribution);
+
+        approvalTrailService.append(
+                cooperativeId,
+                ApprovalTrailService.ENTITY_CONTRIBUTION,
+                contribution.getId(),
+                principal,
+                ApprovalAction.REJECTED,
+                previous,
+                ContributionReviewStatus.REJECTED.name(),
+                request.getRejectionReason().trim());
+        auditService.record(
+                principal.getId(),
+                cooperativeId,
+                AuditableAction.CONTRIBUTION_REJECT,
+                "Contribution",
+                contribution.getId(),
+                "{\"reviewStatus\":\"" + previous + "\"}",
+                "{\"reviewStatus\":\"REJECTED\"}",
+                clientIp(httpRequest),
+                userAgent(httpRequest));
+        return toResponse(contribution, principalName(contribution.getMemberUserId()), true);
     }
 
     @Transactional(readOnly = true)
@@ -374,6 +589,10 @@ public class ContributionService {
                         .status(ContributionStatus.PENDING)
                         .ledgerRevision(0)
                         .build());
+        if (contribution.getReviewStatus() == ContributionReviewStatus.PENDING) {
+            throw new BusinessException(
+                    "This member has a contribution awaiting Accountant review and cannot be edited from the period grid");
+        }
 
         applyLine(contribution, cooperative, line, recordedBy);
         contribution = contributionRepository.save(contribution);
@@ -499,6 +718,11 @@ public class ContributionService {
     }
 
     private ContributionResponse toResponse(Contribution c, String memberName, boolean persisted) {
+        return toResponse(c, memberName, persisted, persisted);
+    }
+
+    private ContributionResponse toResponse(
+            Contribution c, String memberName, boolean persisted, boolean includeHistory) {
         return ContributionResponse.builder()
                 .id(c.getId())
                 .cooperativeId(c.getCooperativeId())
@@ -514,10 +738,43 @@ public class ContributionService {
                 .paymentReference(c.getPaymentReference())
                 .notes(c.getNotes())
                 .recordedBy(c.getRecordedBy())
+                .submittedAmount(c.getSubmittedAmount() == null ? null : MoneyUtils.scale(c.getSubmittedAmount()))
+                .evidenceFileKey(c.getEvidenceFileKey())
+                .submittedBy(c.getSubmittedBy())
+                .submittedByName(principalName(c.getSubmittedBy()))
+                .submittedAt(c.getSubmittedAt())
+                .reviewedBy(c.getReviewedBy())
+                .reviewedByName(principalName(c.getReviewedBy()))
+                .reviewedAt(c.getReviewedAt())
+                .reviewStatus(c.getReviewStatus())
+                .rejectionReason(c.getRejectionReason())
+                .approvalHistory(
+                        includeHistory && c.getId() != null
+                                ? approvalTrailService.list(
+                                        c.getCooperativeId(),
+                                        ApprovalTrailService.ENTITY_CONTRIBUTION,
+                                        c.getId())
+                                : List.of())
                 .persisted(persisted)
                 .createdAt(c.getCreatedAt())
                 .updatedAt(c.getUpdatedAt())
                 .build();
+    }
+
+    private void requireActiveMember(UUID cooperativeId, UUID memberUserId) {
+        var membership = membershipRepository
+                .findByCooperativeIdAndUserId(cooperativeId, memberUserId)
+                .orElseThrow(() -> new ValidationException("User is not a member of this cooperative"));
+        if (!"ACTIVE".equalsIgnoreCase(membership.getMembershipStatus())) {
+            throw new BusinessException("Only ACTIVE members can submit contributions");
+        }
+    }
+
+    private String principalName(UUID userId) {
+        if (userId == null) {
+            return null;
+        }
+        return userRepository.findByIdAndDeletedFalse(userId).map(User::getFullName).orElse(null);
     }
 
     private static String toAuditJson(Contribution c) {

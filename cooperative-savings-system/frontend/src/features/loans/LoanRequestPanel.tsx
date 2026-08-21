@@ -12,11 +12,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSnackbar } from 'notistack'
 import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
+import { LoanApplicationFormView } from './LoanApplicationFormView'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchLoanSettings } from '@/shared/api/loanSettings'
-import { createLoan } from '@/shared/api/loans'
+import { createLoan, fetchLoanApplicationPreview } from '@/shared/api/loans'
 import { fetchMembers } from '@/shared/api/members'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { LoadingState } from '@/shared/components/LoadingState'
@@ -52,12 +53,19 @@ export function LoanRequestPanel({ cooperativeId, isAdmin }: LoanRequestPanelPro
     enabled: Boolean(cooperativeId) && isAdmin,
   })
 
+  const previewQuery = useQuery({
+    queryKey: ['loans', 'application-preview', cooperativeId],
+    queryFn: () => fetchLoanApplicationPreview(cooperativeId),
+    enabled: Boolean(cooperativeId) && !isAdmin,
+  })
+
   const schema = useMemo(() => loanRequestSchema(isAdmin), [isAdmin])
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<LoanRequestFormValues>({
     defaultValues: loanRequestDefaults,
@@ -81,7 +89,9 @@ export function LoanRequestPanel({ cooperativeId, isAdmin }: LoanRequestPanelPro
     },
   })
 
-  if (settingsQuery.isLoading) return <LoadingState variant="skeleton" rows={3} />
+  if (settingsQuery.isLoading || (!isAdmin && previewQuery.isLoading)) {
+    return <LoadingState variant="skeleton" rows={3} />
+  }
   if (settingsQuery.isError) {
     return (
       <ErrorState
@@ -93,6 +103,9 @@ export function LoanRequestPanel({ cooperativeId, isAdmin }: LoanRequestPanelPro
 
   const settings = settingsQuery.data
   const memberRequestsBlocked = !isAdmin && settings && !settings.allowMemberRequests
+  const amount = watch('amount')
+  const purpose = watch('purpose')
+  const termMonths = watch('termMonths')
 
   if (memberRequestsBlocked) {
     return (
@@ -113,13 +126,24 @@ export function LoanRequestPanel({ cooperativeId, isAdmin }: LoanRequestPanelPro
       }}
     >
       <Typography variant="h6" gutterBottom>
-        {isAdmin ? t('loans.request.issueTitle') : t('loans.request.requestTitle')}
+        {isAdmin ? t('loans.request.issueTitle') : t('loans.request.applyTitle')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {isAdmin
           ? t('loans.request.issueDescription')
-          : t('loans.request.requestDescription')}
+          : t('loans.request.applyDescription')}
       </Typography>
+
+      {!isAdmin && previewQuery.data ? (
+        <Box sx={{ mb: 2 }}>
+          <LoanApplicationFormView
+            form={previewQuery.data}
+            amount={amount}
+            purpose={purpose}
+            termMonths={termMonths}
+          />
+        </Box>
+      ) : null}
 
       {settings ? (
         <Alert severity="info" sx={{ mb: 2 }}>
@@ -162,34 +186,39 @@ export function LoanRequestPanel({ cooperativeId, isAdmin }: LoanRequestPanelPro
           {...register('amount')}
           fullWidth
         />
-        <TextField
-          label={t('loans.fields.termMonths')}
-          error={Boolean(errors.termMonths)}
-          helperText={errors.termMonths?.message}
-          {...register('termMonths')}
-          fullWidth
-        />
+        {isAdmin ? (
+          <TextField
+            label={t('loans.fields.termMonths')}
+            error={Boolean(errors.termMonths)}
+            helperText={errors.termMonths?.message}
+            {...register('termMonths')}
+            fullWidth
+          />
+        ) : null}
         <TextField
           label={t('loans.fields.purpose')}
           error={Boolean(errors.purpose)}
           helperText={errors.purpose?.message}
           {...register('purpose')}
           fullWidth
+          required={!isAdmin}
         />
-        <TextField
-          label={t('loans.fields.notes')}
-          {...register('notes')}
-          fullWidth
-          multiline
-          minRows={2}
-        />
+        {isAdmin ? (
+          <TextField
+            label={t('loans.fields.notes')}
+            {...register('notes')}
+            fullWidth
+            multiline
+            minRows={2}
+          />
+        ) : null}
         <Button
           type="submit"
           variant="contained"
           disabled={mutation.isPending}
           sx={{ alignSelf: 'flex-start' }}
         >
-          {isAdmin ? t('loans.request.issue') : t('loans.request.submit')}
+          {isAdmin ? t('loans.request.issue') : t('loans.request.apply')}
         </Button>
       </Stack>
     </Box>

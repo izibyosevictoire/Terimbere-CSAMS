@@ -112,4 +112,30 @@ public final class CooperativeOfficerRoles {
         throw new ForbiddenException(
                 "A President or Vice President must co-sign this fund movement");
     }
+
+    /** Highest cooperative office for electronic approval records. */
+    public static String displayRole(UserPrincipal principal) {
+        if (principal == null) {
+            return MEMBER;
+        }
+        if (principal.hasRole(CooperativeAuthorizationService.SUPER_ADMIN)) {
+            return CooperativeAuthorizationService.SUPER_ADMIN;
+        }
+        if (principal.hasRole(PRESIDENT) || principal.hasRole(LEGACY_ADMIN)) {
+            return PRESIDENT;
+        }
+        if (principal.hasRole(VICE_PRESIDENT)) {
+            return VICE_PRESIDENT;
+        }
+        if (principal.hasRole(SECRETARY)) {
+            return SECRETARY;
+        }
+        if (principal.hasRole(ACCOUNTANT)) {
+            return ACCOUNTANT;
+        }
+        if (principal.hasRole(LOAN_OFFICER)) {
+            return LOAN_OFFICER;
+        }
+        return MEMBER;
+    }
 }

@@ -1,9 +1,20 @@
+import type { ApprovalEvent } from './approval'
+import { mapApprovalEvent } from './approval'
+
 export type ContributionStatus =
   | 'PENDING'
   | 'PARTIALLY_PAID'
   | 'PAID'
   | 'WAIVED'
   | 'CANCELLED'
+
+export type ContributionReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+
+export const CONTRIBUTION_REVIEW_STATUSES: ContributionReviewStatus[] = [
+  'PENDING',
+  'APPROVED',
+  'REJECTED',
+]
 
 export const CONTRIBUTION_STATUSES: ContributionStatus[] = [
   'PENDING',
@@ -63,8 +74,32 @@ export interface Contribution {
   paymentReference?: string | null
   notes?: string | null
   recordedBy?: string | null
+  memberName?: string | null
+  submittedAmount?: string | number | null
+  evidenceFileKey?: string | null
+  submittedBy?: string | null
+  submittedByName?: string | null
+  submittedAt?: string | null
+  reviewedBy?: string | null
+  reviewedByName?: string | null
+  reviewedAt?: string | null
+  reviewStatus?: ContributionReviewStatus | string | null
+  rejectionReason?: string | null
+  approvalHistory?: ApprovalEvent[]
   createdAt?: string
   updatedAt?: string
+}
+
+export interface ContributionSubmitRequest {
+  amount: string | number
+  paymentDate: string
+  paymentReference?: string
+  evidenceFileKey?: string
+  notes?: string
+}
+
+export interface ContributionReviewRequest {
+  rejectionReason: string
 }
 
 export interface ContributionUpdateRequest {
@@ -114,5 +149,7 @@ export function mapContribution(raw: Contribution): Contribution {
     id: String(raw.id),
     memberUserId: String(raw.memberUserId),
     cooperativeId: raw.cooperativeId != null ? String(raw.cooperativeId) : undefined,
+    fullName: raw.fullName || raw.memberName || undefined,
+    approvalHistory: (raw.approvalHistory ?? []).map(mapApprovalEvent),
   }
 }

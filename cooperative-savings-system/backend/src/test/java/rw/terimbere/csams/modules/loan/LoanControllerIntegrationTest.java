@@ -48,6 +48,7 @@ class LoanControllerIntegrationTest {
     private UUID memberUserId;
     private String memberUsername;
     private String memberPassword;
+    private String loanOfficerToken;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -87,6 +88,25 @@ class LoanControllerIntegrationTest {
                 objectMapper.readTree(register.getResponse().getContentAsString()).path("data");
         memberUserId = UUID.fromString(memberData.path("userId").asText());
         memberPassword = memberData.path("temporaryPassword").asText();
+
+        String officerUsername = "loofficer_" + UUID.randomUUID().toString().substring(0, 8);
+        MvcResult officer = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/members")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName":"Loan",
+                                  "lastName":"Officer",
+                                  "username":"%s",
+                                  "email":"%s@test.local",
+                                  "roleInCooperative":"LOAN_OFFICER"
+                                }
+                                """.formatted(officerUsername, officerUsername)))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode officerData =
+                objectMapper.readTree(officer.getResponse().getContentAsString()).path("data");
+        loanOfficerToken = loginAccessToken(officerUsername, officerData.path("temporaryPassword").asText());
 
         mockMvc.perform(put("/api/v1/cooperatives/" + cooperativeId + "/loan-settings")
                         .header("Authorization", "Bearer " + superAdminToken)
@@ -251,13 +271,14 @@ class LoanControllerIntegrationTest {
                                 """))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans/" + loanId + "/approve")
-                        .header("Authorization", "Bearer " + superAdminToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+        completeTwoStepApproval(loanId);
+
+        mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/loans/" + loanId)
+                        .header("Authorization", "Bearer " + superAdminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.interestRatePercent").value(10.0))
-                .andExpect(jsonPath("$.data.interestAmount").value(100.0));
+                .andExpect(jsonPath("$.data.interestAmount").value(100.0))
+                .andExpect(jsonPath("$.data.status").value("APPROVED"));
     }
 
     @Test
@@ -330,6 +351,30 @@ class LoanControllerIntegrationTest {
     }
 
     @Test
+    void memberCannotApproveLoan() throws Exception {
+        String memberToken = loginAccessToken(memberUsername, memberPassword);
+        MvcResult requestResult = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"amount": 500.0000, "termMonths": 3, "purpose": "Self request"}
+                                """))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID loanId = UUID.fromString(objectMapper
+                .readTree(requestResult.getResponse().getContentAsString())
+                .path("data")
+                .path("id")
+                .asText());
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans/" + loanId + "/approve")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void memberDetailIncludesLoans() throws Exception {
         fundGroup(3000.0000);
         UUID loanId = requestApproveDisburse(500.0000);
@@ -387,12 +432,42 @@ class LoanControllerIntegrationTest {
                 .asText());
 
         mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans/" + loanId + "/approve")
+                        .header("Authorization", "Bearer " + loanOfficerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("AWAITING_SECOND_APPROVAL"))
+                .andExpect(jsonPath("$.data.approvalHistory.length()").value(2));
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans/" + loanId + "/approve")
+                        .header("Authorization", "Bearer " + loanOfficerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans/" + loanId + "/approve")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("APPROVED"))
+                .andExpect(jsonPath("$.data.approvalHistory.length()").value(3));
+        return loanId;
+    }
+
+    private void completeTwoStepApproval(UUID loanId) throws Exception {
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans/" + loanId + "/approve")
+                        .header("Authorization", "Bearer " + loanOfficerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("AWAITING_SECOND_APPROVAL"));
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans/" + loanId + "/approve")
                         .header("Authorization", "Bearer " + superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("APPROVED"));
-        return loanId;
     }
 
     private UUID requestApproveDisburse(double amount) throws Exception {

@@ -5,6 +5,7 @@ import {
   isLeadershipRole,
   isOfficerRole,
   PERMISSION_CONTRIBUTION_WRITE,
+  PERMISSION_SOCIAL_WRITE,
   PERMISSION_FINE_WRITE,
   PERMISSION_FUND_AUTHORIZE,
   PERMISSION_LOAN_APPROVE,
@@ -96,6 +97,8 @@ export const selectCanPreparePayouts = (state: { auth: AuthState }) =>
   hasPermission(state.auth.user, PERMISSION_PAYOUT_WRITE)
 export const selectCanRecordContributions = (state: { auth: AuthState }) =>
   hasPermission(state.auth.user, PERMISSION_CONTRIBUTION_WRITE)
+export const selectCanWriteSocial = (state: { auth: AuthState }) =>
+  hasPermission(state.auth.user, PERMISSION_SOCIAL_WRITE)
 export const selectCanManageLoans = (state: { auth: AuthState }) =>
   hasPermission(state.auth.user, PERMISSION_LOAN_APPROVE) ||
   hasPermission(state.auth.user, PERMISSION_LOAN_WRITE)

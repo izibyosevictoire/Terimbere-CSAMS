@@ -3,11 +3,13 @@ package rw.terimbere.csams.modules.loan.dto;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import rw.terimbere.csams.modules.audit.dto.ApprovalEventResponse;
 import rw.terimbere.csams.modules.loan.entity.InterestType;
 import rw.terimbere.csams.modules.loan.entity.LoanStatus;
 
@@ -42,6 +44,11 @@ public class LoanResponse {
     private UUID requestedBy;
     private UUID approvedBy;
     private UUID disbursedBy;
+    private UUID firstApprovedBy;
+    private Instant firstApprovedAt;
+    private String firstApproverRole;
+    private LoanApplicationFormResponse applicationForm;
+    private List<ApprovalEventResponse> approvalHistory;
     private Instant createdAt;
     private Instant updatedAt;
 }

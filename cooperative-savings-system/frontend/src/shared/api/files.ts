@@ -3,6 +3,7 @@ import { unwrapApiData } from './auth'
 
 export type FileUploadCategory =
   | 'FINE_PAYMENT_EVIDENCE'
+  | 'CONTRIBUTION_EVIDENCE'
   | 'SOCIAL_EVIDENCE'
   | 'INVESTMENT_DOCUMENT'
   | 'INCOME_EXPENSE_DOCUMENT'

@@ -25,6 +25,7 @@ export {
   selectCanManageMembers,
   selectCanPreparePayouts,
   selectCanRecordContributions,
+  selectCanWriteSocial,
   selectCanRecordLoans,
   selectSelectedCooperativeId,
   selectUserRoles,
