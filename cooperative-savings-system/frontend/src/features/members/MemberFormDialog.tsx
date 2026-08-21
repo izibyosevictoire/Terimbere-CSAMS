@@ -206,8 +206,10 @@ export function MemberFormDialog({
                       <ListItemText
                         primary={t(`members.roles.${role}`)}
                         secondary={t(`roles.duties.${role}`)}
-                        primaryTypographyProps={{ fontWeight: 600 }}
-                        secondaryTypographyProps={{ sx: { whiteSpace: 'normal' } }}
+                        slotProps={{
+                          primary: { sx: { fontWeight: 600 } },
+                          secondary: { sx: { whiteSpace: 'normal' } },
+                        }}
                       />
                     </MenuItem>
                   ))}
