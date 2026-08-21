@@ -23,8 +23,10 @@ import { ErrorState } from '@/shared/components/ErrorState'
 import { MetricCard } from '@/shared/components/MetricCard'
 import { QuickActionsMenu } from '@/shared/components/QuickActionsMenu'
 import { ReportsMenu } from '@/shared/components/ReportsMenu'
+import { RoleDutiesNote } from '@/shared/components/RoleDutiesNote'
 import { ROUTES } from '@/shared/constants/routes'
 import { formatMoney } from '@/shared/utils/formatMoney'
+import { primaryRole } from '@/shared/types/auth'
 import { MemberFinancialSummarySection } from './MemberFinancialSummarySection'
 import { MonthlyContributionsChart } from './MonthlyContributionsChart'
 
@@ -38,7 +40,9 @@ interface AdminDashboardProps {
 export function AdminDashboard({ cooperativeId }: AdminDashboardProps) {
   const { t } = useTranslation()
   const authStatus = useAppSelector((s) => s.auth.status)
+  const userRoles = useAppSelector((s) => s.auth.user?.roles ?? [])
   const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
+  const officeRole = primaryRole(userRoles)
 
   const cooperativesQuery = useQuery({
     queryKey: ['cooperatives', 'mine'],
@@ -83,7 +87,9 @@ export function AdminDashboard({ cooperativeId }: AdminDashboardProps) {
             </Typography>
             <Chip
               label={
-                isSuperAdmin ? t('roles.superAdminBadge') : t('dashboard.admin.adminChip')
+                isSuperAdmin
+                  ? t('roles.superAdminBadge')
+                  : t(`roles.${officeRole}`, { defaultValue: t('dashboard.admin.adminChip') })
               }
               color="primary"
               size="small"
@@ -100,6 +106,10 @@ export function AdminDashboard({ cooperativeId }: AdminDashboardProps) {
           <QuickActionsMenu />
           <ReportsMenu />
         </Stack>
+      </Box>
+
+      <Box sx={{ mb: 3 }}>
+        <RoleDutiesNote roles={userRoles} />
       </Box>
 
       {summaryQuery.isError ? (

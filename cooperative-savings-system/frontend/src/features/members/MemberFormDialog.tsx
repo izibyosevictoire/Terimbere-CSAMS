@@ -9,6 +9,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  ListItemText,
   MenuItem,
   Stack,
   TextField,
@@ -21,6 +22,7 @@ import { useAppSelector } from '@/app/store/hooks'
 import { selectIsLeadership, selectIsSuperAdmin } from '@/app/store/authSlice'
 import type { Member } from '@/shared/types/member'
 import { ROLES_IN_COOPERATIVE, normalizeRoleInCooperative, type RoleInCooperative } from '@/shared/types/member'
+import { RoleDutiesNote } from '@/shared/components/RoleDutiesNote'
 import {
   memberCreateSchema,
   memberFormDefaults,
@@ -93,11 +95,14 @@ export function MemberFormDialog({
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<MemberFormValues>({
     resolver: yupResolver(memberCreateSchema),
     defaultValues: memberFormDefaults,
   })
+
+  const selectedRole = watch('roleInCooperative')
 
   useEffect(() => {
     if (!open) return
@@ -184,15 +189,32 @@ export function MemberFormDialog({
                   label={t('members.fields.roleInCooperative')}
                   fullWidth
                   disabled={!canAssignRoles}
+                  helperText={
+                    canAssignRoles
+                      ? t('members.roleAssignHint')
+                      : t('members.roleAssignLocked')
+                  }
+                  slotProps={{
+                    select: {
+                      renderValue: (value) =>
+                        t(`members.roles.${String(value)}`, { defaultValue: String(value) }),
+                    },
+                  }}
                 >
                   {roleOptions.map((role) => (
-                    <MenuItem key={role} value={role}>
-                      {t(`members.roles.${role}`)}
+                    <MenuItem key={role} value={role} sx={{ whiteSpace: 'normal', py: 1.25 }}>
+                      <ListItemText
+                        primary={t(`members.roles.${role}`)}
+                        secondary={t(`roles.duties.${role}`)}
+                        primaryTypographyProps={{ fontWeight: 600 }}
+                        secondaryTypographyProps={{ sx: { whiteSpace: 'normal' } }}
+                      />
                     </MenuItem>
                   ))}
                 </TextField>
               )}
             />
+            <RoleDutiesNote role={selectedRole} compact />
             {isCreate ? (
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: { sm: 'flex-start' } }}>
                 <TextField

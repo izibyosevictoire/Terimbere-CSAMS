@@ -13,6 +13,7 @@ import { Link as RouterLink } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
 import { selectIsCooperativeAdmin, selectIsSuperAdmin } from '@/app/store/authSlice'
 import { PageHeader } from '@/shared/components/PageHeader'
+import { RoleDutiesNote } from '@/shared/components/RoleDutiesNote'
 import { ROUTES } from '@/shared/constants/routes'
 
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -78,6 +79,9 @@ export function ProfilePage() {
                     <Typography variant="body2">—</Typography>
                   )}
                 </Stack>
+                <Box sx={{ mt: 1.5 }}>
+                  <RoleDutiesNote roles={user.roles} compact />
+                </Box>
               </Box>
               {isCoopAdmin || isSuperAdmin ? (
                 <Box>

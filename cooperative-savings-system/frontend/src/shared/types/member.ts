@@ -47,8 +47,6 @@ export const ACCOUNT_STATUSES: AccountStatus[] = [
   'SUSPENDED',
 ]
 
-export const ROLES_IN_COOPERATIVE: RoleInCooperative[] = ['MEMBER', 'COOPERATIVE_ADMIN']
-
 export interface Member {
   userId: string
   membershipId?: string

@@ -39,6 +39,7 @@ import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { LoadingState } from '@/shared/components/LoadingState'
 import { PageHeader } from '@/shared/components/PageHeader'
+import { RoleDutiesNote } from '@/shared/components/RoleDutiesNote'
 import { ResponsiveTable, type TableColumn } from '@/shared/components/ResponsiveTable'
 import { ROUTES } from '@/shared/constants/routes'
 import type { Contribution } from '@/shared/types/contribution'
@@ -752,6 +753,9 @@ export function MemberDetailPage() {
                 })}
               />
             </Stack>
+            <Box sx={{ mb: 2 }}>
+              <RoleDutiesNote role={member.roleInCooperative} compact />
+            </Box>
 
             <Stack spacing={2}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>

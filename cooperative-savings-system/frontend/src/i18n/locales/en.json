@@ -360,6 +360,8 @@
       "membershipStatus": "Membership status",
       "accountStatus": "Account status"
     },
+    "roleAssignHint": "Pick the office this person holds. Duties appear under each role.",
+    "roleAssignLocked": "Only the President or Vice President can change office roles.",
     "generatePassword": "Generate Password",
     "additionalInfo": "Additional information"
   },
@@ -1391,6 +1393,17 @@
     "ACCOUNTANT": "ACCOUNTANT",
     "LOAN_OFFICER": "LOAN OFFICER",
     "COOPERATIVE_ADMIN": "PRESIDENT",
-    "MEMBER": "MEMBER"
+    "MEMBER": "MEMBER",
+    "dutiesTitle": "What the {{role}} does",
+    "duties": {
+      "SUPER_ADMIN": "Full platform access: create cooperatives, appoint Presidents, and operate any group.",
+      "MEMBER": "Save each month, request loans, and view your own fines, social fund, and share-out.",
+      "PRESIDENT": "Chair the group, settle disputes, suspend members, approve rule changes, and co-sign money leaving the fund.",
+      "VICE_PRESIDENT": "Act for the President when they are away, with the same authority, and head the loan committee.",
+      "SECRETARY": "Keep the membership register and the record of meetings and decisions. This is not a money role.",
+      "ACCOUNTANT": "Record contributions, loan disbursements, and repayments, and prepare share-out figures. A President must co-sign money movements.",
+      "LOAN_OFFICER": "Review loan requests against savings history, approve or reject them, then send approved loans to the Accountant to disburse.",
+      "COOPERATIVE_ADMIN": "Chair the group, settle disputes, suspend members, approve rule changes, and co-sign money leaving the fund."
+    }
   }
 }

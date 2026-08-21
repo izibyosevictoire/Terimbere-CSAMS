@@ -14,6 +14,7 @@ import { getErrorMessage } from '@/shared/api/client'
 import { fetchMemberFinancialSummary } from '@/shared/api/members'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { MetricCard } from '@/shared/components/MetricCard'
+import { RoleDutiesNote } from '@/shared/components/RoleDutiesNote'
 import { formatMoney } from '@/shared/utils/formatMoney'
 import { ROUTES } from '@/shared/constants/routes'
 import { MonthlyContributionsChart } from './MonthlyContributionsChart'
@@ -61,6 +62,10 @@ export function MemberDashboard({ cooperativeId }: MemberDashboardProps) {
         <Typography variant="body1" color="text.secondary">
           {t('dashboard.description')}
         </Typography>
+      </Box>
+
+      <Box sx={{ mb: 3, maxWidth: 720 }}>
+        <RoleDutiesNote roles={user?.roles} />
       </Box>
 
       {summaryQuery.isError ? (

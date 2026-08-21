@@ -352,7 +352,11 @@
       "roleInCooperative": "Inshingano mu koperative",
       "membershipStatus": "Imiterere y'ubwiyungiro",
       "accountStatus": "Imiterere ya konti"
-    }
+    },
+    "roleAssignHint": "Hitamo inshingano y'uyu muntu. Icyo akora kigaragara munsi y'inshingano.",
+    "roleAssignLocked": "Perezida cyangwa Visi Perezida ni bo bahindura inshingano.",
+    "generatePassword": "Kora ijambo ry'ibanga",
+    "additionalInfo": "Andi makuru"
   },
   "contributions": {
     "selectCooperativeTitle": "Hitamo ikoperative",
@@ -1371,6 +1375,17 @@
     "ACCOUNTANT": "UMUCUNGAMARI",
     "LOAN_OFFICER": "INGUZANYO",
     "COOPERATIVE_ADMIN": "PEREZIDA",
-    "MEMBER": "UMUNYAMURYANGO"
+    "MEMBER": "UMUNYAMURYANGO",
+    "dutiesTitle": "Icyo {{role}} akora",
+    "duties": {
+      "SUPER_ADMIN": "Afite ububasha bwose ku rubuga: ashyiraho amakoperative, ashyira Perezida, kandi ashobora gukoresha itsinda iryo ari ryo ryose.",
+      "MEMBER": "Ashyira umusanzu buri kwezi, asaba inguzanyo, kandi areba amande, ikigega cy'imibano, n'isaranganya bye.",
+      "PRESIDENT": "Ayobora itsinda, akemura amakimbirane, ahagarika abanyamuryango, yemeza amategeko, kandi asinya amafaranga ava mu kigega.",
+      "VICE_PRESIDENT": "Asimbura Perezida iyo adahari, afite ububasha bumwe, kandi ayobora komite y'inguzanyo.",
+      "SECRETARY": "Abika icyo abanyamuryango, inama, n'ibyemezo. Si umukoresha w'amafaranga.",
+      "ACCOUNTANT": "Andika imisanzu, inguzanyo zatanzwe, n'uko zishyurwa, kandi ategura isaranganya. Perezida agomba gusinya iyo amafaranga ava mu kigega.",
+      "LOAN_OFFICER": "Asuzuma ibisabwa by'inguzanyo ku mateka y'imisanzu, yemera cyangwa yanga, hanyuma ayohereza Umucungamari ngo atange amafaranga.",
+      "COOPERATIVE_ADMIN": "Ayobora itsinda, akemura amakimbirane, ahagarika abanyamuryango, yemeza amategeko, kandi asinya amafaranga ava mu kigega."
+    }
   }
 }
