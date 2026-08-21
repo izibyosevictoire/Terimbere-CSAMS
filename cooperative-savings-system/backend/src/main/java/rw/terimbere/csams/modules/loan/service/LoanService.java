@@ -22,6 +22,7 @@ import org.springframework.util.StringUtils;
 import rw.terimbere.csams.modules.audit.entity.ApprovalAction;
 import rw.terimbere.csams.modules.audit.service.ApprovalTrailService;
 import rw.terimbere.csams.modules.audit.service.AuditService;
+import rw.terimbere.csams.modules.contribution.ShareAmountCalculator;
 import rw.terimbere.csams.modules.cooperative.entity.Cooperative;
 import rw.terimbere.csams.modules.notification.entity.NotificationType;
 import rw.terimbere.csams.modules.notification.service.NotificationFacade;
@@ -29,6 +30,9 @@ import rw.terimbere.csams.modules.cooperative.repository.CooperativeRepository;
 import rw.terimbere.csams.modules.ledger.service.LedgerService;
 import rw.terimbere.csams.modules.loan.dto.LoanApplicationFormResponse;
 import rw.terimbere.csams.modules.loan.dto.LoanApproveRequest;
+import rw.terimbere.csams.modules.loan.dto.LoanEligibilityResponse;
+import rw.terimbere.csams.modules.loan.dto.LoanGuarantorRespondRequest;
+import rw.terimbere.csams.modules.loan.dto.LoanGuarantorResponse;
 import rw.terimbere.csams.modules.loan.dto.LoanRejectRequest;
 import rw.terimbere.csams.modules.loan.dto.LoanRepaymentCreateRequest;
 import rw.terimbere.csams.modules.loan.dto.LoanRepaymentResponse;
@@ -36,9 +40,12 @@ import rw.terimbere.csams.modules.loan.dto.LoanRequestCreateRequest;
 import rw.terimbere.csams.modules.loan.dto.LoanResponse;
 import rw.terimbere.csams.modules.loan.entity.InterestType;
 import rw.terimbere.csams.modules.loan.entity.Loan;
+import rw.terimbere.csams.modules.loan.entity.LoanGuaranteeMode;
 import rw.terimbere.csams.modules.loan.entity.LoanSettings;
+import rw.terimbere.csams.modules.loan.entity.LoanShareTier;
 import rw.terimbere.csams.modules.loan.entity.LoanStatus;
 import rw.terimbere.csams.modules.loan.repository.LoanRepository;
+import rw.terimbere.csams.modules.loan.repository.LoanShareTierRepository;
 import rw.terimbere.csams.modules.loanrepayment.entity.LoanRepayment;
 import rw.terimbere.csams.modules.loanrepayment.repository.LoanRepaymentRepository;
 import rw.terimbere.csams.modules.membership.entity.CooperativeMembership;
@@ -64,8 +71,15 @@ import rw.terimbere.csams.shared.utilities.MoneyUtils;
 public class LoanService {
 
     private static final int DEFAULT_TERM_MONTHS = 12;
+    private static final EnumSet<LoanStatus> OPEN_LOAN_STATUSES = EnumSet.of(
+            LoanStatus.PENDING,
+            LoanStatus.AWAITING_SECOND_APPROVAL,
+            LoanStatus.APPROVED,
+            LoanStatus.ACTIVE,
+            LoanStatus.OVERDUE);
 
     private final LoanRepository loanRepository;
+    private final LoanShareTierRepository loanShareTierRepository;
     private final LoanRepaymentRepository loanRepaymentRepository;
     private final LoanSettingsService loanSettingsService;
     private final CooperativeRepository cooperativeRepository;
@@ -77,6 +91,7 @@ public class LoanService {
     private final AuditService auditService;
     private final ApprovalTrailService approvalTrailService;
     private final NotificationFacade notificationFacade;
+    private final LoanGuarantorService loanGuarantorService;
     private final ObjectMapper objectMapper;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -121,9 +136,12 @@ public class LoanService {
 
         BigDecimal amount = MoneyUtils.scaleForStorage(request.getAmount());
         MoneyUtils.assertPositive(amount);
-        if (settings.getMaxLoanAmount() != null && amount.compareTo(settings.getMaxLoanAmount()) > 0) {
-            throw new BusinessException("Requested amount exceeds maximum loan amount");
+        LoanEligibilityResponse eligibility = evaluateEligibility(cooperativeId, memberUserId, amount, null);
+        if (!eligibility.isEligible()) {
+            throw new BusinessException(eligibility.getReason());
         }
+
+        LoanGuaranteeMode guaranteeMode = resolveGuaranteeMode(request);
 
         int termMonths = resolveTermMonths(request.getTermMonths(), settings);
         if (settings.getMaxTermMonths() != null && termMonths > settings.getMaxTermMonths()) {
@@ -143,6 +161,13 @@ public class LoanService {
                 .totalRepaidInterest(BigDecimal.ZERO.setScale(MoneyUtils.STORAGE_SCALE))
                 .requestDate(LocalDate.now())
                 .status(LoanStatus.PENDING)
+                .guaranteeMode(guaranteeMode)
+                .shareCount(eligibility.getShareCount())
+                .sharePercent(eligibility.getSharePercent())
+                .maxLoanByShares(
+                        eligibility.getMaxLoanByShares() == null
+                                ? null
+                                : MoneyUtils.scaleForStorage(eligibility.getMaxLoanByShares()))
                 .purpose(trimToNull(request.getPurpose()))
                 .requestedBy(principal.getId())
                 .build();
@@ -167,9 +192,20 @@ public class LoanService {
                 "Loan",
                 loan.getId(),
                 null,
-                "{\"amount\":\"" + amount + "\",\"status\":\"PENDING\"}",
+                "{\"amount\":\""
+                        + amount
+                        + "\",\"status\":\"PENDING\",\"guaranteeMode\":\""
+                        + guaranteeMode
+                        + "\"}",
                 clientIp(httpRequest),
                 userAgent(httpRequest));
+        if (guaranteeMode == LoanGuaranteeMode.GUARANTOR) {
+            if (request.getGuarantorUserId() == null || request.getGuaranteedAmount() == null) {
+                throw new ValidationException("A guarantor and guaranteed amount are required for a guaranteed loan");
+            }
+            loanGuarantorService.assignGuarantor(
+                    loan, request.getGuarantorUserId(), request.getGuaranteedAmount(), principal, httpRequest);
+        }
         return toResponse(loan, cooperative.getCurrency(), true);
     }
 
@@ -190,7 +226,24 @@ public class LoanService {
                 .termMonths(resolveTermMonths(null, settings))
                 .requestDate(LocalDate.now())
                 .build();
-        return buildApplicationForm(cooperative, membership, principal.getId(), draft, Instant.now());
+        LoanApplicationFormResponse form =
+                buildApplicationForm(cooperative, membership, principal.getId(), draft, Instant.now());
+        form.setEligibility(evaluateEligibility(cooperativeId, principal.getId(), null, null));
+        return form;
+    }
+
+    @Transactional(readOnly = true)
+    public LoanEligibilityResponse eligibility(UUID cooperativeId, UUID memberUserId, BigDecimal requestedAmount) {
+        requireCooperative(cooperativeId);
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        authorizationService.requireMembership(cooperativeId);
+        UUID target = memberUserId;
+        boolean canWrite = principal.hasAuthority("LOAN_WRITE")
+                || principal.hasRole(CooperativeAuthorizationService.SUPER_ADMIN);
+        if (target == null || !canWrite) {
+            target = principal.getId();
+        }
+        return evaluateEligibility(cooperativeId, target, requestedAmount, null);
     }
 
     @Transactional
@@ -263,6 +316,10 @@ public class LoanService {
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
         Loan loan = requireLoan(cooperativeId, loanId);
+        if (principal.getId().equals(loan.getMemberUserId())) {
+            throw new ForbiddenException("A member cannot approve their own loan");
+        }
+        loanGuarantorService.requireAcceptedIfRequired(loan);
         String previousStatus = loan.getStatus().name();
 
         if (loan.getStatus() == LoanStatus.PENDING) {
@@ -651,6 +708,104 @@ public class LoanService {
         }
     }
 
+    private LoanEligibilityResponse evaluateEligibility(
+            UUID cooperativeId, UUID memberUserId, BigDecimal requestedAmount, UUID excludeLoanId) {
+        List<Loan> openLoans = loanRepository.findByCooperativeIdAndMemberUserIdAndStatusIn(
+                cooperativeId, memberUserId, OPEN_LOAN_STATUSES);
+        BigDecimal existingAmount = BigDecimal.ZERO;
+        BigDecimal repaid = BigDecimal.ZERO;
+        BigDecimal outstanding = BigDecimal.ZERO;
+        for (Loan open : openLoans) {
+            if (excludeLoanId != null && excludeLoanId.equals(open.getId())) {
+                continue;
+            }
+            BigDecimal principal = open.getPrincipalAmount() != null
+                    ? open.getPrincipalAmount()
+                    : open.getApprovedAmount() != null ? open.getApprovedAmount() : open.getRequestedAmount();
+            existingAmount = existingAmount.add(principal == null ? BigDecimal.ZERO : principal);
+            repaid = repaid.add(open.getTotalRepaidPrincipal() == null
+                    ? BigDecimal.ZERO
+                    : open.getTotalRepaidPrincipal());
+            repaid = repaid.add(open.getTotalRepaidInterest() == null
+                    ? BigDecimal.ZERO
+                    : open.getTotalRepaidInterest());
+            outstanding = outstanding.add(open.getOutstandingPrincipal() == null
+                    ? BigDecimal.ZERO
+                    : open.getOutstandingPrincipal());
+            outstanding = outstanding.add(open.getOutstandingInterest() == null
+                    ? BigDecimal.ZERO
+                    : open.getOutstandingInterest());
+            if (open.getStatus() == LoanStatus.PENDING
+                    || open.getStatus() == LoanStatus.AWAITING_SECOND_APPROVAL
+                    || open.getStatus() == LoanStatus.APPROVED) {
+                outstanding = outstanding.add(
+                        principal == null || principal.compareTo(BigDecimal.ZERO) == 0
+                                ? (open.getRequestedAmount() == null ? BigDecimal.ZERO : open.getRequestedAmount())
+                                : BigDecimal.ZERO);
+            }
+        }
+        boolean hasOpen = openLoans.stream()
+                .anyMatch(open -> excludeLoanId == null || !excludeLoanId.equals(open.getId()));
+        boolean eligible = !hasOpen;
+        String reason = eligible
+                ? "Member is eligible for a new loan"
+                : "Member already has an outstanding or in-progress loan";
+
+        CooperativeMembership membership = membershipRepository
+                .findByCooperativeIdAndUserId(cooperativeId, memberUserId)
+                .orElse(null);
+        int shareCount = membership == null
+                ? ShareAmountCalculator.DEFAULT_SHARE_COUNT
+                : ShareAmountCalculator.normalizeShareCount(membership.getShareCount());
+        Number totalSharesNumber = membershipRepository.sumShareCountByCooperativeIdAndActiveStatus(cooperativeId);
+        long totalShares = totalSharesNumber == null ? 0L : totalSharesNumber.longValue();
+        BigDecimal sharePercent = LoanShareLimitCalculator.sharePercent(shareCount, totalShares);
+        List<LoanShareTier> tiers =
+                loanShareTierRepository.findByCooperativeIdOrderByMinSharePercentDesc(cooperativeId);
+        BigDecimal maxByShares = LoanShareLimitCalculator.matchingMaxLoan(sharePercent, tiers).orElse(null);
+        LoanSettings settings = loanSettingsService.requireSettings(cooperativeId);
+        BigDecimal effectiveMax = settings.getMaxLoanAmount();
+        if (!tiers.isEmpty() && maxByShares == null && eligible) {
+            eligible = false;
+            reason = "Member share percentage does not meet any configured loan level";
+            effectiveMax = BigDecimal.ZERO.setScale(MoneyUtils.STORAGE_SCALE);
+        } else if (maxByShares != null) {
+            effectiveMax = effectiveMax == null ? maxByShares : effectiveMax.min(maxByShares);
+        }
+        if (eligible && requestedAmount != null && effectiveMax != null
+                && MoneyUtils.scaleForStorage(requestedAmount).compareTo(MoneyUtils.scaleForStorage(effectiveMax))
+                        > 0) {
+            eligible = false;
+            reason = maxByShares != null
+                    ? "Requested amount exceeds the loan level for this member's share percentage (maximum "
+                            + MoneyUtils.scale(effectiveMax)
+                            + ")"
+                    : "Requested amount exceeds maximum loan amount";
+        }
+
+        return LoanEligibilityResponse.builder()
+                .memberUserId(memberUserId)
+                .eligible(eligible)
+                .reason(reason)
+                .existingLoanAmount(MoneyUtils.scale(existingAmount))
+                .amountAlreadyRepaid(MoneyUtils.scale(repaid))
+                .outstandingBalance(MoneyUtils.scale(outstanding))
+                .requestedAmount(requestedAmount == null ? null : MoneyUtils.scale(requestedAmount))
+                .shareCount(shareCount)
+                .totalShares(totalShares)
+                .sharePercent(sharePercent)
+                .maxLoanByShares(maxByShares == null ? null : MoneyUtils.scale(maxByShares))
+                .maxEligibleAmount(effectiveMax == null ? null : MoneyUtils.scale(effectiveMax))
+                .build();
+    }
+
+    private static LoanGuaranteeMode resolveGuaranteeMode(LoanRequestCreateRequest request) {
+        if (request.getGuaranteeMode() != null) {
+            return request.getGuaranteeMode();
+        }
+        return request.getGuarantorUserId() != null ? LoanGuaranteeMode.GUARANTOR : LoanGuaranteeMode.SELF;
+    }
+
     private int resolveTermMonths(Integer requested, LoanSettings settings) {
         if (requested != null) {
             return requested;
@@ -679,8 +834,14 @@ public class LoanService {
                 ? MoneyUtils.scaleForStorage(request.getApprovedAmount())
                 : loan.getRequestedAmount();
         MoneyUtils.assertPositive(approvedAmount);
-        if (settings.getMaxLoanAmount() != null && approvedAmount.compareTo(settings.getMaxLoanAmount()) > 0) {
-            throw new BusinessException("Approved amount exceeds maximum loan amount");
+        LoanEligibilityResponse eligibility = evaluateEligibility(
+                loan.getCooperativeId(), loan.getMemberUserId(), approvedAmount, loan.getId());
+        if (eligibility.getMaxEligibleAmount() != null
+                && approvedAmount.compareTo(MoneyUtils.scaleForStorage(eligibility.getMaxEligibleAmount())) > 0) {
+            throw new BusinessException(
+                    eligibility.getReason() == null
+                            ? "Approved amount exceeds the loan level for this member's shares"
+                            : eligibility.getReason());
         }
         if (request != null && request.getTermMonths() != null) {
             int term = request.getTermMonths();
@@ -765,6 +926,10 @@ public class LoanService {
                 .disbursementDate(loan.getDisbursementDate())
                 .dueDate(loan.getDueDate())
                 .status(loan.getStatus())
+                .guaranteeMode(loan.getGuaranteeMode() == null ? LoanGuaranteeMode.SELF : loan.getGuaranteeMode())
+                .shareCount(loan.getShareCount())
+                .sharePercent(loan.getSharePercent())
+                .maxLoanByShares(scaleOrNull(loan.getMaxLoanByShares()))
                 .purpose(loan.getPurpose())
                 .rejectionReason(loan.getRejectionReason())
                 .requestedBy(loan.getRequestedBy())
@@ -774,6 +939,9 @@ public class LoanService {
                 .firstApprovedAt(loan.getFirstApprovedAt())
                 .firstApproverRole(loan.getFirstApproverRole())
                 .applicationForm(form)
+                .eligibility(evaluateEligibility(
+                        loan.getCooperativeId(), loan.getMemberUserId(), loan.getRequestedAmount(), loan.getId()))
+                .guarantor(loanGuarantorService.findForLoan(loan.getId()))
                 .approvalHistory(
                         includeHistory
                                 ? approvalTrailService.list(

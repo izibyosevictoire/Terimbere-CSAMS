@@ -34,6 +34,7 @@ public class MemberResponse {
     private String membershipStatus;
     private LocalDate membershipDate;
     private String roleInCooperative;
+    private Integer shareCount;
     private Instant createdAt;
     private Instant updatedAt;
 

@@ -88,6 +88,20 @@ public class Loan extends BaseEntity {
     @Column(name = "status", nullable = false, length = 32)
     private LoanStatus status;
 
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "guarantee_mode", nullable = false, length = 32)
+    private LoanGuaranteeMode guaranteeMode = LoanGuaranteeMode.SELF;
+
+    @Column(name = "share_count")
+    private Integer shareCount;
+
+    @Column(name = "share_percent", precision = 9, scale = 4)
+    private BigDecimal sharePercent;
+
+    @Column(name = "max_loan_by_shares", precision = 19, scale = 4)
+    private BigDecimal maxLoanByShares;
+
     @Column(name = "purpose", length = 2000)
     private String purpose;
 

@@ -37,6 +37,9 @@ public class Contribution extends BaseEntity {
     @Column(name = "\"month\"", nullable = false)
     private int month;
 
+    @Column(name = "share_count")
+    private Integer shareCount;
+
     @Column(name = "expected_amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal expectedAmount;
 

@@ -37,8 +37,8 @@ public class FineSettingsController {
     }
 
     @PutMapping
-    @PreAuthorize("hasAuthority('FINE_WRITE')")
-    @Operation(summary = "Update fine settings")
+    @PreAuthorize("hasRole('PRESIDENT') or hasRole('SUPER_ADMIN') or hasRole('COOPERATIVE_ADMIN')")
+    @Operation(summary = "Update fine settings (President only)")
     public ResponseEntity<ApiResponse<FineSettingsResponse>> update(
             @PathVariable UUID cooperativeId,
             @Valid @RequestBody FineSettingsUpdateRequest request,

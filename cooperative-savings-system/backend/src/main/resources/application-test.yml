@@ -26,6 +26,8 @@ app:
     base-path: ${java.io.tmpdir}/csams-test-uploads
   security:
     auth-rate-limit-enabled: false
+  fines:
+    auto-generate-enabled: false
 
 
 logging:

@@ -6,6 +6,8 @@ import type {
   LoanApplicationForm,
   LoanApproveRequest,
   LoanCreateRequest,
+  LoanEligibility,
+  LoanGuarantor,
   LoanListQuery,
   LoanRejectRequest,
   LoanRepayment,
@@ -71,6 +73,43 @@ export async function fetchLoanApplicationPreview(
 ): Promise<LoanApplicationForm> {
   const response = await apiClient.get<ApiResponse<LoanApplicationForm>>(
     `/cooperatives/${cooperativeId}/loans/application-preview`,
+  )
+  return unwrapApiData(response.data)
+}
+
+export async function fetchLoanEligibility(
+  cooperativeId: string,
+  memberUserId?: string,
+  amount?: string | number,
+): Promise<LoanEligibility> {
+  const params: Record<string, string | number> = {}
+  if (memberUserId) params.memberUserId = memberUserId
+  if (amount != null && String(amount).trim() !== '') params.amount = String(amount)
+  const response = await apiClient.get<ApiResponse<LoanEligibility>>(
+    `/cooperatives/${cooperativeId}/loans/eligibility`,
+    { params },
+  )
+  return unwrapApiData(response.data)
+}
+
+export async function fetchGuarantorRequests(
+  cooperativeId: string,
+): Promise<LoanGuarantor[]> {
+  const response = await apiClient.get<ApiResponse<LoanGuarantor[]>>(
+    `/cooperatives/${cooperativeId}/loans/guarantor-requests`,
+  )
+  return unwrapApiData(response.data) ?? []
+}
+
+export async function respondToGuarantorRequest(
+  cooperativeId: string,
+  loanId: string,
+  accepted: boolean,
+  comment?: string,
+): Promise<LoanGuarantor> {
+  const response = await apiClient.post<ApiResponse<LoanGuarantor>>(
+    `/cooperatives/${cooperativeId}/loans/${loanId}/guarantor/respond`,
+    { accepted, comment },
   )
   return unwrapApiData(response.data)
 }

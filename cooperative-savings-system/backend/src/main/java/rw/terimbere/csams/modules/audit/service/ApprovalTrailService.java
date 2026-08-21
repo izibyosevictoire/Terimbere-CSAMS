@@ -22,6 +22,7 @@ public class ApprovalTrailService {
     public static final String ENTITY_LOAN = "Loan";
     public static final String ENTITY_CONTRIBUTION = "Contribution";
     public static final String ENTITY_SOCIAL_CONTRIBUTION = "SocialContribution";
+    public static final String ENTITY_LOAN_GUARANTOR = "LoanGuarantor";
 
     private final ApprovalEventRepository approvalEventRepository;
     private final UserRepository userRepository;

@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import rw.terimbere.csams.modules.audit.service.AuditService;
+import rw.terimbere.csams.modules.contribution.ShareAmountCalculator;
 import rw.terimbere.csams.modules.contribution.repository.ContributionRepository;
 import rw.terimbere.csams.modules.contribution.service.ContributionService;
 import rw.terimbere.csams.modules.cooperative.entity.Cooperative;
@@ -153,6 +154,7 @@ public class MemberService {
                 .membershipStatus("ACTIVE")
                 .membershipDate(request.getMembershipDate() != null ? request.getMembershipDate() : LocalDate.now())
                 .roleInCooperative(roleInCoop)
+                .shareCount(ShareAmountCalculator.normalizeShareCount(request.getShareCount()))
                 .build();
         membership = membershipRepository.save(membership);
 
@@ -198,6 +200,7 @@ public class MemberService {
                         .membershipStatus(membership.getMembershipStatus())
                         .membershipDate(membership.getMembershipDate())
                         .roleInCooperative(membership.getRoleInCooperative())
+                        .shareCount(ShareAmountCalculator.normalizeShareCount(membership.getShareCount()))
                         .build();
             }
             return toResponse(user, membership);
@@ -381,6 +384,9 @@ public class MemberService {
             membership.setRoleInCooperative(roleInCoop);
             ensureSystemRoles(user, roleInCoop);
             userRepository.save(user);
+        }
+        if (request.getShareCount() != null) {
+            membership.setShareCount(ShareAmountCalculator.normalizeShareCount(request.getShareCount()));
         }
         membershipRepository.save(membership);
 
@@ -636,6 +642,7 @@ public class MemberService {
                 .membershipStatus(membership.getMembershipStatus())
                 .membershipDate(membership.getMembershipDate())
                 .roleInCooperative(membership.getRoleInCooperative())
+                .shareCount(ShareAmountCalculator.normalizeShareCount(membership.getShareCount()))
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

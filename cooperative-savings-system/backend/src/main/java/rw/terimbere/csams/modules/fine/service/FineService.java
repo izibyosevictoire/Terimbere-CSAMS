@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -15,12 +16,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import rw.terimbere.csams.modules.audit.service.AuditService;
+import rw.terimbere.csams.modules.contribution.ShareAmountCalculator;
 import rw.terimbere.csams.modules.contribution.entity.Contribution;
 import rw.terimbere.csams.modules.notification.entity.NotificationType;
 import rw.terimbere.csams.modules.notification.service.NotificationFacade;
 import rw.terimbere.csams.modules.contribution.entity.ContributionStatus;
 import rw.terimbere.csams.modules.contribution.repository.ContributionRepository;
 import rw.terimbere.csams.modules.cooperative.entity.Cooperative;
+import rw.terimbere.csams.modules.cooperative.entity.CooperativeStatus;
 import rw.terimbere.csams.modules.cooperative.repository.CooperativeRepository;
 import rw.terimbere.csams.modules.fine.dto.FineCreateRequest;
 import rw.terimbere.csams.modules.fine.dto.FineGenerateRequest;
@@ -29,6 +32,7 @@ import rw.terimbere.csams.modules.fine.dto.FinePaymentCreateRequest;
 import rw.terimbere.csams.modules.fine.dto.FinePaymentResponse;
 import rw.terimbere.csams.modules.fine.dto.FinePaymentReviewRequest;
 import rw.terimbere.csams.modules.fine.dto.FineResponse;
+import rw.terimbere.csams.modules.fine.dto.FineUpdateRequest;
 import rw.terimbere.csams.modules.fine.entity.Fine;
 import rw.terimbere.csams.modules.fine.entity.FineCalculationMode;
 import rw.terimbere.csams.modules.fine.entity.FinePayment;
@@ -40,10 +44,12 @@ import rw.terimbere.csams.modules.fine.repository.FinePaymentRepository;
 import rw.terimbere.csams.modules.fine.repository.FineRepository;
 import rw.terimbere.csams.modules.filemanagement.service.FileManagementService;
 import rw.terimbere.csams.modules.ledger.service.LedgerService;
+import rw.terimbere.csams.modules.membership.entity.CooperativeMembership;
 import rw.terimbere.csams.modules.membership.repository.CooperativeMembershipRepository;
 import rw.terimbere.csams.modules.user.entity.User;
 import rw.terimbere.csams.modules.user.repository.UserRepository;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
+import rw.terimbere.csams.security.CooperativeOfficerRoles;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.auditing.AuditableAction;
 import rw.terimbere.csams.shared.common.dto.PageResponse;
@@ -216,19 +222,48 @@ public class FineService {
     @Transactional
     public FineGenerateResponse generateAutomatic(
             UUID cooperativeId, FineGenerateRequest request, HttpServletRequest httpRequest) {
-        Cooperative cooperative = requireCooperative(cooperativeId);
+        requireCooperative(cooperativeId);
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
+        Integer year = request == null ? null : request.getYear();
+        Integer month = request == null ? null : request.getMonth();
+        return generateAutomaticInternal(cooperativeId, year, month, principal.getId(), httpRequest);
+    }
 
+    @Transactional
+    public void generateAutomaticForEnabledCooperatives() {
+        for (Cooperative cooperative :
+                cooperativeRepository.findAllByDeletedFalseAndStatus(CooperativeStatus.ACTIVE)) {
+            FineSettings settings = fineSettingsService.requireSettings(cooperative.getId());
+            if (!settings.isAutoFinesEnabled()) {
+                continue;
+            }
+            generateAutomaticInternal(cooperative.getId(), null, null, null, null);
+        }
+    }
+
+    private FineGenerateResponse generateAutomaticInternal(
+            UUID cooperativeId,
+            Integer year,
+            Integer month,
+            UUID issuedBy,
+            HttpServletRequest httpRequest) {
+        Cooperative cooperative = requireCooperative(cooperativeId);
         FineSettings settings = fineSettingsService.requireSettings(cooperativeId);
         if (!settings.isAutoFinesEnabled()) {
             throw new BusinessException("Automatic fines are disabled for this cooperative");
         }
 
-        Integer year = request == null ? null : request.getYear();
-        Integer month = request == null ? null : request.getMonth();
         if ((year == null) != (month == null)) {
             throw new ValidationException("year and month must both be provided or both omitted");
+        }
+
+        if (year != null) {
+            ensureUnpaidPeriodRows(cooperative, year, month);
+        } else {
+            YearMonth current = YearMonth.from(LocalDate.now());
+            ensureUnpaidPeriodRowsIfOverdue(cooperative, settings, current);
+            ensureUnpaidPeriodRowsIfOverdue(cooperative, settings, current.minusMonths(1));
         }
 
         List<Contribution> candidates;
@@ -250,8 +285,9 @@ public class FineService {
         List<FineResponse> created = new ArrayList<>();
 
         for (Contribution contribution : candidates) {
-            if (fineRepository.existsByCooperativeIdAndSourceContributionId(
-                    cooperativeId, contribution.getId())) {
+            String automaticKey = automaticSourceKey(cooperativeId, contribution.getId());
+            if (fineRepository.existsByCooperativeIdAndSourceContributionId(cooperativeId, contribution.getId())
+                    || fineRepository.existsByAutomaticSourceKey(automaticKey)) {
                 skippedDuplicates++;
                 continue;
             }
@@ -290,6 +326,7 @@ public class FineService {
                     .fineType(FineType.AUTOMATIC)
                     .calculationMode(mode)
                     .sourceContributionId(contribution.getId())
+                    .automaticSourceKey(automaticKey)
                     .baseAmount(base)
                     .dailyIncrementSnapshot(
                             mode == FineCalculationMode.PROGRESSIVE
@@ -304,22 +341,32 @@ public class FineService {
                     .issuedDate(today)
                     .dueDate(dueDate)
                     .status(FineStatus.UNPAID)
-                    .issuedBy(principal.getId())
+                    .issuedBy(issuedBy)
                     .build();
             fine = fineRepository.save(fine);
             createdCount++;
             created.add(toResponse(fine, cooperative.getCurrency()));
 
             auditService.record(
-                    principal.getId(),
+                    issuedBy,
                     cooperativeId,
                     AuditableAction.FINE_ISSUE,
                     "Fine",
                     fine.getId(),
                     null,
-                    "{\"type\":\"AUTOMATIC\",\"sourceContributionId\":\"" + contribution.getId() + "\"}",
+                    "{\"type\":\"AUTOMATIC\",\"sourceContributionId\":\"" + contribution.getId()
+                            + "\",\"totalAmount\":\"" + total + "\"}",
                     clientIp(httpRequest),
                     userAgent(httpRequest));
+            notificationFacade.notifyUser(
+                    contribution.getMemberUserId(),
+                    cooperativeId,
+                    NotificationType.FINE,
+                    "Late contribution fine",
+                    "A fine of " + MoneyUtils.scale(total) + " was applied for missed contribution "
+                            + contribution.getYear() + "-" + String.format("%02d", contribution.getMonth()) + ".",
+                    "Fine",
+                    fine.getId());
         }
 
         return FineGenerateResponse.builder()
@@ -328,6 +375,74 @@ public class FineService {
                 .skippedNotOverdue(skippedNotOverdue)
                 .created(created)
                 .build();
+    }
+
+    @Transactional
+    public FineResponse updateFine(
+            UUID cooperativeId, UUID fineId, FineUpdateRequest request, HttpServletRequest httpRequest) {
+        Cooperative cooperative = requireCooperative(cooperativeId);
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        authorizationService.requireMembership(cooperativeId);
+        CooperativeOfficerRoles.requireFineConfigurationManager(principal);
+
+        Fine fine = requireFine(cooperativeId, fineId);
+        if (fine.getStatus() == FineStatus.PAID
+                || fine.getStatus() == FineStatus.WAIVED
+                || fine.getStatus() == FineStatus.CANCELLED) {
+            throw new BusinessException("Paid, waived, or cancelled fines cannot be edited");
+        }
+        if (fine.getPaidAmount() != null && fine.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
+            throw new BusinessException("Fines with approved payments cannot be edited");
+        }
+
+        String previous = "{\"totalAmount\":\"" + fine.getTotalAmount() + "\",\"status\":\"" + fine.getStatus() + "\"}";
+        if (request.getAmount() != null) {
+            BigDecimal amount = MoneyUtils.scaleForStorage(request.getAmount());
+            MoneyUtils.assertPositive(amount);
+            fine.setTotalAmount(amount);
+            fine.setBaseAmount(amount);
+            fine.setOutstandingAmount(amount);
+        }
+        if (request.getReason() != null) {
+            fine.setReason(trimToNull(request.getReason()));
+        }
+        if (request.getNotes() != null) {
+            fine.setNotes(trimToNull(request.getNotes()));
+        }
+        if (request.getDueDate() != null) {
+            fine.setDueDate(request.getDueDate());
+        }
+        fine = fineRepository.save(fine);
+
+        auditService.record(
+                principal.getId(),
+                cooperativeId,
+                AuditableAction.FINE_UPDATE,
+                "Fine",
+                fine.getId(),
+                previous,
+                "{\"totalAmount\":\"" + fine.getTotalAmount() + "\"}",
+                clientIp(httpRequest),
+                userAgent(httpRequest));
+        return toResponse(fine, cooperative.getCurrency());
+    }
+
+    @Transactional
+    public FineResponse deleteFine(UUID cooperativeId, UUID fineId, HttpServletRequest httpRequest) {
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        CooperativeOfficerRoles.requireFineConfigurationManager(principal);
+        FineResponse cancelled = cancel(cooperativeId, fineId, httpRequest);
+        auditService.record(
+                principal.getId(),
+                cooperativeId,
+                AuditableAction.FINE_DELETE,
+                "Fine",
+                fineId,
+                "{\"status\":\"UNPAID\"}",
+                "{\"status\":\"CANCELLED\"}",
+                clientIp(httpRequest),
+                userAgent(httpRequest));
+        return cancelled;
     }
 
     @Transactional
@@ -667,6 +782,47 @@ public class FineService {
                 .orElseThrow(() -> new ResourceNotFoundException("FinePayment", paymentId));
     }
 
+    private void ensureUnpaidPeriodRowsIfOverdue(
+            Cooperative cooperative, FineSettings settings, YearMonth period) {
+        LocalDate dueDate = fineCalculationService.contributionDueDate(
+                period.getYear(), period.getMonthValue(), cooperative.getContributionDueDay());
+        LocalDate graceEnd = dueDate.plusDays(Math.max(0, settings.getGraceDays()));
+        if (!LocalDate.now().isAfter(graceEnd)) {
+            return;
+        }
+        ensureUnpaidPeriodRows(cooperative, period.getYear(), period.getMonthValue());
+    }
+
+    private void ensureUnpaidPeriodRows(Cooperative cooperative, int year, int month) {
+        List<CooperativeMembership> members =
+                membershipRepository.findByCooperativeIdAndMembershipStatus(cooperative.getId(), "ACTIVE");
+        for (CooperativeMembership membership : members) {
+            contributionRepository
+                    .findByCooperativeIdAndMemberUserIdAndYearAndMonth(
+                            cooperative.getId(), membership.getUserId(), year, month)
+                    .orElseGet(() -> {
+                        BigDecimal expected = ShareAmountCalculator.expectedMonthly(
+                                cooperative.getMonthlyContributionAmount(), membership.getShareCount());
+                        return contributionRepository.save(Contribution.builder()
+                                .cooperativeId(cooperative.getId())
+                                .memberUserId(membership.getUserId())
+                                .year(year)
+                                .month(month)
+                                .shareCount(ShareAmountCalculator.normalizeShareCount(membership.getShareCount()))
+                                .expectedAmount(expected)
+                                .paidAmount(BigDecimal.ZERO)
+                                .outstandingAmount(expected)
+                                .status(ContributionStatus.PENDING)
+                                .ledgerRevision(0)
+                                .build());
+                    });
+        }
+    }
+
+    private static String automaticSourceKey(UUID cooperativeId, UUID contributionId) {
+        return cooperativeId + ":" + contributionId;
+    }
+
     private void requireActiveMember(UUID cooperativeId, UUID memberUserId) {
         var membership = membershipRepository
                 .findByCooperativeIdAndUserId(cooperativeId, memberUserId)
@@ -687,6 +843,15 @@ public class FineService {
                 .findById(fine.getMemberUserId())
                 .map(this::formatName)
                 .orElse(null);
+        Integer contributionYear = null;
+        Integer contributionMonth = null;
+        if (fine.getSourceContributionId() != null) {
+            Contribution source = contributionRepository.findById(fine.getSourceContributionId()).orElse(null);
+            if (source != null) {
+                contributionYear = source.getYear();
+                contributionMonth = source.getMonth();
+            }
+        }
         return FineResponse.builder()
                 .id(fine.getId())
                 .cooperativeId(fine.getCooperativeId())
@@ -695,6 +860,8 @@ public class FineService {
                 .fineType(fine.getFineType())
                 .calculationMode(fine.getCalculationMode())
                 .sourceContributionId(fine.getSourceContributionId())
+                .contributionYear(contributionYear)
+                .contributionMonth(contributionMonth)
                 .baseAmount(MoneyUtils.scale(fine.getBaseAmount()))
                 .dailyIncrementSnapshot(MoneyUtils.scale(fine.getDailyIncrementSnapshot()))
                 .overdueDays(fine.getOverdueDays())

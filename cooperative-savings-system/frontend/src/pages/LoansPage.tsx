@@ -9,6 +9,7 @@ import {
   LoanRequestPanel,
   LoanSettingsPanel,
   LoansListPanel,
+  GuarantorRequestsPanel,
 } from '@/features/loans'
 import { fetchDashboardSummary } from '@/shared/api/dashboard'
 import { fetchLoans } from '@/shared/api/loans'
@@ -149,6 +150,7 @@ export function LoansPage() {
         {isAdmin ? <Tab label={t('loans.tabs.approvals')} /> : null}
         {isAdmin ? <Tab label={t('loans.tabs.all')} /> : null}
         <Tab label={isAdmin ? t('loans.tabs.issue') : t('loans.tabs.request')} />
+        <Tab label={t('loans.tabs.guarantor')} />
         {isAdmin ? <Tab label={t('loans.tabs.settings')} /> : null}
       </Tabs>
 
@@ -168,7 +170,11 @@ export function LoansPage() {
         <LoanRequestPanel cooperativeId={cooperativeId} isAdmin={isAdmin} />
       ) : null}
 
-      {isAdmin && tab === 4 ? (
+      {((isAdmin && tab === 4) || (!isAdmin && tab === 2)) ? (
+        <GuarantorRequestsPanel cooperativeId={cooperativeId} />
+      ) : null}
+
+      {isAdmin && tab === 5 ? (
         <LoanSettingsPanel cooperativeId={cooperativeId} />
       ) : null}
     </Box>

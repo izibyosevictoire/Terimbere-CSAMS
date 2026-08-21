@@ -25,9 +25,11 @@ public class ContributionResponse {
     private String memberName;
     private int year;
     private int month;
+    private Integer shareCount;
     private BigDecimal expectedAmount;
     private BigDecimal paidAmount;
     private BigDecimal outstandingAmount;
+    private BigDecimal remainingAmount;
     private LocalDate paymentDate;
     private ContributionStatus status;
     private String paymentReference;

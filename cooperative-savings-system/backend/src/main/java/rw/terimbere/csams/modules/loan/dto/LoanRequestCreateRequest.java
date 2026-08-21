@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import rw.terimbere.csams.modules.loan.entity.LoanGuaranteeMode;
 
 @Data
 @Builder
@@ -29,4 +30,12 @@ public class LoanRequestCreateRequest {
     private Integer termMonths;
 
     private String purpose;
+
+    /** SELF = loan on your own; GUARANTOR = loan that needs umwishingizi. */
+    private LoanGuaranteeMode guaranteeMode;
+
+    private UUID guarantorUserId;
+
+    @DecimalMin(value = "0.01", inclusive = true)
+    private BigDecimal guaranteedAmount;
 }

@@ -21,8 +21,10 @@ import org.springframework.util.StringUtils;
 import rw.terimbere.csams.modules.audit.entity.ApprovalAction;
 import rw.terimbere.csams.modules.audit.service.ApprovalTrailService;
 import rw.terimbere.csams.modules.audit.service.AuditService;
+import rw.terimbere.csams.modules.contribution.ShareAmountCalculator;
 import rw.terimbere.csams.modules.contribution.dto.ContributionBatchRequest;
 import rw.terimbere.csams.modules.contribution.dto.ContributionLineRequest;
+import rw.terimbere.csams.modules.contribution.dto.ContributionPeriodPreviewResponse;
 import rw.terimbere.csams.modules.contribution.dto.ContributionPeriodSummaryResponse;
 import rw.terimbere.csams.modules.contribution.dto.ContributionResponse;
 import rw.terimbere.csams.modules.contribution.dto.ContributionReviewRequest;
@@ -38,6 +40,8 @@ import rw.terimbere.csams.modules.cooperative.repository.CooperativeRepository;
 import rw.terimbere.csams.modules.ledger.service.LedgerService;
 import rw.terimbere.csams.modules.membership.entity.CooperativeMembership;
 import rw.terimbere.csams.modules.membership.repository.CooperativeMembershipRepository;
+import rw.terimbere.csams.modules.notification.entity.NotificationType;
+import rw.terimbere.csams.modules.notification.service.NotificationFacade;
 import rw.terimbere.csams.modules.user.entity.User;
 import rw.terimbere.csams.modules.user.repository.UserRepository;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
@@ -64,6 +68,7 @@ public class ContributionService {
     private final LedgerService ledgerService;
     private final AuditService auditService;
     private final ApprovalTrailService approvalTrailService;
+    private final NotificationFacade notificationFacade;
 
     @Transactional(readOnly = true)
     public List<ContributionResponse> getOrBuildPeriodGrid(UUID cooperativeId, int year, int month) {
@@ -71,19 +76,18 @@ public class ContributionService {
         Cooperative cooperative = requireCooperative(cooperativeId);
         authorizationService.requireMembership(cooperativeId);
 
-        BigDecimal expectedDefault = MoneyUtils.scaleForStorage(cooperative.getMonthlyContributionAmount());
         List<CooperativeMembership> activeMembers =
                 membershipRepository.findByCooperativeIdAndMembershipStatus(cooperativeId, "ACTIVE");
         Map<UUID, Contribution> existing = contributionRepository
                 .findByCooperativeIdAndYearAndMonth(cooperativeId, year, month)
                 .stream()
                 .collect(Collectors.toMap(Contribution::getMemberUserId, c -> c, (a, b) -> a));
-
         Map<UUID, String> names = loadMemberNames(
                 activeMembers.stream().map(CooperativeMembership::getUserId).toList());
 
         List<ContributionResponse> rows = new ArrayList<>();
         for (CooperativeMembership membership : activeMembers) {
+            BigDecimal expected = expectedAmountFor(cooperative, membership);
             Contribution saved = existing.get(membership.getUserId());
             if (saved != null) {
                 rows.add(toResponse(saved, names.get(membership.getUserId()), true, false));
@@ -94,9 +98,11 @@ public class ContributionService {
                         .memberName(names.get(membership.getUserId()))
                         .year(year)
                         .month(month)
-                        .expectedAmount(MoneyUtils.scale(expectedDefault))
+                        .shareCount(ShareAmountCalculator.normalizeShareCount(membership.getShareCount()))
+                        .expectedAmount(MoneyUtils.scale(expected))
                         .paidAmount(MoneyUtils.scale(BigDecimal.ZERO))
-                        .outstandingAmount(MoneyUtils.scale(expectedDefault))
+                        .outstandingAmount(MoneyUtils.scale(expected))
+                        .remainingAmount(MoneyUtils.scale(expected))
                         .status(ContributionStatus.PENDING)
                         .persisted(false)
                         .build());
@@ -275,13 +281,17 @@ public class ContributionService {
         Cooperative cooperative = requireCooperative(cooperativeId);
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
-        requireActiveMember(cooperativeId, principal.getId());
+        CooperativeMembership membership = requireActiveMember(cooperativeId, principal.getId());
 
         LocalDate paymentDate = request.getPaymentDate();
-        int year = paymentDate.getYear();
-        int month = paymentDate.getMonthValue();
+        int year = request.getYear() != null ? request.getYear() : paymentDate.getYear();
+        int month = request.getMonth() != null ? request.getMonth() : paymentDate.getMonthValue();
+        validatePeriod(year, month);
         BigDecimal submitted = MoneyUtils.scaleForStorage(request.getAmount());
         MoneyUtils.assertPositive(submitted);
+
+        int shareCount = ShareAmountCalculator.normalizeShareCount(membership.getShareCount());
+        BigDecimal expected = expectedAmountFor(cooperative, membership);
 
         Contribution contribution = contributionRepository
                 .findByCooperativeIdAndMemberUserIdAndYearAndMonth(
@@ -291,23 +301,42 @@ public class ContributionService {
                         .memberUserId(principal.getId())
                         .year(year)
                         .month(month)
-                        .expectedAmount(MoneyUtils.scaleForStorage(cooperative.getMonthlyContributionAmount()))
+                        .shareCount(shareCount)
+                        .expectedAmount(expected)
                         .paidAmount(BigDecimal.ZERO)
-                        .outstandingAmount(MoneyUtils.scaleForStorage(cooperative.getMonthlyContributionAmount()))
+                        .outstandingAmount(expected)
                         .status(ContributionStatus.PENDING)
                         .ledgerRevision(0)
                         .build());
 
-        if (contribution.getStatus() == ContributionStatus.PAID
-                || contribution.getStatus() == ContributionStatus.WAIVED
+        if (contribution.getShareCount() == null) {
+            contribution.setShareCount(shareCount);
+        }
+        if (contribution.getExpectedAmount() == null
+                || contribution.getExpectedAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            contribution.setExpectedAmount(expected);
+        }
+
+        if (contribution.getStatus() == ContributionStatus.WAIVED
                 || contribution.getStatus() == ContributionStatus.CANCELLED) {
             throw new BusinessException("This period already has a recorded contribution");
         }
         if (contribution.getReviewStatus() == ContributionReviewStatus.PENDING) {
             throw new BusinessException("A contribution for this period is already awaiting review");
         }
-        if (contribution.getReviewStatus() == ContributionReviewStatus.APPROVED) {
-            throw new BusinessException("This period's contribution has already been approved");
+
+        BigDecimal alreadyPaid = contribution.getPaidAmount() == null
+                ? BigDecimal.ZERO
+                : MoneyUtils.scaleForStorage(contribution.getPaidAmount());
+        BigDecimal remaining = MoneyUtils.scaleForStorage(
+                contribution.getExpectedAmount().subtract(alreadyPaid).max(BigDecimal.ZERO));
+        if (remaining.compareTo(BigDecimal.ZERO) <= 0
+                || contribution.getStatus() == ContributionStatus.PAID) {
+            throw new BusinessException("This period's contribution is already fully paid");
+        }
+        if (submitted.compareTo(remaining) > 0) {
+            throw new BusinessException(
+                    "Amount paid cannot exceed the remaining amount (" + MoneyUtils.scale(remaining) + ")");
         }
 
         contribution.setSubmittedAmount(submitted);
@@ -321,10 +350,8 @@ public class ContributionService {
         contribution.setReviewedAt(null);
         contribution.setRejectionReason(null);
         contribution.setReviewStatus(ContributionReviewStatus.PENDING);
-        contribution.setPaidAmount(BigDecimal.ZERO);
-        contribution.setOutstandingAmount(MoneyUtils.scaleForStorage(
-                contribution.getExpectedAmount().subtract(BigDecimal.ZERO).max(BigDecimal.ZERO)));
-        contribution.setStatus(ContributionStatus.PENDING);
+        contribution.setOutstandingAmount(remaining);
+        contribution.setStatus(deriveStatus(contribution.getExpectedAmount(), alreadyPaid));
         contribution = contributionRepository.save(contribution);
 
         approvalTrailService.append(
@@ -343,10 +370,81 @@ public class ContributionService {
                 "Contribution",
                 contribution.getId(),
                 null,
-                "{\"status\":\"PENDING\",\"amount\":\"" + submitted + "\"}",
+                "{\"status\":\"PENDING\",\"amount\":\"" + submitted + "\",\"year\":" + year + ",\"month\":" + month
+                        + "}",
                 clientIp(httpRequest),
                 userAgent(httpRequest));
+        notificationFacade.notifyUser(
+                principal.getId(),
+                cooperativeId,
+                NotificationType.CONTRIBUTION,
+                "Contribution submitted",
+                "Your contribution for " + year + "-" + String.format("%02d", month)
+                        + " was submitted for Accountant review.",
+                "Contribution",
+                contribution.getId());
         return toResponse(contribution, principalName(principal.getId()), true);
+    }
+
+    @Transactional(readOnly = true)
+    public ContributionPeriodPreviewResponse periodPreview(UUID cooperativeId, Integer year, Integer month) {
+        Cooperative cooperative = requireCooperative(cooperativeId);
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        authorizationService.requireMembership(cooperativeId);
+        CooperativeMembership membership = requireActiveMember(cooperativeId, principal.getId());
+
+        LocalDate today = LocalDate.now();
+        int resolvedYear = year != null ? year : today.getYear();
+        int resolvedMonth = month != null ? month : today.getMonthValue();
+        validatePeriod(resolvedYear, resolvedMonth);
+
+        int shareCount = ShareAmountCalculator.normalizeShareCount(membership.getShareCount());
+        BigDecimal expected = expectedAmountFor(cooperative, membership);
+        Contribution existing = contributionRepository
+                .findByCooperativeIdAndMemberUserIdAndYearAndMonth(
+                        cooperativeId, principal.getId(), resolvedYear, resolvedMonth)
+                .orElse(null);
+
+        BigDecimal paid = existing == null || existing.getPaidAmount() == null
+                ? BigDecimal.ZERO
+                : existing.getPaidAmount();
+        BigDecimal pending = existing != null
+                        && existing.getReviewStatus() == ContributionReviewStatus.PENDING
+                        && existing.getSubmittedAmount() != null
+                ? existing.getSubmittedAmount()
+                : BigDecimal.ZERO;
+        BigDecimal remaining = expected.subtract(paid).max(BigDecimal.ZERO);
+        boolean awaitingReview =
+                existing != null && existing.getReviewStatus() == ContributionReviewStatus.PENDING;
+        boolean canSubmit = remaining.compareTo(BigDecimal.ZERO) > 0 && !awaitingReview
+                && (existing == null
+                        || (existing.getStatus() != ContributionStatus.WAIVED
+                                && existing.getStatus() != ContributionStatus.CANCELLED
+                                && existing.getStatus() != ContributionStatus.PAID));
+
+        int dueDay = cooperative.getContributionDueDay() <= 0 ? 10 : cooperative.getContributionDueDay();
+        int maxDay = LocalDate.of(resolvedYear, resolvedMonth, 1).lengthOfMonth();
+        LocalDate dueDate = LocalDate.of(resolvedYear, resolvedMonth, Math.min(dueDay, maxDay));
+
+        return ContributionPeriodPreviewResponse.builder()
+                .contributionId(existing == null ? null : existing.getId())
+                .cooperativeId(cooperativeId)
+                .memberUserId(principal.getId())
+                .year(resolvedYear)
+                .month(resolvedMonth)
+                .shareCount(shareCount)
+                .requiredAmount(MoneyUtils.scale(existing != null ? existing.getExpectedAmount() : expected))
+                .paidAmount(MoneyUtils.scale(paid))
+                .pendingSubmittedAmount(MoneyUtils.scale(pending))
+                .remainingAmount(MoneyUtils.scale(
+                        existing != null ? existing.getExpectedAmount().subtract(paid).max(BigDecimal.ZERO) : remaining))
+                .paymentDate(existing == null ? null : existing.getPaymentDate())
+                .dueDate(dueDate)
+                .status(existing == null ? ContributionStatus.PENDING : existing.getStatus())
+                .reviewStatus(existing == null ? null : existing.getReviewStatus())
+                .awaitingReview(awaitingReview)
+                .canSubmit(canSubmit)
+                .build();
     }
 
     @Transactional(readOnly = true)
@@ -377,10 +475,17 @@ public class ContributionService {
         if (principal.getId().equals(contribution.getMemberUserId())) {
             throw new ForbiddenException("You cannot approve your own contribution");
         }
-        BigDecimal paid = contribution.getSubmittedAmount() == null
+        BigDecimal increment = contribution.getSubmittedAmount() == null
                 ? BigDecimal.ZERO
                 : contribution.getSubmittedAmount();
-        MoneyUtils.assertPositive(paid);
+        MoneyUtils.assertPositive(increment);
+        BigDecimal alreadyPaid = contribution.getPaidAmount() == null
+                ? BigDecimal.ZERO
+                : MoneyUtils.scaleForStorage(contribution.getPaidAmount());
+        BigDecimal paid = MoneyUtils.scaleForStorage(alreadyPaid.add(increment));
+        if (paid.compareTo(contribution.getExpectedAmount()) > 0) {
+            throw new BusinessException("Approved amount would exceed the required contribution");
+        }
 
         String previous = contribution.getReviewStatus().name();
         contribution.setPaidAmount(paid);
@@ -414,6 +519,15 @@ public class ContributionService {
                 "{\"reviewStatus\":\"APPROVED\",\"paidAmount\":\"" + paid + "\"}",
                 clientIp(httpRequest),
                 userAgent(httpRequest));
+        notificationFacade.notifyUser(
+                contribution.getMemberUserId(),
+                cooperativeId,
+                NotificationType.CONTRIBUTION,
+                "Contribution approved",
+                "Your contribution for " + contribution.getYear() + "-"
+                        + String.format("%02d", contribution.getMonth()) + " was approved.",
+                "Contribution",
+                contribution.getId());
         return toResponse(contribution, principalName(contribution.getMemberUserId()), true);
     }
 
@@ -444,9 +558,12 @@ public class ContributionService {
         contribution.setReviewedAt(Instant.now());
         contribution.setReviewStatus(ContributionReviewStatus.REJECTED);
         contribution.setRejectionReason(request.getRejectionReason().trim());
-        contribution.setPaidAmount(BigDecimal.ZERO);
-        contribution.setOutstandingAmount(MoneyUtils.scaleForStorage(contribution.getExpectedAmount()));
-        contribution.setStatus(ContributionStatus.PENDING);
+        BigDecimal alreadyPaid = contribution.getPaidAmount() == null
+                ? BigDecimal.ZERO
+                : MoneyUtils.scaleForStorage(contribution.getPaidAmount());
+        contribution.setOutstandingAmount(MoneyUtils.scaleForStorage(
+                contribution.getExpectedAmount().subtract(alreadyPaid).max(BigDecimal.ZERO)));
+        contribution.setStatus(deriveStatus(contribution.getExpectedAmount(), alreadyPaid));
         contribution = contributionRepository.save(contribution);
 
         approvalTrailService.append(
@@ -468,6 +585,17 @@ public class ContributionService {
                 "{\"reviewStatus\":\"REJECTED\"}",
                 clientIp(httpRequest),
                 userAgent(httpRequest));
+        notificationFacade.notifyUser(
+                contribution.getMemberUserId(),
+                cooperativeId,
+                NotificationType.CONTRIBUTION,
+                "Contribution rejected",
+                "Your contribution for " + contribution.getYear() + "-"
+                        + String.format("%02d", contribution.getMonth())
+                        + " was rejected: "
+                        + request.getRejectionReason().trim(),
+                "Contribution",
+                contribution.getId());
         return toResponse(contribution, principalName(contribution.getMemberUserId()), true);
     }
 
@@ -571,9 +699,11 @@ public class ContributionService {
         if (line.getMemberUserId() == null) {
             throw new ValidationException("memberUserId is required");
         }
-        if (!membershipRepository.existsByCooperativeIdAndUserId(cooperative.getId(), line.getMemberUserId())) {
-            throw new ValidationException("Member is not part of this cooperative: " + line.getMemberUserId());
-        }
+        CooperativeMembership membership = membershipRepository
+                .findByCooperativeIdAndUserId(cooperative.getId(), line.getMemberUserId())
+                .orElseThrow(() -> new ValidationException(
+                        "Member is not part of this cooperative: " + line.getMemberUserId()));
+        BigDecimal expectedDefault = expectedAmountFor(cooperative, membership);
 
         Contribution contribution = contributionRepository
                 .findByCooperativeIdAndMemberUserIdAndYearAndMonth(
@@ -583,9 +713,10 @@ public class ContributionService {
                         .memberUserId(line.getMemberUserId())
                         .year(year)
                         .month(month)
-                        .expectedAmount(MoneyUtils.scaleForStorage(cooperative.getMonthlyContributionAmount()))
+                        .shareCount(ShareAmountCalculator.normalizeShareCount(membership.getShareCount()))
+                        .expectedAmount(expectedDefault)
                         .paidAmount(BigDecimal.ZERO)
-                        .outstandingAmount(MoneyUtils.scaleForStorage(cooperative.getMonthlyContributionAmount()))
+                        .outstandingAmount(expectedDefault)
                         .status(ContributionStatus.PENDING)
                         .ledgerRevision(0)
                         .build());
@@ -606,7 +737,12 @@ public class ContributionService {
                 ? MoneyUtils.scaleForStorage(line.getExpectedAmount())
                 : contribution.getExpectedAmount() != null
                         ? MoneyUtils.scaleForStorage(contribution.getExpectedAmount())
-                        : MoneyUtils.scaleForStorage(cooperative.getMonthlyContributionAmount());
+                        : expectedAmountFor(
+                                cooperative,
+                                membershipRepository
+                                        .findByCooperativeIdAndUserId(
+                                                cooperative.getId(), contribution.getMemberUserId())
+                                        .orElse(null));
         MoneyUtils.assertNonNegative(expected);
 
         BigDecimal paid = MoneyUtils.scaleForStorage(
@@ -730,9 +866,11 @@ public class ContributionService {
                 .memberName(memberName)
                 .year(c.getYear())
                 .month(c.getMonth())
+                .shareCount(ShareAmountCalculator.normalizeShareCount(c.getShareCount()))
                 .expectedAmount(MoneyUtils.scale(c.getExpectedAmount()))
                 .paidAmount(MoneyUtils.scale(c.getPaidAmount()))
                 .outstandingAmount(MoneyUtils.scale(c.getOutstandingAmount()))
+                .remainingAmount(MoneyUtils.scale(c.getOutstandingAmount()))
                 .paymentDate(c.getPaymentDate())
                 .status(c.getStatus())
                 .paymentReference(c.getPaymentReference())
@@ -761,13 +899,20 @@ public class ContributionService {
                 .build();
     }
 
-    private void requireActiveMember(UUID cooperativeId, UUID memberUserId) {
-        var membership = membershipRepository
+    private CooperativeMembership requireActiveMember(UUID cooperativeId, UUID memberUserId) {
+        CooperativeMembership membership = membershipRepository
                 .findByCooperativeIdAndUserId(cooperativeId, memberUserId)
                 .orElseThrow(() -> new ValidationException("User is not a member of this cooperative"));
         if (!"ACTIVE".equalsIgnoreCase(membership.getMembershipStatus())) {
             throw new BusinessException("Only ACTIVE members can submit contributions");
         }
+        return membership;
+    }
+
+    private static BigDecimal expectedAmountFor(Cooperative cooperative, CooperativeMembership membership) {
+        return ShareAmountCalculator.expectedMonthly(
+                cooperative.getMonthlyContributionAmount(),
+                membership == null ? null : membership.getShareCount());
     }
 
     private String principalName(UUID userId) {

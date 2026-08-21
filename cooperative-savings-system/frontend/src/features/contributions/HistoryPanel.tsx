@@ -83,8 +83,13 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
         render: (row) => `${row.year}-${String(row.month).padStart(2, '0')}`,
       },
       {
+        id: 'shares',
+        label: t('contributions.fields.shares'),
+        render: (row) => String(row.shareCount ?? 1),
+      },
+      {
         id: 'expected',
-        label: t('contributions.fields.expected'),
+        label: t('contributions.fields.required'),
         render: (row) => formatMoney(row.expectedAmount),
         hideOnMobile: true,
       },
@@ -95,8 +100,8 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
       },
       {
         id: 'outstanding',
-        label: t('contributions.fields.outstanding'),
-        render: (row) => formatMoney(row.outstandingAmount),
+        label: t('contributions.fields.remaining'),
+        render: (row) => formatMoney(row.remainingAmount ?? row.outstandingAmount),
         hideOnMobile: true,
       },
       {

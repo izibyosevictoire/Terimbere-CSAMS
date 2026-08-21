@@ -83,6 +83,15 @@ export function FinesListPanel({ cooperativeId, mode }: FinesListPanelProps) {
         render: (row) => formatMoney(row.totalAmount),
       },
       {
+        id: 'period',
+        label: t('fines.fields.contributionMonth'),
+        render: (row) =>
+          row.contributionYear && row.contributionMonth
+            ? `${row.contributionYear}-${String(row.contributionMonth).padStart(2, '0')}`
+            : '—',
+        hideOnMobile: true,
+      },
+      {
         id: 'outstanding',
         label: t('fines.fields.outstanding'),
         render: (row) => formatMoney(row.outstandingAmount ?? 0),

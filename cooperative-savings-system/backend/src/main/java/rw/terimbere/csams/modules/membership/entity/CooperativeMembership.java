@@ -49,6 +49,10 @@ public class CooperativeMembership {
     @Column(name = "role_in_cooperative", length = 64)
     private String roleInCooperative;
 
+    @Builder.Default
+    @Column(name = "share_count", nullable = false)
+    private Integer shareCount = 1;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -73,6 +77,9 @@ public class CooperativeMembership {
         }
         if (membershipDate == null) {
             membershipDate = LocalDate.now();
+        }
+        if (shareCount == null || shareCount < 1) {
+            shareCount = 1;
         }
     }
 

@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import rw.terimbere.csams.modules.contribution.dto.ContributionBatchRequest;
+import rw.terimbere.csams.modules.contribution.dto.ContributionPeriodPreviewResponse;
 import rw.terimbere.csams.modules.contribution.dto.ContributionPeriodSummaryResponse;
 import rw.terimbere.csams.modules.contribution.dto.ContributionResponse;
 import rw.terimbere.csams.modules.contribution.dto.ContributionReviewRequest;
@@ -87,6 +88,16 @@ public class ContributionController {
     public ResponseEntity<ApiResponse<List<ContributionResponse>>> myContributions(
             @PathVariable UUID cooperativeId) {
         return ResponseEntity.ok(ApiResponse.ok(contributionService.getMyContributions(cooperativeId)));
+    }
+
+    @GetMapping("/my/period-preview")
+    @PreAuthorize("hasAuthority('CONTRIBUTION_READ')")
+    @Operation(summary = "Preview required contribution for a selected month")
+    public ResponseEntity<ApiResponse<ContributionPeriodPreviewResponse>> periodPreview(
+            @PathVariable UUID cooperativeId,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month) {
+        return ResponseEntity.ok(ApiResponse.ok(contributionService.periodPreview(cooperativeId, year, month)));
     }
 
     @PostMapping("/submissions")

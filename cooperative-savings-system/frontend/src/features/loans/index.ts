@@ -2,6 +2,7 @@ export { LoansListPanel } from './LoansListPanel'
 export { LoanRequestPanel } from './LoanRequestPanel'
 export { LoanApplicationFormView } from './LoanApplicationFormView'
 export { LoanSettingsPanel } from './LoanSettingsPanel'
+export { GuarantorRequestsPanel } from './GuarantorRequestsPanel'
 export { RepaymentDialog } from './RepaymentDialog'
 export {
   loanStatusColor,

@@ -1,10 +1,12 @@
 package rw.terimbere.csams.modules.loan.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -40,4 +42,8 @@ public class LoanSettingsUpdateRequest {
     private Boolean lateFeeEnabled;
 
     private String currency;
+
+    /** When non-null, replaces share-percentage loan levels. President-only. */
+    @Valid
+    private List<LoanShareTierRequest> shareTiers;
 }

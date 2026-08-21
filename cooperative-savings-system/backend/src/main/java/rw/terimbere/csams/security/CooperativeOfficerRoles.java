@@ -104,6 +104,22 @@ public final class CooperativeOfficerRoles {
         throw new ForbiddenException("Loan committee approval is required");
     }
 
+    public static void requireFineConfigurationManager(UserPrincipal principal) {
+        requirePresident(principal, "Only the President can manage the fine configuration");
+    }
+
+    public static void requirePresident(UserPrincipal principal, String message) {
+        if (principal == null) {
+            throw new ForbiddenException(message);
+        }
+        if (principal.hasRole(CooperativeAuthorizationService.SUPER_ADMIN)
+                || principal.hasRole(PRESIDENT)
+                || principal.hasRole(LEGACY_ADMIN)) {
+            return;
+        }
+        throw new ForbiddenException(message);
+    }
+
     public static void requireFundAuthorize(UserPrincipal principal) {
         if (principal.hasRole(CooperativeAuthorizationService.SUPER_ADMIN)
                 || principal.hasAuthority(FUND_AUTHORIZE)) {

@@ -17,6 +17,7 @@ import rw.terimbere.csams.modules.fine.entity.FineCalculationMode;
 import rw.terimbere.csams.modules.fine.entity.FineSettings;
 import rw.terimbere.csams.modules.fine.repository.FineSettingsRepository;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
+import rw.terimbere.csams.security.CooperativeOfficerRoles;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.auditing.AuditableAction;
 import rw.terimbere.csams.shared.exceptions.ResourceNotFoundException;
@@ -49,6 +50,8 @@ public class FineSettingsService {
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
 
+        CooperativeOfficerRoles.requireFineConfigurationManager(principal);
+
         FineSettings settings = fineSettingsRepository
                 .findByCooperativeId(cooperativeId)
                 .orElseGet(() -> createDefaults(cooperative));
@@ -79,7 +82,7 @@ public class FineSettingsService {
         auditService.record(
                 principal.getId(),
                 cooperativeId,
-                AuditableAction.SETTINGS_CHANGE,
+                AuditableAction.FINE_SETTINGS_CHANGE,
                 "FineSettings",
                 settings.getId(),
                 previous,

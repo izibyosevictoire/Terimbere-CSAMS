@@ -1,6 +1,8 @@
 package rw.terimbere.csams.modules.contribution.dto;
 
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
@@ -16,6 +18,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ContributionSubmitRequest {
+
+    @Min(2000)
+    @Max(2100)
+    private Integer year;
+
+    @Min(1)
+    @Max(12)
+    private Integer month;
 
     @NotNull
     @DecimalMin(value = "0.01", inclusive = true)

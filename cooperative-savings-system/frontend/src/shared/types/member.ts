@@ -62,6 +62,7 @@ export interface Member {
   membershipStatus: MembershipStatus
   accountStatus: AccountStatus
   roleInCooperative: RoleInCooperative | string
+  shareCount?: number
   profileImageUrl?: string | null
   /** Returned only once on create when the server generated a password. */
   temporaryPassword?: string | null
@@ -86,6 +87,7 @@ export interface MemberCreateRequest {
   membershipDate?: string
   temporaryPassword?: string
   roleInCooperative: RoleInCooperative
+  shareCount?: number
 }
 
 export interface MemberUpdateRequest {
@@ -97,6 +99,7 @@ export interface MemberUpdateRequest {
   address?: string
   membershipDate?: string
   roleInCooperative?: RoleInCooperative
+  shareCount?: number
 }
 
 export interface MemberStatusUpdateRequest {

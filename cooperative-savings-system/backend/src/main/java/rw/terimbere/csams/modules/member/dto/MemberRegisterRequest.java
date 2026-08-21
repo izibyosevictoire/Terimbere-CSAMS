@@ -2,6 +2,8 @@ package rw.terimbere.csams.modules.member.dto;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
@@ -52,6 +54,10 @@ public class MemberRegisterRequest {
 
     @Size(max = 64)
     private String roleInCooperative;
+
+    @Min(1)
+    @Max(1000)
+    private Integer shareCount;
 
     @AssertTrue(message = "Membership date cannot be before 1950-01-01")
     public boolean isMembershipDateReasonable() {

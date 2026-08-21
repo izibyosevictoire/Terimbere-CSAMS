@@ -4,6 +4,7 @@ import type { ApiResponse, PageResponse } from '@/shared/types/api'
 import type {
   Contribution,
   ContributionListQuery,
+  ContributionPeriodPreview,
   ContributionPeriodGrid,
   ContributionPeriodLine,
   ContributionPeriodSaveRequest,
@@ -122,6 +123,18 @@ export async function fetchMyContributions(
     ...data,
     content: (data.content ?? []).map(mapContribution),
   }
+}
+
+export async function fetchContributionPeriodPreview(
+  cooperativeId: string,
+  year: number,
+  month: number,
+): Promise<ContributionPeriodPreview> {
+  const response = await apiClient.get<ApiResponse<ContributionPeriodPreview>>(
+    `/cooperatives/${cooperativeId}/contributions/my/period-preview`,
+    { params: { year, month } },
+  )
+  return unwrapApiData(response.data)
 }
 
 export async function submitRegularContribution(

@@ -52,6 +52,8 @@ export interface Fine {
   fineType: FineType | string
   calculationMode: FineCalculationMode | string
   sourceContributionId?: string | null
+  contributionYear?: number | null
+  contributionMonth?: number | null
   baseAmount: string | number
   dailyIncrementSnapshot?: string | number | null
   overdueDays?: number

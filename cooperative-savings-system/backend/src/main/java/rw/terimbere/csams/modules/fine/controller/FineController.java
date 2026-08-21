@@ -12,7 +12,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,6 +28,7 @@ import rw.terimbere.csams.modules.fine.dto.FinePaymentCreateRequest;
 import rw.terimbere.csams.modules.fine.dto.FinePaymentResponse;
 import rw.terimbere.csams.modules.fine.dto.FinePaymentReviewRequest;
 import rw.terimbere.csams.modules.fine.dto.FineResponse;
+import rw.terimbere.csams.modules.fine.dto.FineUpdateRequest;
 import rw.terimbere.csams.modules.fine.entity.FinePaymentStatus;
 import rw.terimbere.csams.modules.fine.entity.FineStatus;
 import rw.terimbere.csams.modules.fine.service.FineService;
@@ -120,6 +123,25 @@ public class FineController {
     public ResponseEntity<ApiResponse<FineResponse>> cancel(
             @PathVariable UUID cooperativeId, @PathVariable UUID fineId, HttpServletRequest httpRequest) {
         return ResponseEntity.ok(ApiResponse.ok(fineService.cancel(cooperativeId, fineId, httpRequest)));
+    }
+
+    @PatchMapping("/{fineId}")
+    @PreAuthorize("hasRole('PRESIDENT') or hasRole('SUPER_ADMIN') or hasRole('COOPERATIVE_ADMIN')")
+    @Operation(summary = "Edit an unpaid fine (President only)")
+    public ResponseEntity<ApiResponse<FineResponse>> update(
+            @PathVariable UUID cooperativeId,
+            @PathVariable UUID fineId,
+            @Valid @RequestBody FineUpdateRequest request,
+            HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(ApiResponse.ok(fineService.updateFine(cooperativeId, fineId, request, httpRequest)));
+    }
+
+    @DeleteMapping("/{fineId}")
+    @PreAuthorize("hasRole('PRESIDENT') or hasRole('SUPER_ADMIN') or hasRole('COOPERATIVE_ADMIN')")
+    @Operation(summary = "Remove an unpaid fine (President only)")
+    public ResponseEntity<ApiResponse<FineResponse>> delete(
+            @PathVariable UUID cooperativeId, @PathVariable UUID fineId, HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(ApiResponse.ok(fineService.deleteFine(cooperativeId, fineId, httpRequest)));
     }
 
     @PostMapping("/{fineId}/payments")

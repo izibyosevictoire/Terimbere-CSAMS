@@ -2,6 +2,7 @@ package rw.terimbere.csams.modules.loan.dto;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,6 +26,7 @@ public class LoanSettingsResponse {
     private boolean allowMemberRequests;
     private boolean lateFeeEnabled;
     private String currency;
+    private List<LoanShareTierResponse> shareTiers;
     private Instant createdAt;
     private Instant updatedAt;
 }

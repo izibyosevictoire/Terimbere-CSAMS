@@ -21,12 +21,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import rw.terimbere.csams.modules.loan.dto.LoanApplicationFormResponse;
 import rw.terimbere.csams.modules.loan.dto.LoanApproveRequest;
+import rw.terimbere.csams.modules.loan.dto.LoanEligibilityResponse;
+import rw.terimbere.csams.modules.loan.dto.LoanGuarantorRespondRequest;
+import rw.terimbere.csams.modules.loan.dto.LoanGuarantorResponse;
 import rw.terimbere.csams.modules.loan.dto.LoanRejectRequest;
 import rw.terimbere.csams.modules.loan.dto.LoanRepaymentCreateRequest;
 import rw.terimbere.csams.modules.loan.dto.LoanRepaymentResponse;
 import rw.terimbere.csams.modules.loan.dto.LoanRequestCreateRequest;
 import rw.terimbere.csams.modules.loan.dto.LoanResponse;
 import rw.terimbere.csams.modules.loan.entity.LoanStatus;
+import rw.terimbere.csams.modules.loan.service.LoanGuarantorService;
 import rw.terimbere.csams.modules.loan.service.LoanService;
 import rw.terimbere.csams.shared.common.dto.ApiResponse;
 import rw.terimbere.csams.shared.common.dto.PageResponse;
@@ -39,6 +43,7 @@ import rw.terimbere.csams.shared.common.dto.PageResponse;
 public class LoanController {
 
     private final LoanService loanService;
+    private final LoanGuarantorService loanGuarantorService;
 
     @PostMapping
     @PreAuthorize("hasAuthority('LOAN_READ')")
@@ -78,12 +83,42 @@ public class LoanController {
         return ResponseEntity.ok(ApiResponse.ok(loanService.applicationPreview(cooperativeId)));
     }
 
+    @GetMapping("/eligibility")
+    @PreAuthorize("hasAuthority('LOAN_READ')")
+    @Operation(summary = "Check loan eligibility including outstanding loan balance")
+    public ResponseEntity<ApiResponse<LoanEligibilityResponse>> eligibility(
+            @PathVariable UUID cooperativeId,
+            @RequestParam(required = false) UUID memberUserId,
+            @RequestParam(required = false) java.math.BigDecimal amount) {
+        return ResponseEntity.ok(ApiResponse.ok(loanService.eligibility(cooperativeId, memberUserId, amount)));
+    }
+
+    @GetMapping("/guarantor-requests")
+    @PreAuthorize("hasAuthority('LOAN_READ')")
+    @Operation(summary = "List guarantor requests for the current member")
+    public ResponseEntity<ApiResponse<List<LoanGuarantorResponse>>> myGuarantorRequests(
+            @PathVariable UUID cooperativeId) {
+        return ResponseEntity.ok(ApiResponse.ok(loanGuarantorService.myRequests(cooperativeId)));
+    }
+
     @GetMapping("/{loanId}")
     @PreAuthorize("hasAuthority('LOAN_READ')")
     @Operation(summary = "Get loan by id")
     public ResponseEntity<ApiResponse<LoanResponse>> get(
             @PathVariable UUID cooperativeId, @PathVariable UUID loanId) {
         return ResponseEntity.ok(ApiResponse.ok(loanService.get(cooperativeId, loanId)));
+    }
+
+    @PostMapping("/{loanId}/guarantor/respond")
+    @PreAuthorize("hasAuthority('LOAN_READ')")
+    @Operation(summary = "Accept or reject a guarantor request for this loan")
+    public ResponseEntity<ApiResponse<LoanGuarantorResponse>> respondToGuarantorRequest(
+            @PathVariable UUID cooperativeId,
+            @PathVariable UUID loanId,
+            @Valid @RequestBody LoanGuarantorRespondRequest request,
+            HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(
+                ApiResponse.ok(loanGuarantorService.respond(cooperativeId, loanId, request, httpRequest)));
     }
 
     @PostMapping("/{loanId}/approve")

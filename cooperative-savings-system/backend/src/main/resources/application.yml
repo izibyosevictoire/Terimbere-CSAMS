@@ -76,6 +76,9 @@ app:
     lock-duration-minutes: 15
     auth-rate-limit-enabled: true
     auth-rate-limit-max: 20
+  fines:
+    auto-generate-enabled: ${APP_FINES_AUTO_GENERATE_ENABLED:true}
+    auto-generate-cron: ${APP_FINES_AUTO_GENERATE_CRON:0 30 1 * * *}
 
 logging:
   pattern:

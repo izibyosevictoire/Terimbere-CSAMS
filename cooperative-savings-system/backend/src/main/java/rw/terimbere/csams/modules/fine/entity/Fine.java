@@ -41,6 +41,9 @@ public class Fine extends BaseEntity {
     @Column(name = "source_contribution_id")
     private UUID sourceContributionId;
 
+    @Column(name = "automatic_source_key", length = 80, unique = true)
+    private String automaticSourceKey;
+
     @Column(name = "base_amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal baseAmount;
 

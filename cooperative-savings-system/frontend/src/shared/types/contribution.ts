@@ -66,9 +66,11 @@ export interface Contribution {
   username?: string
   year: number
   month: number
+  shareCount?: number | null
   expectedAmount: string | number
   paidAmount: string | number
   outstandingAmount: string | number
+  remainingAmount?: string | number | null
   status: ContributionStatus | string
   paymentDate?: string | null
   paymentReference?: string | null
@@ -91,11 +93,32 @@ export interface Contribution {
 }
 
 export interface ContributionSubmitRequest {
+  year?: number
+  month?: number
   amount: string | number
   paymentDate: string
   paymentReference?: string
   evidenceFileKey?: string
   notes?: string
+}
+
+export interface ContributionPeriodPreview {
+  contributionId?: string | null
+  cooperativeId?: string
+  memberUserId?: string
+  year: number
+  month: number
+  shareCount: number
+  requiredAmount: string | number
+  paidAmount: string | number
+  pendingSubmittedAmount?: string | number | null
+  remainingAmount: string | number
+  paymentDate?: string | null
+  dueDate?: string | null
+  status?: ContributionStatus | string | null
+  reviewStatus?: ContributionReviewStatus | string | null
+  awaitingReview?: boolean
+  canSubmit?: boolean
 }
 
 export interface ContributionReviewRequest {

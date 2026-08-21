@@ -361,6 +361,52 @@ export function LoanDetailPage() {
               </Stack>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <InfoRow
+                  label={t('loans.request.guaranteeMode')}
+                  value={t(
+                    loan.guaranteeMode === 'GUARANTOR'
+                      ? 'loans.request.guaranteeModeGuarantor'
+                      : 'loans.request.guaranteeModeSelf',
+                  )}
+                />
+                <InfoRow
+                  label={t('loans.eligibility.shares')}
+                  value={
+                    loan.shareCount != null
+                      ? loan.sharePercent != null
+                        ? `${loan.shareCount} (${loan.sharePercent}%)`
+                        : String(loan.shareCount)
+                      : '—'
+                  }
+                />
+              </Stack>
+              {loan.guarantor ? (
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                  <InfoRow
+                    label={t('loans.guarantor.guarantor')}
+                    value={loan.guarantor.guarantorName ?? ''}
+                  />
+                  <InfoRow
+                    label={t('loans.guarantor.guaranteedAmount')}
+                    value={formatMoney(loan.guarantor.guaranteedAmount)}
+                  />
+                </Stack>
+              ) : null}
+              {loan.guarantor ? (
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                  <InfoRow
+                    label={t('loans.guarantor.response')}
+                    value={t(`loans.guarantor.status.${loan.guarantor.status}`, {
+                      defaultValue: String(loan.guarantor.status),
+                    })}
+                  />
+                  <InfoRow
+                    label={t('loans.guarantor.respondedAt')}
+                    value={loan.guarantor.respondedAt?.replace('T', ' ').slice(0, 19) ?? ''}
+                  />
+                </Stack>
+              ) : null}
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <InfoRow
                   label={t('loans.fields.termMonths')}
                   value={String(loan.termMonths ?? '—')}
                 />

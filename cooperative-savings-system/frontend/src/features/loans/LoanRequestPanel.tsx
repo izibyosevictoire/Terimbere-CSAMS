@@ -2,7 +2,12 @@ import {
   Alert,
   Box,
   Button,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
   MenuItem,
+  Radio,
+  RadioGroup,
   Stack,
   TextField,
   Typography,
@@ -12,17 +17,20 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSnackbar } from 'notistack'
 import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
+import { useAppSelector } from '@/app/store/hooks'
+import { selectAuthUser } from '@/app/store/authSlice'
 import { LoanApplicationFormView } from './LoanApplicationFormView'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchLoanSettings } from '@/shared/api/loanSettings'
-import { createLoan, fetchLoanApplicationPreview } from '@/shared/api/loans'
+import { fetchLoanEligibility, createLoan, fetchLoanApplicationPreview } from '@/shared/api/loans'
 import { fetchMembers } from '@/shared/api/members'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { LoadingState } from '@/shared/components/LoadingState'
 import { ROUTES } from '@/shared/constants/routes'
 import { memberDisplayName } from '@/shared/types/member'
+import { formatMoney } from '@/shared/utils/formatMoney'
 import {
   loanRequestDefaults,
   loanRequestSchema,
@@ -40,6 +48,7 @@ export function LoanRequestPanel({ cooperativeId, isAdmin }: LoanRequestPanelPro
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { enqueueSnackbar } = useSnackbar()
+  const currentUser = useAppSelector(selectAuthUser)
 
   const settingsQuery = useQuery({
     queryKey: ['loan-settings', cooperativeId],
@@ -50,7 +59,7 @@ export function LoanRequestPanel({ cooperativeId, isAdmin }: LoanRequestPanelPro
   const membersQuery = useQuery({
     queryKey: ['members', cooperativeId, 'loan-select'],
     queryFn: () => fetchMembers(cooperativeId, { status: 'ACTIVE', size: 200 }),
-    enabled: Boolean(cooperativeId) && isAdmin,
+    enabled: Boolean(cooperativeId),
   })
 
   const previewQuery = useQuery({
@@ -66,6 +75,7 @@ export function LoanRequestPanel({ cooperativeId, isAdmin }: LoanRequestPanelPro
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<LoanRequestFormValues>({
     defaultValues: loanRequestDefaults,
@@ -106,6 +116,15 @@ export function LoanRequestPanel({ cooperativeId, isAdmin }: LoanRequestPanelPro
   const amount = watch('amount')
   const purpose = watch('purpose')
   const termMonths = watch('termMonths')
+  const selectedMemberId = watch('memberUserId')
+  const guaranteeMode = watch('guaranteeMode')
+  const eligibilityMemberId = isAdmin ? selectedMemberId : currentUser?.id
+
+  const eligibilityQuery = useQuery({
+    queryKey: ['loans', 'eligibility', cooperativeId, eligibilityMemberId, amount],
+    queryFn: () => fetchLoanEligibility(cooperativeId, eligibilityMemberId, amount),
+    enabled: Boolean(cooperativeId && eligibilityMemberId),
+  })
 
   if (memberRequestsBlocked) {
     return (
@@ -161,6 +180,52 @@ export function LoanRequestPanel({ cooperativeId, isAdmin }: LoanRequestPanelPro
         </Alert>
       ) : null}
 
+      {eligibilityQuery.data ? (
+        <Alert
+          severity={eligibilityQuery.data.eligible ? 'success' : 'warning'}
+          sx={{ mb: 2 }}
+        >
+          <Stack spacing={0.5}>
+            <Typography variant="body2">{eligibilityQuery.data.reason}</Typography>
+            <Typography variant="body2">
+              {t('loans.eligibility.existingAmount')}:{' '}
+              {formatMoney(eligibilityQuery.data.existingLoanAmount ?? 0)}
+            </Typography>
+            <Typography variant="body2">
+              {t('loans.eligibility.repaid')}:{' '}
+              {formatMoney(eligibilityQuery.data.amountAlreadyRepaid ?? 0)}
+            </Typography>
+            <Typography variant="body2">
+              {t('loans.eligibility.outstanding')}:{' '}
+              {formatMoney(eligibilityQuery.data.outstandingBalance ?? 0)}
+            </Typography>
+            <Typography variant="body2">
+              {t('loans.eligibility.requested')}: {formatMoney(amount || 0)}
+            </Typography>
+            {eligibilityQuery.data.shareCount != null ? (
+              <Typography variant="body2">
+                {t('loans.eligibility.shares')}: {eligibilityQuery.data.shareCount}
+                {eligibilityQuery.data.sharePercent != null
+                  ? ` (${eligibilityQuery.data.sharePercent}%)`
+                  : ''}
+              </Typography>
+            ) : null}
+            {eligibilityQuery.data.maxLoanByShares != null ? (
+              <Typography variant="body2">
+                {t('loans.eligibility.maxByShares')}:{' '}
+                {formatMoney(eligibilityQuery.data.maxLoanByShares)}
+              </Typography>
+            ) : null}
+            {eligibilityQuery.data.maxEligibleAmount != null ? (
+              <Typography variant="body2">
+                {t('loans.eligibility.maxEligible')}:{' '}
+                {formatMoney(eligibilityQuery.data.maxEligibleAmount)}
+              </Typography>
+            ) : null}
+          </Stack>
+        </Alert>
+      ) : null}
+
       <Stack spacing={2}>
         {isAdmin ? (
           <TextField
@@ -203,6 +268,60 @@ export function LoanRequestPanel({ cooperativeId, isAdmin }: LoanRequestPanelPro
           fullWidth
           required={!isAdmin}
         />
+        <FormControl>
+          <FormLabel>{t('loans.request.guaranteeMode')}</FormLabel>
+          <RadioGroup
+            row
+            value={guaranteeMode}
+            onChange={(event) =>
+              setValue('guaranteeMode', event.target.value as 'SELF' | 'GUARANTOR', {
+                shouldValidate: true,
+              })
+            }
+          >
+            <FormControlLabel
+              value="SELF"
+              control={<Radio />}
+              label={t('loans.request.guaranteeModeSelf')}
+            />
+            <FormControlLabel
+              value="GUARANTOR"
+              control={<Radio />}
+              label={t('loans.request.guaranteeModeGuarantor')}
+            />
+          </RadioGroup>
+        </FormControl>
+        {guaranteeMode === 'GUARANTOR' ? (
+          <>
+        <TextField
+          select
+          label={t('loans.guarantor.guarantor')}
+          error={Boolean(errors.guarantorUserId)}
+          helperText={errors.guarantorUserId?.message}
+          {...register('guarantorUserId')}
+          fullWidth
+          required
+          disabled={membersQuery.isLoading}
+        >
+          {(membersQuery.data?.content ?? [])
+            .filter((member) => member.userId !== currentUser?.id)
+            .filter((member) => !isAdmin || member.userId !== selectedMemberId)
+            .map((member) => (
+              <MenuItem key={member.userId} value={member.userId}>
+                {memberDisplayName(member)}
+              </MenuItem>
+            ))}
+        </TextField>
+        <TextField
+          label={t('loans.guarantor.guaranteedAmount')}
+          error={Boolean(errors.guaranteedAmount)}
+          helperText={errors.guaranteedAmount?.message}
+          {...register('guaranteedAmount')}
+          fullWidth
+          required
+        />
+          </>
+        ) : null}
         {isAdmin ? (
           <TextField
             label={t('loans.fields.notes')}
@@ -215,7 +334,7 @@ export function LoanRequestPanel({ cooperativeId, isAdmin }: LoanRequestPanelPro
         <Button
           type="submit"
           variant="contained"
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || eligibilityQuery.data?.eligible === false}
           sx={{ alignSelf: 'flex-start' }}
         >
           {isAdmin ? t('loans.request.issue') : t('loans.request.apply')}

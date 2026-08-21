@@ -1,8 +1,11 @@
+import AddIcon from '@mui/icons-material/Add'
+import DeleteIcon from '@mui/icons-material/Delete'
 import {
   Alert,
   Box,
   Button,
   FormControlLabel,
+  IconButton,
   MenuItem,
   Stack,
   Switch,
@@ -13,8 +16,10 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSnackbar } from 'notistack'
 import { useEffect } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
+import { useAppSelector } from '@/app/store/hooks'
+import { selectCanManageFineSettings } from '@/app/store/authSlice'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchLoanSettings, updateLoanSettings } from '@/shared/api/loanSettings'
 import { ErrorState } from '@/shared/components/ErrorState'
@@ -35,6 +40,7 @@ export function LoanSettingsPanel({ cooperativeId }: LoanSettingsPanelProps) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const { enqueueSnackbar } = useSnackbar()
+  const canManageShareTiers = useAppSelector(selectCanManageFineSettings)
 
   const query = useQuery({
     queryKey: ['loan-settings', cooperativeId],
@@ -51,6 +57,11 @@ export function LoanSettingsPanel({ cooperativeId }: LoanSettingsPanelProps) {
   } = useForm<LoanSettingsFormValues>({
     defaultValues: loanSettingsDefaults,
     resolver: yupResolver(loanSettingsSchema),
+  })
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'shareTiers',
   })
 
   useEffect(() => {
@@ -70,12 +81,16 @@ export function LoanSettingsPanel({ cooperativeId }: LoanSettingsPanelProps) {
           : '0',
       allowMemberRequests: Boolean(query.data.allowMemberRequests),
       lateFeeEnabled: Boolean(query.data.lateFeeEnabled),
+      shareTiers: (query.data.shareTiers ?? []).map((tier) => ({
+        minSharePercent: String(tier.minSharePercent ?? ''),
+        maxLoanAmount: String(tier.maxLoanAmount ?? ''),
+      })),
     })
   }, [query.data, reset])
 
   const mutation = useMutation({
     mutationFn: (values: LoanSettingsFormValues) =>
-      updateLoanSettings(cooperativeId, toLoanSettingsPayload(values)),
+      updateLoanSettings(cooperativeId, toLoanSettingsPayload(values, canManageShareTiers)),
     onSuccess: () => {
       enqueueSnackbar(t('loans.settings.saveSuccess'), { variant: 'success' })
       void queryClient.invalidateQueries({ queryKey: ['loan-settings', cooperativeId] })
@@ -100,7 +115,7 @@ export function LoanSettingsPanel({ cooperativeId }: LoanSettingsPanelProps) {
       component="form"
       onSubmit={handleSubmit((values) => mutation.mutate(values))}
       sx={{
-        maxWidth: 560,
+        maxWidth: 640,
         p: { xs: 2, sm: 2.5 },
         border: '1px solid',
         borderColor: 'divider',
@@ -197,6 +212,67 @@ export function LoanSettingsPanel({ cooperativeId }: LoanSettingsPanelProps) {
             />
           )}
         />
+
+        <Box>
+          <Typography variant="subtitle1" sx={{ mb: 0.5 }}>
+            {t('loans.settings.shareTiersTitle')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            {t('loans.settings.shareTiersDescription')}
+          </Typography>
+          {!canManageShareTiers ? (
+            <Alert severity="info" sx={{ mb: 1.5 }}>
+              {t('loans.settings.shareTiersPresidentOnly')}
+            </Alert>
+          ) : null}
+          <Stack spacing={1.5}>
+            {fields.map((field, index) => (
+              <Stack
+                key={field.id}
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={1}
+                sx={{ alignItems: 'flex-start' }}
+              >
+                <TextField
+                  label={t('loans.settings.minSharePercent')}
+                  error={Boolean(errors.shareTiers?.[index]?.minSharePercent)}
+                  helperText={errors.shareTiers?.[index]?.minSharePercent?.message}
+                  {...register(`shareTiers.${index}.minSharePercent`)}
+                  fullWidth
+                  disabled={!canManageShareTiers}
+                />
+                <TextField
+                  label={t('loans.settings.tierMaxLoanAmount')}
+                  error={Boolean(errors.shareTiers?.[index]?.maxLoanAmount)}
+                  helperText={errors.shareTiers?.[index]?.maxLoanAmount?.message}
+                  {...register(`shareTiers.${index}.maxLoanAmount`)}
+                  fullWidth
+                  disabled={!canManageShareTiers}
+                />
+                {canManageShareTiers ? (
+                  <IconButton
+                    aria-label={t('loans.settings.removeShareTier')}
+                    onClick={() => remove(index)}
+                    sx={{ mt: { sm: 1 } }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                ) : null}
+              </Stack>
+            ))}
+          </Stack>
+          {canManageShareTiers ? (
+            <Button
+              type="button"
+              startIcon={<AddIcon />}
+              onClick={() => append({ minSharePercent: '', maxLoanAmount: '' })}
+              sx={{ mt: 1 }}
+            >
+              {t('loans.settings.addShareTier')}
+            </Button>
+          ) : null}
+        </Box>
+
         <Button
           type="submit"
           variant="contained"

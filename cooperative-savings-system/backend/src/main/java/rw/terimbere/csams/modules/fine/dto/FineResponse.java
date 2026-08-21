@@ -25,6 +25,8 @@ public class FineResponse {
     private FineType fineType;
     private FineCalculationMode calculationMode;
     private UUID sourceContributionId;
+    private Integer contributionYear;
+    private Integer contributionMonth;
     private BigDecimal baseAmount;
     private BigDecimal dailyIncrementSnapshot;
     private int overdueDays;

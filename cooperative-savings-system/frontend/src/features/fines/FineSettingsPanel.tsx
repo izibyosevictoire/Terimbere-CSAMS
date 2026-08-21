@@ -16,6 +16,8 @@ import { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink } from 'react-router-dom'
+import { useAppSelector } from '@/app/store/hooks'
+import { selectCanManageFineSettings } from '@/app/store/authSlice'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchCooperative } from '@/shared/api/cooperatives'
 import { fetchFineSettings, updateFineSettings } from '@/shared/api/fineSettings'
@@ -38,6 +40,7 @@ export function FineSettingsPanel({ cooperativeId }: FineSettingsPanelProps) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const { enqueueSnackbar } = useSnackbar()
+  const canEdit = useAppSelector(selectCanManageFineSettings)
 
   const query = useQuery({
     queryKey: ['fine-settings', cooperativeId],
@@ -100,7 +103,10 @@ export function FineSettingsPanel({ cooperativeId }: FineSettingsPanelProps) {
   return (
     <Box
       component="form"
-      onSubmit={handleSubmit((values) => mutation.mutate(values))}
+      onSubmit={handleSubmit((values) => {
+        if (!canEdit) return
+        mutation.mutate(values)
+      })}
       sx={{
         maxWidth: 560,
         p: { xs: 2, sm: 2.5 },
@@ -115,6 +121,11 @@ export function FineSettingsPanel({ cooperativeId }: FineSettingsPanelProps) {
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {t('fines.settings.description')}
       </Typography>
+      {!canEdit ? (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {t('fines.settings.presidentOnly')}
+        </Alert>
+      ) : null}
 
       <Alert severity="info" sx={{ mb: 2 }}>
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -145,6 +156,7 @@ export function FineSettingsPanel({ cooperativeId }: FineSettingsPanelProps) {
                 <Switch
                   checked={field.value}
                   onChange={(_, checked) => field.onChange(checked)}
+                  disabled={!canEdit}
                 />
               }
               label={t('fines.settings.autoFinesEnabled')}
@@ -189,7 +201,7 @@ export function FineSettingsPanel({ cooperativeId }: FineSettingsPanelProps) {
         <Button
           type="submit"
           variant="contained"
-          disabled={mutation.isPending || !isDirty}
+          disabled={!canEdit || mutation.isPending || !isDirty}
           sx={{ alignSelf: 'flex-start' }}
         >
           {t('common.save')}

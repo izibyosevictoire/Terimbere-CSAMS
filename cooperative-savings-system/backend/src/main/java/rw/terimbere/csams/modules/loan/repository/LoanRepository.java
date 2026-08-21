@@ -37,6 +37,12 @@ public interface LoanRepository extends JpaRepository<Loan, UUID> {
     List<Loan> findTop20ByCooperativeIdAndMemberUserIdOrderByRequestDateDescCreatedAtDesc(
             UUID cooperativeId, UUID memberUserId);
 
+    List<Loan> findByCooperativeIdAndMemberUserIdAndStatusIn(
+            UUID cooperativeId, UUID memberUserId, Collection<LoanStatus> statuses);
+
+    boolean existsByCooperativeIdAndMemberUserIdAndStatusIn(
+            UUID cooperativeId, UUID memberUserId, Collection<LoanStatus> statuses);
+
     @Query(
             """
             SELECT COALESCE(SUM(l.outstandingPrincipal), 0)

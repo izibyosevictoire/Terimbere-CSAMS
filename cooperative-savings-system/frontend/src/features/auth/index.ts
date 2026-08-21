@@ -27,6 +27,7 @@ export {
   selectCanRecordContributions,
   selectCanWriteSocial,
   selectCanRecordLoans,
+  selectCanManageFineSettings,
   selectSelectedCooperativeId,
   selectUserRoles,
   setAuthStatus,

@@ -2,7 +2,11 @@ package rw.terimbere.csams.modules.loan.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,10 +17,15 @@ import rw.terimbere.csams.modules.cooperative.entity.Cooperative;
 import rw.terimbere.csams.modules.cooperative.repository.CooperativeRepository;
 import rw.terimbere.csams.modules.loan.dto.LoanSettingsResponse;
 import rw.terimbere.csams.modules.loan.dto.LoanSettingsUpdateRequest;
+import rw.terimbere.csams.modules.loan.dto.LoanShareTierRequest;
+import rw.terimbere.csams.modules.loan.dto.LoanShareTierResponse;
 import rw.terimbere.csams.modules.loan.entity.InterestType;
 import rw.terimbere.csams.modules.loan.entity.LoanSettings;
+import rw.terimbere.csams.modules.loan.entity.LoanShareTier;
 import rw.terimbere.csams.modules.loan.repository.LoanSettingsRepository;
+import rw.terimbere.csams.modules.loan.repository.LoanShareTierRepository;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
+import rw.terimbere.csams.security.CooperativeOfficerRoles;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.auditing.AuditableAction;
 import rw.terimbere.csams.shared.exceptions.ResourceNotFoundException;
@@ -30,6 +39,7 @@ public class LoanSettingsService {
     private static final BigDecimal DEFAULT_RATE = new BigDecimal("10.0000");
 
     private final LoanSettingsRepository loanSettingsRepository;
+    private final LoanShareTierRepository loanShareTierRepository;
     private final CooperativeRepository cooperativeRepository;
     private final CooperativeAuthorizationService authorizationService;
     private final AuditService auditService;
@@ -88,6 +98,11 @@ public class LoanSettingsService {
         }
 
         settings = loanSettingsRepository.save(settings);
+        if (request.getShareTiers() != null) {
+            CooperativeOfficerRoles.requirePresident(
+                    principal, "Only the President can manage share-based loan levels");
+            replaceShareTiers(cooperativeId, request.getShareTiers());
+        }
 
         auditService.record(
                 principal.getId(),
@@ -156,9 +171,52 @@ public class LoanSettingsService {
                 .allowMemberRequests(settings.isAllowMemberRequests())
                 .lateFeeEnabled(settings.isLateFeeEnabled())
                 .currency(settings.getCurrency())
+                .shareTiers(listShareTiers(settings.getCooperativeId()))
                 .createdAt(settings.getCreatedAt())
                 .updatedAt(settings.getUpdatedAt())
                 .build();
+    }
+
+    private void replaceShareTiers(UUID cooperativeId, List<LoanShareTierRequest> requests) {
+        Set<String> percents = new HashSet<>();
+        List<LoanShareTier> next = new ArrayList<>();
+        for (LoanShareTierRequest item : requests) {
+            if (item == null || item.getMinSharePercent() == null || item.getMaxLoanAmount() == null) {
+                throw new ValidationException("Each share-based loan level needs a percentage and a maximum amount");
+            }
+            BigDecimal percent = item.getMinSharePercent().setScale(4, java.math.RoundingMode.HALF_UP);
+            BigDecimal amount = MoneyUtils.scaleForStorage(item.getMaxLoanAmount());
+            if (percent.compareTo(BigDecimal.ZERO) <= 0 || percent.compareTo(new BigDecimal("100")) > 0) {
+                throw new ValidationException("Share percentage must be greater than 0 and at most 100");
+            }
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new ValidationException("Share-based loan amount must be greater than 0");
+            }
+            String key = percent.stripTrailingZeros().toPlainString();
+            if (!percents.add(key)) {
+                throw new ValidationException("Duplicate share percentage loan levels are not allowed");
+            }
+            next.add(LoanShareTier.builder()
+                    .cooperativeId(cooperativeId)
+                    .minSharePercent(percent)
+                    .maxLoanAmount(amount)
+                    .build());
+        }
+        loanShareTierRepository.deleteByCooperativeId(cooperativeId);
+        loanShareTierRepository.flush();
+        if (!next.isEmpty()) {
+            loanShareTierRepository.saveAll(next);
+        }
+    }
+
+    private List<LoanShareTierResponse> listShareTiers(UUID cooperativeId) {
+        return loanShareTierRepository.findByCooperativeIdOrderByMinSharePercentDesc(cooperativeId).stream()
+                .map(tier -> LoanShareTierResponse.builder()
+                        .id(tier.getId())
+                        .minSharePercent(tier.getMinSharePercent())
+                        .maxLoanAmount(MoneyUtils.scale(tier.getMaxLoanAmount()))
+                        .build())
+                .toList();
     }
 
     private static String clientIp(HttpServletRequest request) {

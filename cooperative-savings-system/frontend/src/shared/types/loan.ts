@@ -13,6 +13,10 @@ export type LoanStatus =
 
 export type InterestType = 'FLAT' | 'REDUCING'
 
+export type LoanGuaranteeMode = 'SELF' | 'GUARANTOR'
+
+export const LOAN_GUARANTEE_MODES: LoanGuaranteeMode[] = ['SELF', 'GUARANTOR']
+
 export const LOAN_STATUSES: LoanStatus[] = [
   'PENDING',
   'AWAITING_SECOND_APPROVAL',
@@ -29,6 +33,12 @@ export const INTEREST_TYPES: InterestType[] = ['FLAT']
 /** Display-only — REDUCING is blocked until business rule is confirmed. */
 export const INTEREST_TYPES_DISPLAY: InterestType[] = ['FLAT', 'REDUCING']
 
+export interface LoanShareTier {
+  id?: string
+  minSharePercent: string | number
+  maxLoanAmount: string | number
+}
+
 export interface LoanSettings {
   id?: string
   cooperativeId?: string
@@ -40,6 +50,7 @@ export interface LoanSettings {
   allowMemberRequests: boolean
   lateFeeEnabled?: boolean
   currency?: string
+  shareTiers?: LoanShareTier[]
   version?: number
   createdAt?: string
   updatedAt?: string
@@ -53,6 +64,7 @@ export interface LoanSettingsUpdateRequest {
   minMembershipMonths?: number | null
   allowMemberRequests: boolean
   lateFeeEnabled?: boolean
+  shareTiers?: LoanShareTier[]
 }
 
 export interface LoanApplicationForm {
@@ -76,6 +88,42 @@ export interface LoanApplicationForm {
   interestType?: InterestType | string | null
   requestDate?: string | null
   submittedAt?: string | null
+  eligibility?: LoanEligibility | null
+}
+
+export type LoanGuarantorStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED'
+
+export interface LoanEligibility {
+  memberUserId?: string
+  eligible: boolean
+  reason?: string | null
+  existingLoanAmount?: string | number | null
+  amountAlreadyRepaid?: string | number | null
+  outstandingBalance?: string | number | null
+  requestedAmount?: string | number | null
+  shareCount?: number | null
+  totalShares?: number | null
+  sharePercent?: string | number | null
+  maxLoanByShares?: string | number | null
+  maxEligibleAmount?: string | number | null
+}
+
+export interface LoanGuarantor {
+  id: string
+  cooperativeId?: string
+  loanId: string
+  borrowerUserId?: string | null
+  borrowerName?: string | null
+  loanAmount?: string | number | null
+  loanStatus?: LoanStatus | string | null
+  guarantorUserId: string
+  guarantorName?: string | null
+  guaranteedAmount: string | number
+  status: LoanGuarantorStatus | string
+  requestedBy?: string | null
+  requestedAt?: string | null
+  respondedAt?: string | null
+  responseComment?: string | null
 }
 
 export interface Loan {
@@ -101,6 +149,10 @@ export interface Loan {
   disbursementDate?: string | null
   dueDate?: string | null
   status: LoanStatus | string
+  guaranteeMode?: LoanGuaranteeMode | string | null
+  shareCount?: number | null
+  sharePercent?: string | number | null
+  maxLoanByShares?: string | number | null
   purpose?: string | null
   notes?: string | null
   rejectionReason?: string | null
@@ -111,6 +163,8 @@ export interface Loan {
   firstApprovedAt?: string | null
   firstApproverRole?: string | null
   applicationForm?: LoanApplicationForm | null
+  eligibility?: LoanEligibility | null
+  guarantor?: LoanGuarantor | null
   approvalHistory?: ApprovalEvent[]
   createdAt?: string
   updatedAt?: string
@@ -124,6 +178,9 @@ export interface LoanCreateRequest {
   termMonths?: number
   purpose?: string
   notes?: string
+  guaranteeMode?: LoanGuaranteeMode
+  guarantorUserId?: string
+  guaranteedAmount?: string | number
 }
 
 export interface LoanApproveRequest {
@@ -178,6 +235,7 @@ export function mapLoanSettings(raw: LoanSettings): LoanSettings {
     interestType: raw.interestType || 'FLAT',
     allowMemberRequests: Boolean(raw.allowMemberRequests),
     lateFeeEnabled: Boolean(raw.lateFeeEnabled),
+    shareTiers: raw.shareTiers ?? [],
   }
 }
 

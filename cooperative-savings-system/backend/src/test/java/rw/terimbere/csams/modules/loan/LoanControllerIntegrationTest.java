@@ -48,7 +48,11 @@ class LoanControllerIntegrationTest {
     private UUID memberUserId;
     private String memberUsername;
     private String memberPassword;
+    private UUID guarantorUserId;
+    private String guarantorUsername;
+    private String guarantorPassword;
     private String loanOfficerToken;
+    private UUID officerUserId;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -89,6 +93,26 @@ class LoanControllerIntegrationTest {
         memberUserId = UUID.fromString(memberData.path("userId").asText());
         memberPassword = memberData.path("temporaryPassword").asText();
 
+        guarantorUsername = "gmember_" + UUID.randomUUID().toString().substring(0, 8);
+        MvcResult guarantor = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/members")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName":"Gua",
+                                  "lastName":"Rantor",
+                                  "username":"%s",
+                                  "email":"%s@test.local",
+                                  "roleInCooperative":"MEMBER"
+                                }
+                                """.formatted(guarantorUsername, guarantorUsername)))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode guarantorData =
+                objectMapper.readTree(guarantor.getResponse().getContentAsString()).path("data");
+        guarantorUserId = UUID.fromString(guarantorData.path("userId").asText());
+        guarantorPassword = guarantorData.path("temporaryPassword").asText();
+
         String officerUsername = "loofficer_" + UUID.randomUUID().toString().substring(0, 8);
         MvcResult officer = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/members")
                         .header("Authorization", "Bearer " + superAdminToken)
@@ -106,6 +130,7 @@ class LoanControllerIntegrationTest {
                 .andReturn();
         JsonNode officerData =
                 objectMapper.readTree(officer.getResponse().getContentAsString()).path("data");
+        officerUserId = UUID.fromString(officerData.path("userId").asText());
         loanOfficerToken = loginAccessToken(officerUsername, officerData.path("temporaryPassword").asText());
 
         mockMvc.perform(put("/api/v1/cooperatives/" + cooperativeId + "/loan-settings")
@@ -338,8 +363,14 @@ class LoanControllerIntegrationTest {
                         .header("Authorization", "Bearer " + memberToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"amount": 500.0000, "termMonths": 3, "purpose": "Self request"}
-                                """))
+                                {
+                                  "amount": 500.0000,
+                                  "termMonths": 3,
+                                  "purpose": "Self request",
+                                  "guarantorUserId": "%s",
+                                  "guaranteedAmount": 500.0000
+                                }
+                                """.formatted(guarantorUserId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("PENDING"))
                 .andExpect(jsonPath("$.data.memberUserId").value(memberUserId.toString()));
@@ -357,8 +388,14 @@ class LoanControllerIntegrationTest {
                         .header("Authorization", "Bearer " + memberToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"amount": 500.0000, "termMonths": 3, "purpose": "Self request"}
-                                """))
+                                {
+                                  "amount": 500.0000,
+                                  "termMonths": 3,
+                                  "purpose": "Self request",
+                                  "guarantorUserId": "%s",
+                                  "guaranteedAmount": 500.0000
+                                }
+                                """.formatted(guarantorUserId)))
                 .andExpect(status().isOk())
                 .andReturn();
         UUID loanId = UUID.fromString(objectMapper
@@ -372,6 +409,290 @@ class LoanControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void guarantorMustAcceptBeforeApproval_andRejectBlocksWorkflow() throws Exception {
+        String memberToken = loginAccessToken(memberUsername, memberPassword);
+        String guarantorToken = loginAccessToken(guarantorUsername, guarantorPassword);
+
+        MvcResult requestResult = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "amount": 700.0000,
+                                  "termMonths": 3,
+                                  "purpose": "Guarantor test",
+                                  "guarantorUserId": "%s",
+                                  "guaranteedAmount": 700.0000
+                                }
+                                """.formatted(guarantorUserId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.guarantor.status").value("PENDING"))
+                .andReturn();
+        UUID loanId = UUID.fromString(objectMapper
+                .readTree(requestResult.getResponse().getContentAsString())
+                .path("data")
+                .path("id")
+                .asText());
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans/" + loanId + "/approve")
+                        .header("Authorization", "Bearer " + loanOfficerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isUnprocessableEntity());
+
+        mockMvc.perform(post("/api/v1/cooperatives/"
+                                + cooperativeId
+                                + "/loans/"
+                                + loanId
+                                + "/guarantor/respond")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"accepted\":true}"))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/cooperatives/"
+                                + cooperativeId
+                                + "/loans/"
+                                + loanId
+                                + "/guarantor/respond")
+                        .header("Authorization", "Bearer " + guarantorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"accepted\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("REJECTED"));
+
+        mockMvc.perform(post("/api/v1/cooperatives/"
+                                + cooperativeId
+                                + "/loans/"
+                                + loanId
+                                + "/guarantor/respond")
+                        .header("Authorization", "Bearer " + guarantorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"accepted\":true}"))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void outstandingLoanBlocksNewRequest() throws Exception {
+        fundGroup(5000.0000);
+        requestApproveDisburse(1000.0000);
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "memberUserId": "%s",
+                                  "amount": 400.0000,
+                                  "termMonths": 3,
+                                  "purpose": "Second loan"
+                                }
+                                """.formatted(memberUserId)))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void memberCanRequestOwnLoanWithoutGuarantor() throws Exception {
+        String memberToken = loginAccessToken(memberUsername, memberPassword);
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "amount": 500.0000,
+                                  "termMonths": 3,
+                                  "purpose": "Own loan",
+                                  "guaranteeMode": "SELF"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("PENDING"))
+                .andExpect(jsonPath("$.data.guaranteeMode").value("SELF"))
+                .andExpect(jsonPath("$.data.guarantor").doesNotExist());
+    }
+
+    @Test
+    void guaranteedLoanRequiresGuarantorDetails() throws Exception {
+        String memberToken = loginAccessToken(memberUsername, memberPassword);
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "amount": 500.0000,
+                                  "termMonths": 3,
+                                  "purpose": "Needs guarantor",
+                                  "guaranteeMode": "GUARANTOR"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void sharePercentTiersCapLoanAmount() throws Exception {
+        mockMvc.perform(put("/api/v1/cooperatives/" + cooperativeId + "/members/" + memberUserId)
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName":"Loan",
+                                  "lastName":"Member",
+                                  "email":"%s@test.local",
+                                  "roleInCooperative":"MEMBER",
+                                  "shareCount": 4
+                                }
+                                """.formatted(memberUsername)))
+                .andExpect(status().isOk());
+        mockMvc.perform(put("/api/v1/cooperatives/" + cooperativeId + "/members/" + guarantorUserId)
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName":"Gua",
+                                  "lastName":"Rantor",
+                                  "email":"%s@test.local",
+                                  "roleInCooperative":"MEMBER",
+                                  "shareCount": 2
+                                }
+                                """.formatted(guarantorUsername)))
+                .andExpect(status().isOk());
+        mockMvc.perform(put("/api/v1/cooperatives/" + cooperativeId + "/members/" + officerUserId)
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName":"Loan",
+                                  "lastName":"Officer",
+                                  "email":"officer-shares@test.local",
+                                  "roleInCooperative":"LOAN_OFFICER",
+                                  "shareCount": 94
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(put("/api/v1/cooperatives/" + cooperativeId + "/loan-settings")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "interestRatePercent": 10.0000,
+                                  "interestType": "FLAT",
+                                  "maxLoanAmount": 100000.0000,
+                                  "maxTermMonths": 12,
+                                  "minMembershipMonths": 0,
+                                  "allowMemberRequests": true,
+                                  "lateFeeEnabled": false,
+                                  "shareTiers": [
+                                    {"minSharePercent": 4.0000, "maxLoanAmount": 20000.0000},
+                                    {"minSharePercent": 2.0000, "maxLoanAmount": 3000.0000}
+                                  ]
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.shareTiers.length()").value(2));
+
+        String memberToken = loginAccessToken(memberUsername, memberPassword);
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "amount": 20000.0000,
+                                  "termMonths": 3,
+                                  "purpose": "Four percent level",
+                                  "guaranteeMode": "SELF"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.guaranteeMode").value("SELF"))
+                .andExpect(jsonPath("$.data.shareCount").value(4));
+
+        String guarantorToken = loginAccessToken(guarantorUsername, guarantorPassword);
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans")
+                        .header("Authorization", "Bearer " + guarantorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "amount": 20000.0000,
+                                  "termMonths": 3,
+                                  "purpose": "Too high for two percent",
+                                  "guaranteeMode": "SELF"
+                                }
+                                """))
+                .andExpect(status().isUnprocessableEntity());
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans")
+                        .header("Authorization", "Bearer " + guarantorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "amount": 3000.0000,
+                                  "termMonths": 3,
+                                  "purpose": "Two percent level",
+                                  "guaranteeMode": "SELF"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.shareCount").value(2))
+                .andExpect(jsonPath("$.data.maxLoanByShares").value(3000.0));
+    }
+
+    @Test
+    void accountantCannotChangeShareTiers() throws Exception {
+        String accountantUsername = "acc_" + UUID.randomUUID().toString().substring(0, 8);
+        MvcResult accountant = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/members")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName":"Acc",
+                                  "lastName":"Ountant",
+                                  "username":"%s",
+                                  "email":"%s@test.local",
+                                  "roleInCooperative":"ACCOUNTANT"
+                                }
+                                """.formatted(accountantUsername, accountantUsername)))
+                .andExpect(status().isOk())
+                .andReturn();
+        String accountantToken = loginAccessToken(
+                accountantUsername,
+                objectMapper
+                        .readTree(accountant.getResponse().getContentAsString())
+                        .path("data")
+                        .path("temporaryPassword")
+                        .asText());
+
+        mockMvc.perform(put("/api/v1/cooperatives/" + cooperativeId + "/loan-settings")
+                        .header("Authorization", "Bearer " + accountantToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "interestRatePercent": 10.0000,
+                                  "interestType": "FLAT",
+                                  "maxTermMonths": 12,
+                                  "allowMemberRequests": true,
+                                  "shareTiers": [
+                                    {"minSharePercent": 4.0000, "maxLoanAmount": 20000.0000}
+                                  ]
+                                }
+                                """))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(put("/api/v1/cooperatives/" + cooperativeId + "/loan-settings")
+                        .header("Authorization", "Bearer " + accountantToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "interestRatePercent": 11.0000,
+                                  "interestType": "FLAT",
+                                  "maxTermMonths": 12,
+                                  "allowMemberRequests": true
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.interestRatePercent").value(11.0));
     }
 
     @Test

@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { AuthStatus, AuthUser } from '@/shared/types/auth'
 import {
+  hasAnyRole,
   hasPermission,
   isLeadershipRole,
   isOfficerRole,
@@ -12,6 +13,8 @@ import {
   PERMISSION_LOAN_WRITE,
   PERMISSION_MEMBERSHIP_MANAGE,
   PERMISSION_PAYOUT_WRITE,
+  ROLE_COOPERATIVE_ADMIN,
+  ROLE_PRESIDENT,
   ROLE_SUPER_ADMIN,
 } from '@/shared/types/auth'
 
@@ -104,5 +107,7 @@ export const selectCanManageLoans = (state: { auth: AuthState }) =>
   hasPermission(state.auth.user, PERMISSION_LOAN_WRITE)
 export const selectCanManageFines = (state: { auth: AuthState }) =>
   hasPermission(state.auth.user, PERMISSION_FINE_WRITE)
+export const selectCanManageFineSettings = (state: { auth: AuthState }) =>
+  hasAnyRole(state.auth.user?.roles, [ROLE_PRESIDENT, ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN])
 
 export default authSlice.reducer

@@ -375,7 +375,9 @@
       "temporaryPassword": "Temporary password",
       "roleInCooperative": "Role in cooperative",
       "membershipStatus": "Membership status",
-      "accountStatus": "Account status"
+      "accountStatus": "Account status",
+      "shareCount": "Shares (imigabane)",
+      "shareCountHint": "Number of shares owned by this member."
     },
     "roleAssignHint": "Pick the office this person holds. Duties appear under each role.",
     "roleAssignLocked": "Only the President or Vice President can change office roles.",
@@ -417,7 +419,10 @@
       "notes": "Notes",
       "month": "Month",
       "year": "Year",
-      "period": "Period"
+      "period": "Period",
+      "shares": "Shares",
+      "required": "Required",
+      "remaining": "Remaining"
     },
     "status": {
       "PENDING": "Pending",
@@ -433,16 +438,23 @@
     },
     "submit": {
       "title": "Submit Regular Contribution",
-      "description": "Enter the amount you paid. The Accountant / Treasurer will review the proof before it is counted.",
+      "description": "Select the month you are paying for. The required amount is calculated from your shares (imigabane).",
       "action": "Submit Regular Contribution",
       "proof": "Payment proof",
       "uploadProof": "Upload screenshot",
-      "proofHint": "Optional screenshot or receipt of the payment.",
+      "proofHint": "Attach a screenshot or receipt of the payment.",
       "uploadFailed": "Could not upload the payment proof.",
       "success": "Contribution submitted for Accountant review",
       "amountRequired": "Amount is required",
       "amountInvalid": "Enter a valid amount",
-      "dateRequired": "Date is required"
+      "dateRequired": "Date is required",
+      "paymentMonth": "Which month are you paying for?",
+      "shares": "Number of shares",
+      "required": "Required amount",
+      "alreadyPaid": "Amount already paid",
+      "payingNow": "Amount being paid now",
+      "remaining": "Remaining amount",
+      "amountPaidNow": "Amount paid now"
     },
     "approvals": {
       "title": "Pending regular contributions",
@@ -516,7 +528,8 @@
       "request": "Apply for Loan",
       "issue": "Issue loan",
       "settings": "Loan settings",
-      "approvals": "Loan Approvals"
+      "approvals": "Loan Approvals",
+      "guarantor": "Guarantor requests"
     },
     "emptyTitle": "No loans found",
     "emptyDescription": "Create a loan request or issue a loan to a member.",
@@ -574,7 +587,39 @@
       "requestSuccess": "Loan request submitted",
       "issueSuccess": "Loan created",
       "memberRequestsDisabled": "Member loan requests are disabled for this cooperative.",
-      "settingsHint": "Current settings: {{rate}}% {{type}}, max amount {{maxAmount}}, max term {{maxTerm}} months."
+      "settingsHint": "Current settings: {{rate}}% {{type}}, max amount {{maxAmount}}, max term {{maxTerm}} months.",
+      "guaranteeMode": "Loan type",
+      "guaranteeModeSelf": "Loan on your own",
+      "guaranteeModeGuarantor": "Loan with a guarantor (umwishingizi)"
+    },
+    "eligibility": {
+      "existingAmount": "Existing loan amount",
+      "repaid": "Amount already repaid",
+      "outstanding": "Outstanding loan balance",
+      "requested": "New loan amount requested",
+      "shares": "Shares (imigabane)",
+      "maxByShares": "Loan level for your shares",
+      "maxEligible": "Maximum you can borrow"
+    },
+    "guarantor": {
+      "guarantor": "Guarantor (umwishingizi)",
+      "guaranteedAmount": "Guaranteed amount",
+      "borrower": "Borrower",
+      "response": "Guarantor response",
+      "requestedAt": "Requested at",
+      "respondedAt": "Response date",
+      "accept": "Accept",
+      "reject": "Reject",
+      "acceptSuccess": "You accepted the guarantor request",
+      "rejectSuccess": "You rejected the guarantor request",
+      "description": "Members who asked you to guarantee their loan.",
+      "emptyTitle": "No guarantor requests",
+      "emptyDescription": "When a member asks you to guarantee a loan, the request appears here.",
+      "status": {
+        "PENDING": "Pending",
+        "ACCEPTED": "Accepted",
+        "REJECTED": "Rejected"
+      }
     },
     "application": {
       "title": "Loan Application Form",
@@ -594,7 +639,14 @@
       "allowMemberRequests": "Allow member loan requests",
       "lateFeeEnabled": "Late fees enabled (future)",
       "reducingUnavailable": "Reducing-balance interest is not currently available. Please use Flat Interest.",
-      "saveSuccess": "Loan settings saved"
+      "saveSuccess": "Loan settings saved",
+      "shareTiersTitle": "Share-based loan levels",
+      "shareTiersDescription": "The President sets how much a member can borrow from their share of the cooperative. Example: 4% can take 20,000; 2% can take 3,000.",
+      "shareTiersPresidentOnly": "Only the President can add, change, or remove share-based loan levels.",
+      "minSharePercent": "Minimum share %",
+      "tierMaxLoanAmount": "Maximum loan amount",
+      "addShareTier": "Add loan level",
+      "removeShareTier": "Remove loan level"
     },
     "actions": {
       "approve": "Approve",
@@ -663,7 +715,8 @@
       "paymentDate": "Payment date",
       "reference": "Reference",
       "year": "Year",
-      "month": "Month"
+      "month": "Month",
+      "contributionMonth": "Related contribution month"
     },
     "status": {
       "UNPAID": "Unpaid",
@@ -709,6 +762,7 @@
       "dailyIncrement": "Daily increment",
       "graceDays": "Grace days",
       "saveSuccess": "Fine settings saved",
+      "presidentOnly": "Only the President can change the fine configuration.",
       "contributionDueDay": "Contribution due day",
       "editDueDay": "Edit contribution due day",
       "editDueDayHint": "Configured on the cooperative settings page."

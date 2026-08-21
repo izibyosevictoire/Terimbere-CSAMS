@@ -36,4 +36,5 @@ public class LoanApplicationFormResponse {
     private InterestType interestType;
     private LocalDate requestDate;
     private Instant submittedAt;
+    private LoanEligibilityResponse eligibility;
 }

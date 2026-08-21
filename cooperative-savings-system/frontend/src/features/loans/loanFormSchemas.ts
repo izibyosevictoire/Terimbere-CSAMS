@@ -1,5 +1,5 @@
 import * as yup from 'yup'
-import type { InterestType } from '@/shared/types/loan'
+import type { InterestType, LoanGuaranteeMode } from '@/shared/types/loan'
 import type { LoanCreateRequest } from '@/shared/types/loan'
 import type { LoanRepaymentCreateRequest } from '@/shared/types/loan'
 import type { LoanSettingsUpdateRequest } from '@/shared/types/loan'
@@ -20,6 +20,9 @@ export type LoanRequestFormValues = {
   termMonths: string
   purpose: string
   notes: string
+  guaranteeMode: LoanGuaranteeMode
+  guarantorUserId: string
+  guaranteedAmount: string
 }
 
 export const loanRequestDefaults: LoanRequestFormValues = {
@@ -28,6 +31,9 @@ export const loanRequestDefaults: LoanRequestFormValues = {
   termMonths: '',
   purpose: '',
   notes: '',
+  guaranteeMode: 'SELF',
+  guarantorUserId: '',
+  guaranteedAmount: '',
 }
 
 export function loanRequestSchema(requireMember: boolean): yup.ObjectSchema<LoanRequestFormValues> {
@@ -49,6 +55,24 @@ export function loanRequestSchema(requireMember: boolean): yup.ObjectSchema<Loan
       ? yup.string().trim().max(500).default('')
       : yup.string().trim().required('Loan purpose is required').max(500),
     notes: yup.string().trim().max(2000).default(''),
+    guaranteeMode: yup.mixed<LoanGuaranteeMode>().oneOf(['SELF', 'GUARANTOR']).required(),
+    guarantorUserId: yup
+      .string()
+      .trim()
+      .default('')
+      .test('guarantor', 'Select a guarantor', function (value) {
+        if (this.parent.guaranteeMode !== 'GUARANTOR') return true
+        return Boolean(value)
+      }),
+    guaranteedAmount: yup
+      .string()
+      .trim()
+      .default('')
+      .test('guaranteed', 'Enter a valid guaranteed amount', function (value) {
+        if (this.parent.guaranteeMode !== 'GUARANTOR') return true
+        if (!value) return false
+        return /^\d+(\.\d{1,4})?$/.test(value) && Number(value) > 0
+      }),
   })
 }
 
@@ -60,12 +84,21 @@ export function toLoanCreatePayload(
     amount: values.amount.trim(),
     purpose: values.purpose.trim() || undefined,
     notes: values.notes.trim() || undefined,
+    guaranteeMode: values.guaranteeMode,
   }
   if (values.termMonths.trim()) {
     payload.termMonths = Number(values.termMonths.trim())
   }
   if (includeMember && values.memberUserId.trim()) {
     payload.memberUserId = values.memberUserId.trim()
+  }
+  if (values.guaranteeMode === 'GUARANTOR') {
+    if (values.guarantorUserId.trim()) {
+      payload.guarantorUserId = values.guarantorUserId.trim()
+    }
+    if (values.guaranteedAmount.trim()) {
+      payload.guaranteedAmount = values.guaranteedAmount.trim()
+    }
   }
   return payload
 }
@@ -143,6 +176,11 @@ export function toRepaymentPayload(values: RepaymentFormValues): LoanRepaymentCr
   }
 }
 
+export type LoanShareTierFormValues = {
+  minSharePercent: string
+  maxLoanAmount: string
+}
+
 export type LoanSettingsFormValues = {
   interestRatePercent: string
   interestType: InterestType
@@ -151,6 +189,7 @@ export type LoanSettingsFormValues = {
   minMembershipMonths: string
   allowMemberRequests: boolean
   lateFeeEnabled: boolean
+  shareTiers: LoanShareTierFormValues[]
 }
 
 export const loanSettingsDefaults: LoanSettingsFormValues = {
@@ -161,6 +200,7 @@ export const loanSettingsDefaults: LoanSettingsFormValues = {
   minMembershipMonths: '0',
   allowMemberRequests: true,
   lateFeeEnabled: false,
+  shareTiers: [],
 }
 
 export const loanSettingsSchema: yup.ObjectSchema<LoanSettingsFormValues> = yup.object({
@@ -203,12 +243,35 @@ export const loanSettingsSchema: yup.ObjectSchema<LoanSettingsFormValues> = yup.
     }),
   allowMemberRequests: yup.boolean().required(),
   lateFeeEnabled: yup.boolean().required(),
+  shareTiers: yup
+    .array()
+    .of(
+      yup.object({
+        minSharePercent: yup
+          .string()
+          .trim()
+          .required('Share % is required')
+          .test('pct', 'Enter a percentage between 0 and 100', (v) => {
+            if (!v) return false
+            const n = Number(v)
+            return n > 0 && n <= 100
+          }),
+        maxLoanAmount: yup
+          .string()
+          .trim()
+          .required('Loan amount is required')
+          .matches(/^\d+(\.\d{1,4})?$/, 'Enter a valid amount')
+          .test('positive', 'Amount must be greater than 0', (v) => Boolean(v && Number(v) > 0)),
+      }),
+    )
+    .default([]),
 })
 
 export function toLoanSettingsPayload(
   values: LoanSettingsFormValues,
+  includeShareTiers: boolean,
 ): LoanSettingsUpdateRequest {
-  return {
+  const payload: LoanSettingsUpdateRequest = {
     interestRatePercent: values.interestRatePercent.trim(),
     interestType: values.interestType,
     maxLoanAmount: values.maxLoanAmount.trim() || null,
@@ -221,4 +284,11 @@ export function toLoanSettingsPayload(
     allowMemberRequests: values.allowMemberRequests,
     lateFeeEnabled: values.lateFeeEnabled,
   }
+  if (includeShareTiers) {
+    payload.shareTiers = values.shareTiers.map((tier) => ({
+      minSharePercent: tier.minSharePercent.trim(),
+      maxLoanAmount: tier.maxLoanAmount.trim(),
+    }))
+  }
+  return payload
 }

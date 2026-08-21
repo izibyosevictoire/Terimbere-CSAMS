@@ -368,6 +368,14 @@ export function FineDetailPage() {
                 <InfoRow label={t('fines.fields.dueDate')} value={fine.dueDate ?? ''} />
               </Stack>
               <InfoRow label={t('fines.fields.reason')} value={fine.reason ?? ''} />
+              <InfoRow
+                label={t('fines.fields.contributionMonth')}
+                value={
+                  fine.contributionYear && fine.contributionMonth
+                    ? `${fine.contributionYear}-${String(fine.contributionMonth).padStart(2, '0')}`
+                    : '—'
+                }
+              />
               {fine.notes ? (
                 <InfoRow label={t('fines.fields.notes')} value={fine.notes} />
               ) : null}

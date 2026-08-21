@@ -16,6 +16,7 @@ export type MemberFormValues = {
   membershipDate: string
   temporaryPassword: string
   roleInCooperative: RoleInCooperative
+  shareCount: string
 }
 
 const todayIso = () => new Date().toISOString().slice(0, 10)
@@ -43,6 +44,15 @@ const membershipDateSchema = yup
     return value >= '1950-01-01'
   })
 
+const shareCountSchema = yup
+  .string()
+  .trim()
+  .required()
+  .test('shares', 'Share count must be between 1 and 1000', (value) => {
+    const n = Number(value)
+    return Number.isInteger(n) && n >= 1 && n <= 1000
+  })
+
 export const memberFormDefaults: MemberFormValues = {
   firstName: '',
   lastName: '',
@@ -54,6 +64,7 @@ export const memberFormDefaults: MemberFormValues = {
   membershipDate: '',
   temporaryPassword: '',
   roleInCooperative: 'MEMBER',
+  shareCount: '1',
 }
 
 export const memberCreateSchema: yup.ObjectSchema<MemberFormValues> = yup.object({
@@ -79,6 +90,7 @@ export const memberCreateSchema: yup.ObjectSchema<MemberFormValues> = yup.object
     .mixed<RoleInCooperative>()
     .oneOf(['MEMBER', 'PRESIDENT', 'VICE_PRESIDENT', 'SECRETARY', 'ACCOUNTANT', 'LOAN_OFFICER'])
     .required(),
+  shareCount: shareCountSchema,
 })
 
 export const memberUpdateSchema = yup.object({
@@ -93,6 +105,7 @@ export const memberUpdateSchema = yup.object({
     .mixed<RoleInCooperative>()
     .oneOf(['MEMBER', 'PRESIDENT', 'VICE_PRESIDENT', 'SECRETARY', 'ACCOUNTANT', 'LOAN_OFFICER'])
     .required(),
+  shareCount: shareCountSchema,
 })
 
 export type MemberUpdateFormValues = Omit<
@@ -112,6 +125,7 @@ export function toMemberCreatePayload(values: MemberFormValues): MemberCreateReq
     membershipDate: values.membershipDate.trim() || undefined,
     temporaryPassword: values.temporaryPassword.trim() || undefined,
     roleInCooperative: values.roleInCooperative,
+    shareCount: Number(values.shareCount.trim() || '1'),
   }
 }
 
@@ -125,5 +139,6 @@ export function toMemberUpdatePayload(values: MemberUpdateFormValues): MemberUpd
     address: values.address.trim() || undefined,
     membershipDate: values.membershipDate.trim() || undefined,
     roleInCooperative: values.roleInCooperative,
+    shareCount: Number(values.shareCount.trim() || '1'),
   }
 }

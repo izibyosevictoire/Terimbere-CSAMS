@@ -54,6 +54,7 @@ function fromMember(member: Member): MemberFormValues {
     membershipDate: member.membershipDate ?? '',
     temporaryPassword: '',
     roleInCooperative: normalizeRoleInCooperative(member.roleInCooperative),
+    shareCount: String(member.shareCount ?? 1),
   }
 }
 
@@ -123,6 +124,7 @@ export function MemberFormDialog({
       address: values.address,
       membershipDate: values.membershipDate,
       roleInCooperative: values.roleInCooperative,
+      shareCount: values.shareCount,
     }
     onUpdate?.(toMemberUpdatePayload(updateValues))
   })
@@ -281,6 +283,13 @@ export function MemberFormDialog({
                     error={Boolean(errors.membershipDate)}
                     helperText={errors.membershipDate?.message}
                     {...register('membershipDate')}
+                  />
+                  <TextField
+                    label={t('members.fields.shareCount')}
+                    fullWidth
+                    error={Boolean(errors.shareCount)}
+                    helperText={errors.shareCount?.message || t('members.fields.shareCountHint')}
+                    {...register('shareCount')}
                   />
                   <TextField
                     label={t('members.fields.address')}

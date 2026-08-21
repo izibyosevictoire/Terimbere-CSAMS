@@ -157,6 +157,55 @@ class FineControllerIntegrationTest {
     }
 
     @Test
+    void changingFineSettingsDoesNotAlterHistoricalAutomaticFine() throws Exception {
+        persistPendingContribution(2026, 1);
+        MvcResult first = mockMvc.perform(post(
+                                "/api/v1/cooperatives/" + cooperativeId + "/fines/generate-automatic")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"year":2026,"month":1}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.created[0].totalAmount").value(500.0))
+                .andReturn();
+        UUID firstFineId = UUID.fromString(objectMapper
+                .readTree(first.getResponse().getContentAsString())
+                .path("data")
+                .path("created")
+                .get(0)
+                .path("id")
+                .asText());
+
+        mockMvc.perform(put("/api/v1/cooperatives/" + cooperativeId + "/fine-settings")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "autoFinesEnabled": true,
+                                  "fineMode": "FIXED",
+                                  "baseFineAmount": 900.0000,
+                                  "dailyIncrement": 25.0000,
+                                  "graceDays": 0
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        persistPendingContribution(2026, 2);
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/fines/generate-automatic")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"year":2026,"month":2}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.created[0].totalAmount").value(900.0));
+
+        Fine historical = fineRepository.findById(firstFineId).orElseThrow();
+        assertThat(historical.getTotalAmount()).isEqualByComparingTo("500.0000");
+    }
+
+    @Test
     void manualFine_paymentSubmitApprove_updatesOutstandingAndLedger() throws Exception {
         UUID fineId = createManualFine(1000.0000);
 

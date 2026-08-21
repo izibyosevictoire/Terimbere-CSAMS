@@ -464,6 +464,107 @@ class ContributionControllerIntegrationTest {
                 .andExpect(jsonPath("$.data.paidAmount").value(0.0));
     }
 
+    @Test
+    void shareCountScalesExpectedAmount_andPartialPaymentRemaining() throws Exception {
+        String twoShareUser = "shares_" + UUID.randomUUID().toString().substring(0, 8);
+        MvcResult register = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/members")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName":"Two",
+                                  "lastName":"Shares",
+                                  "username":"%s",
+                                  "email":"%s@test.local",
+                                  "roleInCooperative":"MEMBER",
+                                  "shareCount": 2
+                                }
+                                """.formatted(twoShareUser, twoShareUser)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.shareCount").value(2))
+                .andReturn();
+        UUID twoShareId = UUID.fromString(objectMapper
+                .readTree(register.getResponse().getContentAsString())
+                .path("data")
+                .path("userId")
+                .asText());
+        String twoSharePassword = objectMapper
+                .readTree(register.getResponse().getContentAsString())
+                .path("data")
+                .path("temporaryPassword")
+                .asText();
+        String token = loginAccessToken(twoShareUser, twoSharePassword);
+
+        mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/contributions/my/period-preview")
+                        .header("Authorization", "Bearer " + token)
+                        .param("year", "2026")
+                        .param("month", "6"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.shareCount").value(2))
+                .andExpect(jsonPath("$.data.requiredAmount").value(2000.0))
+                .andExpect(jsonPath("$.data.remainingAmount").value(2000.0));
+
+        MvcResult submit = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/contributions/submissions")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "year": 2026,
+                                  "month": 6,
+                                  "amount": 800.0000,
+                                  "paymentDate": "2026-06-04",
+                                  "paymentReference": "PARTIAL-1"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.shareCount").value(2))
+                .andExpect(jsonPath("$.data.expectedAmount").value(2000.0))
+                .andExpect(jsonPath("$.data.submittedAmount").value(800.0))
+                .andExpect(jsonPath("$.data.remainingAmount").value(2000.0))
+                .andReturn();
+        UUID contributionId = UUID.fromString(objectMapper
+                .readTree(submit.getResponse().getContentAsString())
+                .path("data")
+                .path("id")
+                .asText());
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/contributions/" + contributionId + "/approve")
+                        .header("Authorization", "Bearer " + superAdminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("PARTIALLY_PAID"))
+                .andExpect(jsonPath("$.data.paidAmount").value(800.0))
+                .andExpect(jsonPath("$.data.remainingAmount").value(1200.0));
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/contributions/submissions")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "year": 2026,
+                                  "month": 6,
+                                  "amount": 1200.0000,
+                                  "paymentDate": "2026-06-08"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.reviewStatus").value("PENDING"));
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/contributions/submissions")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "year": 2026,
+                                  "month": 6,
+                                  "amount": 1.0000,
+                                  "paymentDate": "2026-06-09"
+                                }
+                                """))
+                .andExpect(status().isUnprocessableEntity());
+
+        assertThat(twoShareId).isNotNull();
+    }
+
     private String loginAccessToken(String username, String password) throws Exception {
         MvcResult login = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

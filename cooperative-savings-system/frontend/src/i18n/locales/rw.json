@@ -367,7 +367,9 @@
       "temporaryPassword": "Ijambo ry'ibanga rya vuba",
       "roleInCooperative": "Inshingano mu koperative",
       "membershipStatus": "Imiterere y'ubwiyungiro",
-      "accountStatus": "Imiterere ya konti"
+      "accountStatus": "Imiterere ya konti",
+      "shareCount": "Imigabane",
+      "shareCountHint": "Umubare w'imigabane uyu munyamuryango afite."
     },
     "roleAssignHint": "Hitamo inshingano y'uyu muntu. Icyo akora kigaragara munsi y'inshingano.",
     "roleAssignLocked": "Perezida cyangwa Visi Perezida ni bo bahindura inshingano.",
@@ -409,7 +411,10 @@
       "notes": "Inyandiko",
       "month": "Ukwezi",
       "year": "Umwaka",
-      "period": "Igihe"
+      "period": "Igihe",
+      "shares": "Imigabane",
+      "required": "Ikiteganywa",
+      "remaining": "Asigaye"
     },
     "status": {
       "PENDING": "Bitegereje",
@@ -425,16 +430,23 @@
     },
     "submit": {
       "title": "Tanga amafaranga y'ukwezi",
-      "description": "Andika amafaranga wishyuye. Umubitsi / Treasurer azasuzuma icyemezo mbere y'uko bibarwa.",
+      "description": "Hitamo ukwezi wishyurira. Amafaranga asabwa abarwa hashingiwe ku migabane yawe.",
       "action": "Tanga amafaranga y'ukwezi",
       "proof": "Icyemezo cyo kwishyura",
       "uploadProof": "Shyira ifoto",
-      "proofHint": "Ifoto cyangwa recu y'ubwishyu (bitari ngombwa).",
+      "proofHint": "Shyira ifoto cyangwa recu y'ubwishyu.",
       "uploadFailed": "Ntibishoboye kohereza icyemezo.",
       "success": "Amafaranga yoherejwe kugira ngo umubitsi ayasuzume",
       "amountRequired": "Amafaranga arakenewe",
       "amountInvalid": "Andika umubare wemewe",
-      "dateRequired": "Itariki irakenewe"
+      "dateRequired": "Itariki irakenewe",
+      "paymentMonth": "Wishyura ukwezi ki?",
+      "shares": "Umubare w'imigabane",
+      "required": "Amafaranga asabwa",
+      "alreadyPaid": "Amafaranga yamaze kwishyurwa",
+      "payingNow": "Amafaranga wishyura none",
+      "remaining": "Asigaye",
+      "amountPaidNow": "Amafaranga wishyuye none"
     },
     "approvals": {
       "title": "Amafaranga y'ukwezi ategereje",
@@ -508,7 +520,8 @@
       "request": "Saba inguzanyo",
       "issue": "Tanga inguzanyo",
       "settings": "Igenamiterere",
-      "approvals": "Kwemeza inguzanyo"
+      "approvals": "Kwemeza inguzanyo",
+      "guarantor": "Kwishingira"
     },
     "emptyTitle": "Nta nguzanyo zibonetse",
     "emptyDescription": "Saba cyangwa utange inguzanyo ku munyamuryango.",
@@ -566,7 +579,39 @@
       "requestSuccess": "Icyifuzo cyoherejwe",
       "issueSuccess": "Inguzanyo yarakozwe",
       "memberRequestsDisabled": "Gusaba inguzanyo ntibyemewe muri iki koperative.",
-      "settingsHint": "Igenamiterere: {{rate}}% {{type}}, ntarengwa {{maxAmount}}, amezi {{maxTerm}}."
+      "settingsHint": "Igenamiterere: {{rate}}% {{type}}, ntarengwa {{maxAmount}}, amezi {{maxTerm}}.",
+      "guaranteeMode": "Ubwoko bw'inguzanyo",
+      "guaranteeModeSelf": "Inguzanyo kuwawe",
+      "guaranteeModeGuarantor": "Inguzanyo ifite umwishingizi"
+    },
+    "eligibility": {
+      "existingAmount": "Inguzanyo isanzweho",
+      "repaid": "Ayamaze kwishyurwa",
+      "outstanding": "Asigaye ku nguzanyo",
+      "requested": "Inguzanyo nshya isabwe",
+      "shares": "Imigabane",
+      "maxByShares": "Urwego rw'inguzanyo ku migabane yawe",
+      "maxEligible": "Ntarengwa ushobora gusaba"
+    },
+    "guarantor": {
+      "guarantor": "Umwishingizi",
+      "guaranteedAmount": "Amafaranga yishingiwe",
+      "borrower": "Usaba",
+      "response": "Igisubizo cy'umwishingizi",
+      "requestedAt": "Igihe cyasabwe",
+      "respondedAt": "Igihe cyasubijwe",
+      "accept": "Emera",
+      "reject": "Anga",
+      "acceptSuccess": "Wemeye kwishingira",
+      "rejectSuccess": "Wanze kwishingira",
+      "description": "Abanyamuryango basabye ko ubishingira.",
+      "emptyTitle": "Nta busabe bwo kwishingira",
+      "emptyDescription": "Iyo umunyamuryango agusaba kumwishingira, icyifuzo kigaragara hano.",
+      "status": {
+        "PENDING": "Bitegereje",
+        "ACCEPTED": "Byemejwe",
+        "REJECTED": "Byanzwe"
+      }
     },
     "application": {
       "title": "Ifishi yo gusaba inguzanyo",
@@ -586,7 +631,14 @@
       "allowMemberRequests": "Emera abanyamuryango gusaba",
       "lateFeeEnabled": "Amahane yatinze (hazaza)",
       "reducingUnavailable": "Inyungu igabanuka ntabwo ihari ubu. Koresha Flat Interest.",
-      "saveSuccess": "Igenamiterere ryabitswe"
+      "saveSuccess": "Igenamiterere ryabitswe",
+      "shareTiersTitle": "Inguzanyo zishingiye ku migabane",
+      "shareTiersDescription": "Perezida ashyiraho umubare umunyamuryango ashobora kwaka hashingiwe ku migabane ye. Urugero: 4% afata 20,000; 2% afata 3,000.",
+      "shareTiersPresidentOnly": "Perezida wenyine ni we ushobora kongeramo, guhindura, cyangwa gukuraho aya marwego.",
+      "minSharePercent": "Ijanisha ry'imigabane ntarengwa",
+      "tierMaxLoanAmount": "Amafaranga ntarengwa y'inguzanyo",
+      "addShareTier": "Ongeramo urwego",
+      "removeShareTier": "Kuraho urwego"
     },
     "actions": {
       "approve": "Emera",
@@ -655,7 +707,8 @@
       "paymentDate": "Itariki yo kwishyura",
       "reference": "Referansi",
       "year": "Umwaka",
-      "month": "Ukwezi"
+      "month": "Ukwezi",
+      "contributionMonth": "Ukwezi kw'amafaranga"
     },
     "status": {
       "UNPAID": "Atishyuwe",
@@ -700,7 +753,8 @@
       "baseFineAmount": "Amafaranga ya mbere",
       "dailyIncrement": "Iyongera rya buri munsi",
       "graceDays": "Iminsi y'ubwitonzi",
-      "saveSuccess": "Igenamiterere ryabitswe"
+      "saveSuccess": "Igenamiterere ryabitswe",
+      "presidentOnly": "Perezida ni we wenyine ushobora guhindura igenamiterere ry'amahane."
     },
     "actions": {
       "waive": "Babura",

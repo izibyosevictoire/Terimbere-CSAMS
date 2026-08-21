@@ -2,22 +2,29 @@ import {
   Alert,
   Box,
   Button,
+  MenuItem,
   Stack,
   TextField,
   Typography,
 } from '@mui/material'
 import { yupResolver } from '@hookform/resolvers/yup'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSnackbar } from 'notistack'
 import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import * as yup from 'yup'
 import { getErrorMessage } from '@/shared/api/client'
-import { submitRegularContribution } from '@/shared/api/contributions'
+import {
+  fetchContributionPeriodPreview,
+  submitRegularContribution,
+} from '@/shared/api/contributions'
 import { uploadCooperativeFile } from '@/shared/api/files'
+import { formatMoney } from '@/shared/utils/formatMoney'
 
 interface FormValues {
+  year: string
+  month: string
   amount: string
   paymentDate: string
   paymentReference: string
@@ -25,7 +32,19 @@ interface FormValues {
   notes: string
 }
 
+function currentPeriod(): { year: string; month: string } {
+  const now = new Date()
+  return {
+    year: String(now.getFullYear()),
+    month: String(now.getMonth() + 1),
+  }
+}
+
+const period = currentPeriod()
+
 const defaults: FormValues = {
+  year: period.year,
+  month: period.month,
   amount: '',
   paymentDate: new Date().toISOString().slice(0, 10),
   paymentReference: '',
@@ -49,6 +68,8 @@ export function MemberContributionSubmitPanel({
   const schema = useMemo(
     () =>
       yup.object({
+        year: yup.string().trim().required(),
+        month: yup.string().trim().required(),
         amount: yup
           .string()
           .trim()
@@ -75,6 +96,20 @@ export function MemberContributionSubmitPanel({
   })
 
   const evidenceKey = watch('evidenceFileKey')
+  const year = Number(watch('year'))
+  const month = Number(watch('month'))
+  const amount = watch('amount')
+
+  const previewQuery = useQuery({
+    queryKey: ['contributions', 'period-preview', cooperativeId, year, month],
+    queryFn: () => fetchContributionPeriodPreview(cooperativeId, year, month),
+    enabled: Boolean(cooperativeId && year && month),
+  })
+
+  const preview = previewQuery.data
+  const remaining = Number(preview?.remainingAmount ?? 0)
+  const payingNow = Number(amount || 0)
+  const remainingAfter = Math.max(0, remaining - payingNow)
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) =>
@@ -92,6 +127,8 @@ export function MemberContributionSubmitPanel({
   const submitMutation = useMutation({
     mutationFn: (values: FormValues) =>
       submitRegularContribution(cooperativeId, {
+        year: Number(values.year),
+        month: Number(values.month),
         amount: values.amount.trim(),
         paymentDate: values.paymentDate.trim(),
         paymentReference: values.paymentReference.trim() || undefined,
@@ -100,7 +137,7 @@ export function MemberContributionSubmitPanel({
       }),
     onSuccess: () => {
       enqueueSnackbar(t('contributions.submit.success'), { variant: 'success' })
-      reset(defaults)
+      reset({ ...defaults, year: String(year), month: String(month) })
       setUploadedName(null)
       void queryClient.invalidateQueries({ queryKey: ['contributions'] })
       void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
@@ -109,6 +146,8 @@ export function MemberContributionSubmitPanel({
       enqueueSnackbar(getErrorMessage(error, t('errors.generic')), { variant: 'error' })
     },
   })
+
+  const years = Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - 2 + i)
 
   return (
     <Box
@@ -130,7 +169,72 @@ export function MemberContributionSubmitPanel({
       </Typography>
       <Stack spacing={2}>
         <TextField
-          label={t('contributions.fields.paid')}
+          select
+          label={t('contributions.submit.paymentMonth')}
+          error={Boolean(errors.month)}
+          {...register('month')}
+          fullWidth
+        >
+          {Array.from({ length: 12 }, (_, i) => i + 1).map((value) => (
+            <MenuItem key={value} value={String(value)}>
+              {t(`contributions.months.${value}`, {
+                defaultValue: new Date(2000, value - 1, 1).toLocaleString(undefined, {
+                  month: 'long',
+                }),
+              })}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          select
+          label={t('contributions.fields.year')}
+          error={Boolean(errors.year)}
+          {...register('year')}
+          fullWidth
+        >
+          {years.map((value) => (
+            <MenuItem key={value} value={String(value)}>
+              {value}
+            </MenuItem>
+          ))}
+        </TextField>
+        {previewQuery.data ? (
+          <Alert severity={preview?.canSubmit === false ? 'warning' : 'info'}>
+            <Stack spacing={0.5}>
+              <Typography variant="body2">
+                {t('contributions.submit.shares')}: {preview?.shareCount}
+              </Typography>
+              <Typography variant="body2">
+                {t('contributions.submit.required')}: {formatMoney(preview?.requiredAmount ?? 0)}
+              </Typography>
+              <Typography variant="body2">
+                {t('contributions.submit.alreadyPaid')}: {formatMoney(preview?.paidAmount ?? 0)}
+              </Typography>
+              <Typography variant="body2">
+                {t('contributions.submit.payingNow')}: {formatMoney(payingNow || 0)}
+              </Typography>
+              <Typography variant="body2">
+                {t('contributions.submit.remaining')}: {formatMoney(remainingAfter)}
+              </Typography>
+              <Typography variant="body2">
+                {t('contributions.submit.paymentMonth')}: {preview?.year}-
+                {String(preview?.month).padStart(2, '0')}
+              </Typography>
+              <Typography variant="body2">
+                {t('contributions.fields.status')}:{' '}
+                {preview?.reviewStatus
+                  ? t(`contributions.reviewStatus.${preview.reviewStatus}`, {
+                      defaultValue: String(preview.reviewStatus),
+                    })
+                  : t(`contributions.status.${preview?.status}`, {
+                      defaultValue: String(preview?.status ?? 'PENDING'),
+                    })}
+              </Typography>
+            </Stack>
+          </Alert>
+        ) : null}
+        <TextField
+          label={t('contributions.submit.amountPaidNow')}
           error={Boolean(errors.amount)}
           helperText={errors.amount?.message}
           {...register('amount')}
@@ -189,7 +293,11 @@ export function MemberContributionSubmitPanel({
           multiline
           minRows={2}
         />
-        <Button type="submit" variant="contained" disabled={submitMutation.isPending}>
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={submitMutation.isPending || preview?.canSubmit === false}
+        >
           {t('contributions.submit.action')}
         </Button>
       </Stack>
