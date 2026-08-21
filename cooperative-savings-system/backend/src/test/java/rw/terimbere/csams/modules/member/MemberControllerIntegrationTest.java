@@ -146,7 +146,7 @@ class MemberControllerIntegrationTest {
                                 }
                                 """.formatted(username, username)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.roleInCooperative").value("COOPERATIVE_ADMIN"))
+                .andExpect(jsonPath("$.data.roleInCooperative").value("PRESIDENT"))
                 .andExpect(jsonPath("$.data.temporaryPassword").isNotEmpty());
     }
 

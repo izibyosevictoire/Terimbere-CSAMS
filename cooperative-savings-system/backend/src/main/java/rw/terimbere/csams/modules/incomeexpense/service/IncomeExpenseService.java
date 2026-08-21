@@ -24,6 +24,7 @@ import rw.terimbere.csams.modules.incomeexpense.entity.LedgerEffect;
 import rw.terimbere.csams.modules.incomeexpense.repository.IncomeExpenseTransactionRepository;
 import rw.terimbere.csams.modules.ledger.service.LedgerService;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
+import rw.terimbere.csams.security.CooperativeOfficerRoles;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.auditing.AuditableAction;
 import rw.terimbere.csams.shared.common.dto.PageResponse;
@@ -119,6 +120,7 @@ public class IncomeExpenseService {
         Cooperative cooperative = requireCooperative(cooperativeId);
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
+        CooperativeOfficerRoles.requireFundAuthorize(principal);
         IncomeExpenseTransaction tx = requireTransaction(cooperativeId, transactionId);
 
         if (tx.getApprovalStatus() != IncomeExpenseApprovalStatus.PENDING) {

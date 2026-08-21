@@ -75,7 +75,7 @@ public class PayoutController {
     }
 
     @PostMapping("/{runId}/confirm")
-    @PreAuthorize("hasAuthority('PAYOUT_WRITE')")
+    @PreAuthorize("hasAuthority('FUND_AUTHORIZE')")
     @Operation(summary = "Confirm PREVIEWED run: post MEMBER_PAYOUT ledger debits and freeze amounts")
     public ResponseEntity<ApiResponse<PayoutRunResponse>> confirm(
             @PathVariable UUID cooperativeId,

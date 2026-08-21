@@ -20,7 +20,11 @@ import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectIsCooperativeAdmin } from '@/app/store/authSlice'
+import {
+  selectCanApproveLoans,
+  selectCanAuthorizeFunds,
+  selectCanRecordLoans,
+} from '@/app/store/authSlice'
 import {
   RepaymentDialog,
   canShowApprove,
@@ -78,7 +82,9 @@ export function LoanDetailPage() {
   const queryClient = useQueryClient()
   const { enqueueSnackbar } = useSnackbar()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
-  const isAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const canApproveLoans = useAppSelector(selectCanApproveLoans)
+  const canRecordLoans = useAppSelector(selectCanRecordLoans)
+  const canAuthorizeFunds = useAppSelector(selectCanAuthorizeFunds)
 
   const [confirmAction, setConfirmAction] = useState<
     'approve' | 'disburse' | 'writeOff' | null
@@ -375,7 +381,7 @@ export function LoanDetailPage() {
               useFlexGap
               sx={{ mt: 2.5, flexWrap: 'wrap' }}
             >
-              {canShowApprove(status, isAdmin) ? (
+              {canShowApprove(status, canApproveLoans) ? (
                 <Button
                   variant="contained"
                   onClick={() => {
@@ -392,7 +398,7 @@ export function LoanDetailPage() {
                   {t('loans.actions.approve')}
                 </Button>
               ) : null}
-              {canShowReject(status, isAdmin) ? (
+              {canShowReject(status, canApproveLoans) ? (
                 <Button
                   variant="outlined"
                   color="error"
@@ -401,17 +407,17 @@ export function LoanDetailPage() {
                   {t('loans.actions.reject')}
                 </Button>
               ) : null}
-              {canShowDisburse(status, isAdmin) ? (
+              {canShowDisburse(status, canRecordLoans) ? (
                 <Button variant="contained" onClick={() => setConfirmAction('disburse')}>
                   {t('loans.actions.disburse')}
                 </Button>
               ) : null}
-              {canShowRepayment(status, isAdmin) ? (
+              {canShowRepayment(status, canRecordLoans) ? (
                 <Button variant="contained" onClick={() => setRepayOpen(true)}>
                   {t('loans.repayment.record')}
                 </Button>
               ) : null}
-              {canShowWriteOff(status, isAdmin) ? (
+              {canShowWriteOff(status, canAuthorizeFunds) ? (
                 <Button
                   variant="outlined"
                   color="warning"

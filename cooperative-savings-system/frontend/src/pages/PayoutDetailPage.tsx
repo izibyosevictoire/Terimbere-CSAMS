@@ -17,7 +17,10 @@ import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectIsCooperativeAdmin } from '@/app/store/authSlice'
+import {
+  selectCanAuthorizeFunds,
+  selectCanPreparePayouts,
+} from '@/app/store/authSlice'
 import {
   canCancelPayout,
   canConfirmPayout,
@@ -64,7 +67,8 @@ export function PayoutDetailPage() {
   const queryClient = useQueryClient()
   const { enqueueSnackbar } = useSnackbar()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
-  const isAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const canAuthorizeFunds = useAppSelector(selectCanAuthorizeFunds)
+  const canPreparePayouts = useAppSelector(selectCanPreparePayouts)
   const statementRef = useRef<HTMLDivElement>(null)
 
   const [confirmAction, setConfirmAction] = useState<'confirm' | 'markPaid' | 'cancel' | null>(
@@ -318,17 +322,17 @@ export function PayoutDetailPage() {
         ) : null}
 
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
-          {canConfirmPayout(status, isAdmin) ? (
+          {canConfirmPayout(status, canAuthorizeFunds) ? (
             <Button variant="contained" onClick={() => setConfirmAction('confirm')}>
               {t('payouts.actions.confirm')}
             </Button>
           ) : null}
-          {canMarkPaidPayout(status, isAdmin) ? (
+          {canMarkPaidPayout(status, canPreparePayouts) ? (
             <Button variant="contained" onClick={() => setConfirmAction('markPaid')}>
               {t('payouts.actions.markPaid')}
             </Button>
           ) : null}
-          {canCancelPayout(status, isAdmin) ? (
+          {canCancelPayout(status, canPreparePayouts) ? (
             <Button
               color="warning"
               variant="outlined"

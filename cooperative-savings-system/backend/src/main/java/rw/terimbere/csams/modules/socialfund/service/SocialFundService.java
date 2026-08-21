@@ -33,6 +33,7 @@ import rw.terimbere.csams.modules.socialfund.entity.SocialDisbursementStatus;
 import rw.terimbere.csams.modules.socialfund.repository.SocialContributionRepository;
 import rw.terimbere.csams.modules.socialfund.repository.SocialDisbursementRepository;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
+import rw.terimbere.csams.security.CooperativeOfficerRoles;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.auditing.AuditableAction;
 import rw.terimbere.csams.shared.common.dto.PageResponse;
@@ -318,6 +319,7 @@ public class SocialFundService {
         Cooperative cooperative = requireCooperative(cooperativeId);
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
+        CooperativeOfficerRoles.requireFundAuthorize(principal);
 
         SocialDisbursement disbursement = requireDisbursement(cooperativeId, disbursementId);
         if (disbursement.getStatus() == SocialDisbursementStatus.APPROVED) {

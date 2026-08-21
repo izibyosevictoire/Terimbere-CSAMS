@@ -1,6 +1,18 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { AuthStatus, AuthUser } from '@/shared/types/auth'
-import { ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN } from '@/shared/types/auth'
+import {
+  hasPermission,
+  isLeadershipRole,
+  isOfficerRole,
+  PERMISSION_CONTRIBUTION_WRITE,
+  PERMISSION_FINE_WRITE,
+  PERMISSION_FUND_AUTHORIZE,
+  PERMISSION_LOAN_APPROVE,
+  PERMISSION_LOAN_WRITE,
+  PERMISSION_MEMBERSHIP_MANAGE,
+  PERMISSION_PAYOUT_WRITE,
+  ROLE_SUPER_ADMIN,
+} from '@/shared/types/auth'
 
 /**
  * Access tokens live in Redux memory only (not localStorage).
@@ -66,10 +78,28 @@ export const selectIsAuthenticated = (state: { auth: AuthState }) =>
   state.auth.status === 'authenticated'
 export const selectIsSuperAdmin = (state: { auth: AuthState }) =>
   state.auth.user?.roles.includes(ROLE_SUPER_ADMIN) ?? false
-/** Super Admin or Cooperative Admin — may manage cooperative operations. */
+/** Any cooperative officer or Super Admin — operational staff chrome. */
 export const selectIsCooperativeAdmin = (state: { auth: AuthState }) =>
-  state.auth.user?.roles.some(
-    (role) => role === ROLE_COOPERATIVE_ADMIN || role === ROLE_SUPER_ADMIN,
-  ) ?? false
+  isOfficerRole(state.auth.user?.roles) ||
+  (state.auth.user?.roles.includes(ROLE_SUPER_ADMIN) ?? false)
+export const selectIsLeadership = (state: { auth: AuthState }) =>
+  isLeadershipRole(state.auth.user?.roles)
+export const selectCanManageMembers = (state: { auth: AuthState }) =>
+  hasPermission(state.auth.user, PERMISSION_MEMBERSHIP_MANAGE)
+export const selectCanApproveLoans = (state: { auth: AuthState }) =>
+  hasPermission(state.auth.user, PERMISSION_LOAN_APPROVE)
+export const selectCanRecordLoans = (state: { auth: AuthState }) =>
+  hasPermission(state.auth.user, PERMISSION_LOAN_WRITE)
+export const selectCanAuthorizeFunds = (state: { auth: AuthState }) =>
+  hasPermission(state.auth.user, PERMISSION_FUND_AUTHORIZE)
+export const selectCanPreparePayouts = (state: { auth: AuthState }) =>
+  hasPermission(state.auth.user, PERMISSION_PAYOUT_WRITE)
+export const selectCanRecordContributions = (state: { auth: AuthState }) =>
+  hasPermission(state.auth.user, PERMISSION_CONTRIBUTION_WRITE)
+export const selectCanManageLoans = (state: { auth: AuthState }) =>
+  hasPermission(state.auth.user, PERMISSION_LOAN_APPROVE) ||
+  hasPermission(state.auth.user, PERMISSION_LOAN_WRITE)
+export const selectCanManageFines = (state: { auth: AuthState }) =>
+  hasPermission(state.auth.user, PERMISSION_FINE_WRITE)
 
 export default authSlice.reducer

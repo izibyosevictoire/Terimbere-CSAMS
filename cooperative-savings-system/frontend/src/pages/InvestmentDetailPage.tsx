@@ -21,7 +21,10 @@ import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectIsCooperativeAdmin } from '@/app/store/authSlice'
+import {
+  selectCanAuthorizeFunds,
+  selectIsCooperativeAdmin,
+} from '@/app/store/authSlice'
 import {
   canActivateInvestment,
   canCancelInvestment,
@@ -79,6 +82,7 @@ export function InvestmentDetailPage() {
   const { enqueueSnackbar } = useSnackbar()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
   const isAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const canAuthorizeFunds = useAppSelector(selectCanAuthorizeFunds)
 
   const [confirmAction, setConfirmAction] = useState<'activate' | 'cancel' | null>(null)
   const [returnOpen, setReturnOpen] = useState(false)
@@ -273,7 +277,7 @@ export function InvestmentDetailPage() {
         }
       />
 
-      {canActivateInvestment(status, isAdmin) && fundInsufficient ? (
+      {canActivateInvestment(status, canAuthorizeFunds) && fundInsufficient ? (
         <Alert severity="warning" sx={{ mb: 2 }}>
           {t('investments.activateFundWarning', {
             amount: formatMoney(investment.amount, { currency }),
@@ -282,7 +286,7 @@ export function InvestmentDetailPage() {
         </Alert>
       ) : null}
 
-      {canActivateInvestment(status, isAdmin) && !fundInsufficient && availableFunds != null ? (
+      {canActivateInvestment(status, canAuthorizeFunds) && !fundInsufficient && availableFunds != null ? (
         <Alert severity="info" sx={{ mb: 2 }}>
           {t('investments.activateFundInfo', {
             available: formatMoney(availableFunds, { currency }),
@@ -346,17 +350,17 @@ export function InvestmentDetailPage() {
         ) : null}
 
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
-          {canActivateInvestment(status, isAdmin) ? (
+          {canActivateInvestment(status, canAuthorizeFunds) ? (
             <Button variant="contained" onClick={() => setConfirmAction('activate')}>
               {t('investments.actions.activate')}
             </Button>
           ) : null}
-          {canRecordInvestmentReturn(status, isAdmin) ? (
+          {canRecordInvestmentReturn(status, canAuthorizeFunds) ? (
             <Button variant="contained" onClick={() => setReturnOpen(true)}>
               {t('investments.actions.recordReturn')}
             </Button>
           ) : null}
-          {canRecordInvestmentLoss(status, isAdmin) ? (
+          {canRecordInvestmentLoss(status, canAuthorizeFunds) ? (
             <Button color="error" variant="outlined" onClick={() => setLossOpen(true)}>
               {t('investments.actions.recordLoss')}
             </Button>

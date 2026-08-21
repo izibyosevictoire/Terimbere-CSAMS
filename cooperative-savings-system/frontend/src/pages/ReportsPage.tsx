@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectIsCooperativeAdmin } from '@/app/store/authSlice'
+import { selectCanRecordContributions } from '@/app/store/authSlice'
 import { ContributionImportPanel, ReportsExportPanel } from '@/features/reports'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { PageHeader } from '@/shared/components/PageHeader'
@@ -12,17 +12,17 @@ export function ReportsPage() {
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
-  const isAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const canImport = useAppSelector(selectCanRecordContributions)
   const [tab, setTab] = useState(0)
   const initialReportType = searchParams.get('type') ?? undefined
 
   const tabs = useMemo(() => {
     const items = [{ key: 'reports', label: t('reports.tabs.reports') }]
-    if (isAdmin) {
+    if (canImport) {
       items.push({ key: 'import', label: t('reports.tabs.import') })
     }
     return items
-  }, [isAdmin, t])
+  }, [canImport, t])
 
   if (!cooperativeId) {
     return (
@@ -65,7 +65,7 @@ export function ReportsPage() {
       ) : null}
 
       {activeKey === 'import' ? (
-        <ContributionImportPanel cooperativeId={cooperativeId} isAdmin={isAdmin} />
+        <ContributionImportPanel cooperativeId={cooperativeId} isAdmin={canImport} />
       ) : null}
     </Box>
   )

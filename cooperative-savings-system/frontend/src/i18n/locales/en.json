@@ -338,7 +338,12 @@
     "historyPlaceholderDescription": "Available when those modules go live.",
     "roles": {
       "MEMBER": "Member",
-      "COOPERATIVE_ADMIN": "Cooperative admin"
+      "PRESIDENT": "President",
+      "VICE_PRESIDENT": "Vice President",
+      "SECRETARY": "Secretary",
+      "ACCOUNTANT": "Accountant / Treasurer",
+      "LOAN_OFFICER": "Loan Officer",
+      "COOPERATIVE_ADMIN": "President"
     },
     "fields": {
       "fullName": "Full name",
@@ -1380,7 +1385,12 @@
     "memberBadge": "MEMBER",
     "superAdminBadge": "SUPER ADMIN",
     "SUPER_ADMIN": "Super Admin",
-    "COOPERATIVE_ADMIN": "Cooperative Admin",
-    "MEMBER": "Member"
+    "PRESIDENT": "PRESIDENT",
+    "VICE_PRESIDENT": "VICE PRESIDENT",
+    "SECRETARY": "SECRETARY",
+    "ACCOUNTANT": "ACCOUNTANT",
+    "LOAN_OFFICER": "LOAN OFFICER",
+    "COOPERATIVE_ADMIN": "PRESIDENT",
+    "MEMBER": "MEMBER"
   }
 }

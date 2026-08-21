@@ -32,7 +32,12 @@ import { CooperativeDetailPage } from '@/pages/CooperativeDetailPage'
 import { SystemHealthPage } from '@/pages/SystemHealthPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { ROUTES } from '@/shared/constants/routes'
-import { ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN } from '@/shared/types/auth'
+import {
+  FINANCE_ACCESS_ROLES,
+  LEADERSHIP_ROLES,
+  ROLE_SUPER_ADMIN,
+  SECRETARY_ACCESS_ROLES,
+} from '@/shared/types/auth'
 import { AuthBootstrap } from './AuthBootstrap'
 import { ProtectedRoute } from './ProtectedRoute'
 import { RoleRoute } from './RoleRoute'
@@ -53,9 +58,7 @@ export function AppRouter() {
             <Route element={<AppLayout />}>
               <Route path={ROUTES.dashboard} element={<DashboardPage />} />
               <Route
-                element={
-                  <RoleRoute roles={[ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN]} />
-                }
+                element={<RoleRoute roles={SECRETARY_ACCESS_ROLES} />}
               >
                 <Route path={ROUTES.members} element={<MembersPage />} />
                 <Route path="/members/:userId" element={<MemberDetailPage />} />
@@ -70,17 +73,13 @@ export function AppRouter() {
               <Route path={ROUTES.fines} element={<FinesPage />} />
               <Route path="/fines/:fineId" element={<FineDetailPage />} />
               <Route
-                element={
-                  <RoleRoute roles={[ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN]} />
-                }
+                element={<RoleRoute roles={FINANCE_ACCESS_ROLES} />}
               >
                 <Route path={ROUTES.finePayments} element={<FinePaymentQueuePage />} />
               </Route>
               <Route path={ROUTES.socialFund} element={<SocialFundPage />} />
               <Route
-                element={
-                  <RoleRoute roles={[ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN]} />
-                }
+                element={<RoleRoute roles={FINANCE_ACCESS_ROLES} />}
               >
                 <Route path={ROUTES.investments} element={<InvestmentsPage />} />
                 <Route
@@ -97,11 +96,13 @@ export function AppRouter() {
               <Route path={ROUTES.profile} element={<ProfilePage />} />
               <Route path={ROUTES.changePassword} element={<ChangePasswordPage />} />
               <Route
-                element={
-                  <RoleRoute roles={[ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN]} />
-                }
+                element={<RoleRoute roles={[...LEADERSHIP_ROLES]} />}
               >
                 <Route path={ROUTES.settings} element={<SettingsPage />} />
+              </Route>
+              <Route
+                element={<RoleRoute roles={SECRETARY_ACCESS_ROLES} />}
+              >
                 <Route path={ROUTES.auditLogs} element={<AuditLogsPage />} />
               </Route>
               <Route element={<RoleRoute roles={[ROLE_SUPER_ADMIN]} />}>

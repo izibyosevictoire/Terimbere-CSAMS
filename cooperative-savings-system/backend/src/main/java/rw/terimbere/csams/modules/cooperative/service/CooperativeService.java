@@ -29,6 +29,7 @@ import rw.terimbere.csams.modules.filemanagement.service.FileManagementService;
 import rw.terimbere.csams.modules.membership.entity.CooperativeMembership;
 import rw.terimbere.csams.modules.membership.repository.CooperativeMembershipRepository;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
+import rw.terimbere.csams.security.CooperativeOfficerRoles;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.auditing.AuditableAction;
 import rw.terimbere.csams.shared.common.dto.PageResponse;
@@ -240,8 +241,8 @@ public class CooperativeService {
             return;
         }
         authorizationService.requireMembership(cooperativeId);
-        if (!principal.hasRole("COOPERATIVE_ADMIN") || !principal.hasAuthority("COOPERATIVE_WRITE")) {
-            throw new ForbiddenException("COOPERATIVE_ADMIN with COOPERATIVE_WRITE required");
+        if (!CooperativeOfficerRoles.isLeadership(principal) || !principal.hasAuthority("COOPERATIVE_WRITE")) {
+            throw new ForbiddenException("President or Vice President with COOPERATIVE_WRITE required");
         }
     }
 

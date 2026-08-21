@@ -17,7 +17,14 @@ import SettingsIcon from '@mui/icons-material/Settings'
 import ShowChartIcon from '@mui/icons-material/ShowChart'
 import type { SvgIconComponent } from '@mui/icons-material'
 import { ROUTES } from '@/shared/constants/routes'
-import { ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN } from '@/shared/types/auth'
+import {
+  FINANCE_ACCESS_ROLES,
+  LOAN_OPS_ROLES,
+  ROLE_SUPER_ADMIN,
+  SECRETARY_ACCESS_ROLES,
+  STAFF_ROLES,
+  isOfficerRole,
+} from '@/shared/types/auth'
 
 export interface NavItem {
   labelKey: string
@@ -29,8 +36,13 @@ export interface NavItem {
   group?: 'main' | 'advanced' | 'super'
 }
 
-const STAFF_ROLES = [ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN]
 const SUPER_ADMIN_ROLES = [ROLE_SUPER_ADMIN]
+const LEADERSHIP_NAV_ROLES = [
+  'PRESIDENT',
+  'VICE_PRESIDENT',
+  'COOPERATIVE_ADMIN',
+  ROLE_SUPER_ADMIN,
+]
 
 /** Top-level Dashboard link — all authenticated users. */
 export const dashboardNavItem: NavItem = {
@@ -56,49 +68,49 @@ export const memberNavItems: NavItem[] = [
 
 /** Admin modules shown under Admin ▼ (and in mobile drawer for admins). */
 export const adminModuleNavItems: NavItem[] = [
-  { labelKey: 'nav.members', path: ROUTES.members, icon: GroupsIcon, roles: STAFF_ROLES, group: 'main' },
+  { labelKey: 'nav.members', path: ROUTES.members, icon: GroupsIcon, roles: SECRETARY_ACCESS_ROLES, group: 'main' },
   {
     labelKey: 'nav.contributions',
     path: ROUTES.contributions,
     icon: SavingsIcon,
-    roles: STAFF_ROLES,
+    roles: FINANCE_ACCESS_ROLES,
     group: 'main',
   },
-  { labelKey: 'nav.loans', path: ROUTES.loans, icon: AccountBalanceWalletIcon, roles: STAFF_ROLES, group: 'main' },
-  { labelKey: 'nav.fines', path: ROUTES.fines, icon: GavelIcon, roles: STAFF_ROLES, group: 'main' },
+  { labelKey: 'nav.loans', path: ROUTES.loans, icon: AccountBalanceWalletIcon, roles: LOAN_OPS_ROLES, group: 'main' },
+  { labelKey: 'nav.fines', path: ROUTES.fines, icon: GavelIcon, roles: FINANCE_ACCESS_ROLES, group: 'main' },
   {
     labelKey: 'nav.finePaymentQueue',
     path: ROUTES.finePayments,
     icon: GavelIcon,
-    roles: STAFF_ROLES,
+    roles: FINANCE_ACCESS_ROLES,
     group: 'main',
   },
   {
     labelKey: 'nav.socialDashboard',
     path: ROUTES.socialFund,
     icon: FavoriteIcon,
-    roles: STAFF_ROLES,
+    roles: FINANCE_ACCESS_ROLES,
     group: 'main',
   },
   {
     labelKey: 'nav.investments',
     path: ROUTES.investments,
     icon: ShowChartIcon,
-    roles: STAFF_ROLES,
+    roles: FINANCE_ACCESS_ROLES,
     group: 'main',
   },
   {
     labelKey: 'nav.shareOut',
     path: ROUTES.payouts,
     icon: PaymentsIcon,
-    roles: STAFF_ROLES,
+    roles: FINANCE_ACCESS_ROLES,
     group: 'main',
   },
   {
     labelKey: 'nav.transactions',
     path: ROUTES.transactions,
     icon: ReceiptLongIcon,
-    roles: STAFF_ROLES,
+    roles: FINANCE_ACCESS_ROLES,
     group: 'main',
   },
   {
@@ -119,21 +131,21 @@ export const adminModuleNavItems: NavItem[] = [
     labelKey: 'nav.settings',
     path: ROUTES.settings,
     icon: SettingsIcon,
-    roles: STAFF_ROLES,
+    roles: LEADERSHIP_NAV_ROLES,
     group: 'main',
   },
   {
     labelKey: 'nav.ledger',
     path: ROUTES.ledger,
     icon: MenuBookIcon,
-    roles: STAFF_ROLES,
+    roles: FINANCE_ACCESS_ROLES,
     group: 'advanced',
   },
   {
     labelKey: 'nav.auditLogs',
     path: ROUTES.auditLogs,
     icon: HistoryIcon,
-    roles: STAFF_ROLES,
+    roles: SECRETARY_ACCESS_ROLES,
     group: 'advanced',
   },
   {
@@ -172,7 +184,7 @@ export function canAccessNavItem(item: NavItem, userRoles: string[]): boolean {
 }
 
 export function isCooperativeAdminUser(userRoles: string[]): boolean {
-  return userRoles.includes(ROLE_COOPERATIVE_ADMIN)
+  return isOfficerRole(userRoles)
 }
 
 export function isSuperAdminUser(userRoles: string[]): boolean {

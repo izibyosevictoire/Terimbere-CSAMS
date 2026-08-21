@@ -1,0 +1,59 @@
+package rw.terimbere.csams.security;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+import rw.terimbere.csams.shared.exceptions.ForbiddenException;
+import rw.terimbere.csams.shared.exceptions.ValidationException;
+
+class CooperativeOfficerRolesTest {
+
+    @Test
+    void normalizesLegacyAdminToPresident() {
+        assertThat(CooperativeOfficerRoles.normalize("cooperative_admin")).isEqualTo("PRESIDENT");
+        assertThat(CooperativeOfficerRoles.normalize("VICE_PRESIDENT")).isEqualTo("VICE_PRESIDENT");
+        assertThat(CooperativeOfficerRoles.normalize(null)).isEqualTo("MEMBER");
+    }
+
+    @Test
+    void rejectsUnknownMembershipRole() {
+        assertThatThrownBy(() -> CooperativeOfficerRoles.normalize("TREASURER"))
+                .isInstanceOf(ValidationException.class);
+    }
+
+    @Test
+    void leadershipCanAppointOfficersButNotPresident() {
+        UserPrincipal president = principal(Set.of("PRESIDENT"), Set.of());
+        assertThat(CooperativeOfficerRoles.canAssign(president, "ACCOUNTANT")).isTrue();
+        assertThat(CooperativeOfficerRoles.canAssign(president, "PRESIDENT")).isFalse();
+
+        UserPrincipal secretary =
+                principal(Set.of("SECRETARY", "MEMBER"), Set.of("MEMBERSHIP_MANAGE"));
+        assertThat(CooperativeOfficerRoles.canAssign(secretary, "MEMBER")).isTrue();
+        assertThat(CooperativeOfficerRoles.canAssign(secretary, "ACCOUNTANT")).isFalse();
+    }
+
+    @Test
+    void fundAuthorizeRequiresPermission() {
+        UserPrincipal accountant = principal(Set.of("ACCOUNTANT", "MEMBER"), Set.of("LOAN_WRITE"));
+        assertThatThrownBy(() -> CooperativeOfficerRoles.requireFundAuthorize(accountant))
+                .isInstanceOf(ForbiddenException.class);
+
+        UserPrincipal president =
+                principal(Set.of("PRESIDENT", "MEMBER"), Set.of(CooperativeOfficerRoles.FUND_AUTHORIZE));
+        CooperativeOfficerRoles.requireFundAuthorize(president);
+    }
+
+    private static UserPrincipal principal(Set<String> roles, Set<String> permissions) {
+        return UserPrincipal.builder()
+                .username("tester")
+                .roles(roles)
+                .permissions(permissions)
+                .cooperativeIds(Set.of())
+                .accountNonLocked(true)
+                .enabled(true)
+                .build();
+    }
+}

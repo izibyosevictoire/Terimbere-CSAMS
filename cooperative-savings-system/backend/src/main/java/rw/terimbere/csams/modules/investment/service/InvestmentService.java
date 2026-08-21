@@ -27,6 +27,7 @@ import rw.terimbere.csams.modules.investment.repository.InvestmentRepository;
 import rw.terimbere.csams.modules.investment.repository.InvestmentReturnRepository;
 import rw.terimbere.csams.modules.ledger.service.LedgerService;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
+import rw.terimbere.csams.security.CooperativeOfficerRoles;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.auditing.AuditableAction;
 import rw.terimbere.csams.shared.common.dto.PageResponse;
@@ -115,6 +116,7 @@ public class InvestmentService {
         Cooperative cooperative = requireCooperative(cooperativeId);
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
+        CooperativeOfficerRoles.requireFundAuthorize(principal);
         Investment investment = requireInvestment(cooperativeId, investmentId);
 
         if (investment.getStatus() != InvestmentStatus.PLANNED) {
@@ -206,6 +208,7 @@ public class InvestmentService {
         Cooperative cooperative = requireCooperative(cooperativeId);
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
+        CooperativeOfficerRoles.requireFundAuthorize(principal);
         Investment investment = requireInvestment(cooperativeId, investmentId);
 
         if (investment.getStatus() != InvestmentStatus.ACTIVE
@@ -329,6 +332,7 @@ public class InvestmentService {
         requireCooperative(cooperativeId);
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
+        CooperativeOfficerRoles.requireFundAuthorize(principal);
         Investment investment = requireInvestment(cooperativeId, investmentId);
 
         if (investment.getStatus() != InvestmentStatus.ACTIVE

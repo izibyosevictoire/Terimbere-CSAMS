@@ -76,7 +76,7 @@ public class LoanController {
     }
 
     @PostMapping("/{loanId}/approve")
-    @PreAuthorize("hasAuthority('LOAN_WRITE')")
+    @PreAuthorize("hasAuthority('LOAN_APPROVE')")
     @Operation(summary = "Approve a pending loan")
     public ResponseEntity<ApiResponse<LoanResponse>> approve(
             @PathVariable UUID cooperativeId,
@@ -88,7 +88,7 @@ public class LoanController {
     }
 
     @PostMapping("/{loanId}/reject")
-    @PreAuthorize("hasAuthority('LOAN_WRITE')")
+    @PreAuthorize("hasAuthority('LOAN_APPROVE')")
     @Operation(summary = "Reject a pending loan")
     public ResponseEntity<ApiResponse<LoanResponse>> reject(
             @PathVariable UUID cooperativeId,
@@ -108,7 +108,7 @@ public class LoanController {
     }
 
     @PostMapping("/{loanId}/write-off")
-    @PreAuthorize("hasAuthority('LOAN_WRITE') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('FUND_AUTHORIZE') or hasRole('SUPER_ADMIN')")
     @Operation(summary = "Write off an active/overdue loan")
     public ResponseEntity<ApiResponse<LoanResponse>> writeOff(
             @PathVariable UUID cooperativeId, @PathVariable UUID loanId, HttpServletRequest httpRequest) {

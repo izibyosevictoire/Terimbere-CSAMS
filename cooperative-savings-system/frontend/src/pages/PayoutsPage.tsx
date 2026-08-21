@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectIsCooperativeAdmin } from '@/app/store/authSlice'
+import { selectCanPreparePayouts } from '@/app/store/authSlice'
 import {
   PayoutHistoryPanel,
   PayoutMyPanel,
@@ -16,7 +16,7 @@ export function PayoutsPage() {
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
-  const isAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const isAdmin = useAppSelector(selectCanPreparePayouts)
 
   const tabs = useMemo(() => {
     if (isAdmin) {

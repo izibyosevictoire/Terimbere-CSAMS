@@ -331,7 +331,12 @@
     "historyPlaceholderDescription": "Bizaboneka iyo ayo magice atangiye gukora.",
     "roles": {
       "MEMBER": "Umunyamuryango",
-      "COOPERATIVE_ADMIN": "Umuyobozi w'ikoperative"
+      "PRESIDENT": "Perezida",
+      "VICE_PRESIDENT": "Visi Perezida",
+      "SECRETARY": "Umwanditsi",
+      "ACCOUNTANT": "Umucungamari",
+      "LOAN_OFFICER": "Umukozi w'inguzanyo",
+      "COOPERATIVE_ADMIN": "Perezida"
     },
     "fields": {
       "fullName": "Amazina yuzuye",
@@ -1357,10 +1362,15 @@
   },
   "roles": {
     "adminBadge": "ADMIN",
-    "memberBadge": "MEMBER",
+    "memberBadge": "UMUNYAMURYANGO",
     "superAdminBadge": "SUPER ADMIN",
     "SUPER_ADMIN": "Umuyobozi mukuru",
-    "COOPERATIVE_ADMIN": "Umuyobozi w'ikoperative",
-    "MEMBER": "Umunyamuryango"
+    "PRESIDENT": "PEREZIDA",
+    "VICE_PRESIDENT": "VISI PEREZIDA",
+    "SECRETARY": "UMWANDITSI",
+    "ACCOUNTANT": "UMUCUNGAMARI",
+    "LOAN_OFFICER": "INGUZANYO",
+    "COOPERATIVE_ADMIN": "PEREZIDA",
+    "MEMBER": "UMUNYAMURYANGO"
   }
 }

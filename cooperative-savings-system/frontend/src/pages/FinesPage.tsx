@@ -12,7 +12,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectIsCooperativeAdmin } from '@/app/store/authSlice'
+import { selectCanManageFines } from '@/app/store/authSlice'
 import {
   FineGeneratePanel,
   FineIssuePanel,
@@ -28,7 +28,7 @@ import { ROUTES } from '@/shared/constants/routes'
 export function FinesPage() {
   const { t } = useTranslation()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
-  const isAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const isAdmin = useAppSelector(selectCanManageFines)
   const [tab, setTab] = useState(0)
 
   const summaryQuery = useQuery({

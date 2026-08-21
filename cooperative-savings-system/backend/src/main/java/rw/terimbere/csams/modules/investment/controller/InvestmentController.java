@@ -67,7 +67,7 @@ public class InvestmentController {
     }
 
     @PostMapping("/{investmentId}/activate")
-    @PreAuthorize("hasAuthority('INVESTMENT_WRITE')")
+    @PreAuthorize("hasAuthority('FUND_AUTHORIZE')")
     @Operation(summary = "Activate a PLANNED investment (posts INVESTMENT_OUTFLOW debit)")
     public ResponseEntity<ApiResponse<InvestmentResponse>> activate(
             @PathVariable UUID cooperativeId,
@@ -89,7 +89,7 @@ public class InvestmentController {
     }
 
     @PostMapping("/{investmentId}/returns")
-    @PreAuthorize("hasAuthority('INVESTMENT_WRITE')")
+    @PreAuthorize("hasAuthority('FUND_AUTHORIZE')")
     @Operation(summary = "Record capital and/or profit return")
     public ResponseEntity<ApiResponse<InvestmentReturnResponse>> recordReturn(
             @PathVariable UUID cooperativeId,
@@ -109,7 +109,7 @@ public class InvestmentController {
     }
 
     @PostMapping("/{investmentId}/record-loss")
-    @PreAuthorize("hasAuthority('INVESTMENT_WRITE')")
+    @PreAuthorize("hasAuthority('FUND_AUTHORIZE')")
     @Operation(summary = "Write off remaining capital as LOSS_RECORDED (no capital return credit)")
     public ResponseEntity<ApiResponse<InvestmentResponse>> recordLoss(
             @PathVariable UUID cooperativeId,

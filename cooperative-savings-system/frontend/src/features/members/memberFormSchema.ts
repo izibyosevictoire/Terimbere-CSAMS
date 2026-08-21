@@ -77,7 +77,7 @@ export const memberCreateSchema: yup.ObjectSchema<MemberFormValues> = yup.object
     .test('pwd', 'At least 8 characters if provided', (v) => !v || v.length >= 8),
   roleInCooperative: yup
     .mixed<RoleInCooperative>()
-    .oneOf(['MEMBER', 'COOPERATIVE_ADMIN'])
+    .oneOf(['MEMBER', 'PRESIDENT', 'VICE_PRESIDENT', 'SECRETARY', 'ACCOUNTANT', 'LOAN_OFFICER'])
     .required(),
 })
 
@@ -91,7 +91,7 @@ export const memberUpdateSchema = yup.object({
   membershipDate: membershipDateSchema,
   roleInCooperative: yup
     .mixed<RoleInCooperative>()
-    .oneOf(['MEMBER', 'COOPERATIVE_ADMIN'])
+    .oneOf(['MEMBER', 'PRESIDENT', 'VICE_PRESIDENT', 'SECRETARY', 'ACCOUNTANT', 'LOAN_OFFICER'])
     .required(),
 })
 

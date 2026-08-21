@@ -25,7 +25,7 @@ import { getErrorMessage } from '@/shared/api/client'
 import { fetchHealth } from '@/shared/api/health'
 import { AuthBrand } from '@/shared/components/AuthBrand'
 import { ROUTES } from '@/shared/constants/routes'
-import { ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN } from '@/shared/types/auth'
+import { ROLE_PRESIDENT, ROLE_SUPER_ADMIN } from '@/shared/types/auth'
 import { isPreviewLoginEnabled } from '@/shared/auth/previewLogin'
 
 interface LoginFormValues {
@@ -91,7 +91,7 @@ export function LoginPage() {
           firstName: 'Dev',
           lastName: 'Preview',
           fullName: 'Dev Preview User',
-          roles: [ROLE_COOPERATIVE_ADMIN, ROLE_SUPER_ADMIN],
+          roles: [ROLE_PRESIDENT, ROLE_SUPER_ADMIN],
           permissions: [],
           cooperativeIds: ['demo-coop-1'],
         },

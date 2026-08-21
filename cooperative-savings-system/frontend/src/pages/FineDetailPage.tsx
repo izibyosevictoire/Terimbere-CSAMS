@@ -13,7 +13,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectIsCooperativeAdmin } from '@/app/store/authSlice'
+import { selectCanManageFines } from '@/app/store/authSlice'
 import {
   FinePaymentDialog,
   canApproveFinePayment,
@@ -65,7 +65,7 @@ export function FineDetailPage() {
   const queryClient = useQueryClient()
   const { enqueueSnackbar } = useSnackbar()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
-  const isAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const isAdmin = useAppSelector(selectCanManageFines)
 
   const [confirmAction, setConfirmAction] = useState<'waive' | 'cancel' | null>(null)
   const [paymentOpen, setPaymentOpen] = useState(false)

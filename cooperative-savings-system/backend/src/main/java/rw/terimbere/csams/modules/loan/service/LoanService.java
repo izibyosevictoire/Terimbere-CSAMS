@@ -38,6 +38,7 @@ import rw.terimbere.csams.modules.membership.repository.CooperativeMembershipRep
 import rw.terimbere.csams.modules.user.entity.User;
 import rw.terimbere.csams.modules.user.repository.UserRepository;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
+import rw.terimbere.csams.security.CooperativeOfficerRoles;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.auditing.AuditableAction;
 import rw.terimbere.csams.shared.common.dto.PageResponse;
@@ -210,6 +211,7 @@ public class LoanService {
         requireCooperative(cooperativeId);
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
+        CooperativeOfficerRoles.requireLoanApprove(principal);
         Loan loan = requireLoan(cooperativeId, loanId);
         if (loan.getStatus() != LoanStatus.PENDING) {
             throw new BusinessException("Only PENDING loans can be approved");
@@ -267,6 +269,7 @@ public class LoanService {
         requireCooperative(cooperativeId);
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
+        CooperativeOfficerRoles.requireLoanApprove(principal);
         Loan loan = requireLoan(cooperativeId, loanId);
         if (loan.getStatus() != LoanStatus.PENDING) {
             throw new BusinessException("Only PENDING loans can be rejected");
@@ -380,6 +383,7 @@ public class LoanService {
         requireCooperative(cooperativeId);
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
+        CooperativeOfficerRoles.requireFundAuthorize(principal);
         if (!principal.hasRole(CooperativeAuthorizationService.SUPER_ADMIN)
                 && !principal.hasAuthority("LOAN_WRITE")) {
             throw new ForbiddenException("LOAN_WRITE or SUPER_ADMIN required to write off a loan");

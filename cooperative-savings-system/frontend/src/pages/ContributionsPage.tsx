@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectIsCooperativeAdmin } from '@/app/store/authSlice'
+import { selectCanRecordContributions } from '@/app/store/authSlice'
 import {
   HistoryPanel,
   MonthlyEntryPanel,
@@ -26,7 +26,7 @@ export function ContributionsPage() {
   const { campaignId } = useParams()
   const [searchParams] = useSearchParams()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
-  const isAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const isAdmin = useAppSelector(selectCanRecordContributions)
   const [tab, setTab] = useState(() => initialTabFromQuery(searchParams.get('tab'), isAdmin))
 
   if (!cooperativeId) {

@@ -55,6 +55,7 @@ import rw.terimbere.csams.modules.user.entity.AccountStatus;
 import rw.terimbere.csams.modules.user.entity.User;
 import rw.terimbere.csams.modules.user.repository.UserRepository;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
+import rw.terimbere.csams.security.CooperativeOfficerRoles;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.auditing.AuditableAction;
 import rw.terimbere.csams.shared.common.dto.PageResponse;
@@ -69,7 +70,6 @@ import rw.terimbere.csams.shared.pagination.PageMapper;
 public class MemberService {
 
     private static final String ROLE_MEMBER = "MEMBER";
-    private static final String ROLE_COOP_ADMIN = "COOPERATIVE_ADMIN";
     private static final Set<String> MEMBERSHIP_STATUSES =
             Set.of("ACTIVE", "INACTIVE", "SUSPENDED", "PENDING");
     private static final String PASSWORD_CHARS =
@@ -119,12 +119,8 @@ public class MemberService {
             throw new ConflictException("National ID already exists");
         }
 
-        String roleInCoop = StringUtils.hasText(request.getRoleInCooperative())
-                ? request.getRoleInCooperative().trim().toUpperCase(Locale.ROOT)
-                : ROLE_MEMBER;
-        if (!ROLE_MEMBER.equals(roleInCoop) && !ROLE_COOP_ADMIN.equals(roleInCoop)) {
-            throw new ValidationException("roleInCooperative must be MEMBER or COOPERATIVE_ADMIN");
-        }
+        String roleInCoop = CooperativeOfficerRoles.normalize(request.getRoleInCooperative());
+        assertCanAssignRole(principal, roleInCoop);
 
         boolean generated = !StringUtils.hasText(request.getTemporaryPassword());
         String temporaryPassword =
@@ -132,8 +128,9 @@ public class MemberService {
 
         Set<Role> roles = new HashSet<>();
         roles.add(requireRole(ROLE_MEMBER));
-        if (ROLE_COOP_ADMIN.equals(roleInCoop)) {
-            roles.add(requireRole(ROLE_COOP_ADMIN));
+        String platformRole = CooperativeOfficerRoles.platformRole(roleInCoop);
+        if (platformRole != null) {
+            roles.add(requireRole(platformRole));
         }
 
         User user = User.builder()
@@ -379,10 +376,8 @@ public class MemberService {
             membership.setMembershipDate(request.getMembershipDate());
         }
         if (StringUtils.hasText(request.getRoleInCooperative())) {
-            String roleInCoop = request.getRoleInCooperative().trim().toUpperCase(Locale.ROOT);
-            if (!ROLE_MEMBER.equals(roleInCoop) && !ROLE_COOP_ADMIN.equals(roleInCoop)) {
-                throw new ValidationException("roleInCooperative must be MEMBER or COOPERATIVE_ADMIN");
-            }
+            String roleInCoop = CooperativeOfficerRoles.normalize(request.getRoleInCooperative());
+            assertCanAssignRole(principal, roleInCoop);
             membership.setRoleInCooperative(roleInCoop);
             ensureSystemRoles(user, roleInCoop);
             userRepository.save(user);
@@ -410,7 +405,7 @@ public class MemberService {
             HttpServletRequest httpRequest) {
         requireCooperativeExists(cooperativeId);
         UserPrincipal principal = authorizationService.currentPrincipal();
-        requireMembershipManage(principal, cooperativeId);
+        requireLeadership(principal, cooperativeId);
 
         if (request.getAccountStatus() == null && !StringUtils.hasText(request.getMembershipStatus())) {
             throw new ValidationException("accountStatus or membershipStatus is required");
@@ -518,7 +513,7 @@ public class MemberService {
             temporaryPassword = generated ? generatePassword() : request.getTemporaryPassword();
             Set<Role> roles = new HashSet<>();
             roles.add(requireRole(ROLE_MEMBER));
-            roles.add(requireRole(ROLE_COOP_ADMIN));
+            roles.add(requireRole(CooperativeOfficerRoles.PRESIDENT));
             user = userRepository.save(User.builder()
                     .username(username)
                     .email(email)
@@ -531,7 +526,7 @@ public class MemberService {
                     .build());
         }
 
-        ensureSystemRoles(user, ROLE_COOP_ADMIN);
+        ensureSystemRoles(user, CooperativeOfficerRoles.PRESIDENT);
         userRepository.save(user);
 
         CooperativeMembership membership = membershipRepository
@@ -543,7 +538,7 @@ public class MemberService {
                         .membershipDate(LocalDate.now())
                         .build());
         membership.setMembershipStatus("ACTIVE");
-        membership.setRoleInCooperative(ROLE_COOP_ADMIN);
+        membership.setRoleInCooperative(CooperativeOfficerRoles.PRESIDENT);
         membership = membershipRepository.save(membership);
 
         auditService.record(
@@ -553,7 +548,7 @@ public class MemberService {
                 "User",
                 user.getId(),
                 null,
-                "{\"roleInCooperative\":\"COOPERATIVE_ADMIN\"}",
+                "{\"roleInCooperative\":\"PRESIDENT\"}",
                 clientIp(httpRequest),
                 userAgent(httpRequest));
 
@@ -565,29 +560,38 @@ public class MemberService {
     }
 
     private void requireMembershipManage(UserPrincipal principal, UUID cooperativeId) {
-        if (principal.hasRole(CooperativeAuthorizationService.SUPER_ADMIN)) {
-            if (!principal.hasAuthority("MEMBERSHIP_MANAGE") && !principal.hasAuthority("USER_WRITE")) {
-                throw new ForbiddenException("MEMBERSHIP_MANAGE or USER_WRITE required");
-            }
-            return;
-        }
-        authorizationService.requireMembership(cooperativeId);
-        if (!principal.hasRole(ROLE_COOP_ADMIN)) {
-            throw new ForbiddenException("COOPERATIVE_ADMIN required");
+        if (!principal.hasRole(CooperativeAuthorizationService.SUPER_ADMIN)) {
+            authorizationService.requireMembership(cooperativeId);
         }
         if (!principal.hasAuthority("MEMBERSHIP_MANAGE") && !principal.hasAuthority("USER_WRITE")) {
             throw new ForbiddenException("MEMBERSHIP_MANAGE or USER_WRITE required");
         }
     }
 
+    private void requireLeadership(UserPrincipal principal, UUID cooperativeId) {
+        if (!principal.hasRole(CooperativeAuthorizationService.SUPER_ADMIN)) {
+            authorizationService.requireMembership(cooperativeId);
+        }
+        if (!CooperativeOfficerRoles.isLeadership(principal)) {
+            throw new ForbiddenException("President or Vice President required to change member status");
+        }
+    }
+
+    private void assertCanAssignRole(UserPrincipal principal, String roleInCoop) {
+        if (!CooperativeOfficerRoles.canAssign(principal, roleInCoop)) {
+            throw new ForbiddenException("You cannot assign the " + roleInCoop + " role");
+        }
+    }
+
     private void ensureSystemRoles(User user, String roleInCoop) {
-        Role memberRole = requireRole(ROLE_MEMBER);
         if (user.getRoles() == null) {
             user.setRoles(new HashSet<>());
         }
-        user.getRoles().add(memberRole);
-        if (ROLE_COOP_ADMIN.equals(roleInCoop)) {
-            user.getRoles().add(requireRole(ROLE_COOP_ADMIN));
+        user.getRoles().removeIf(role -> CooperativeOfficerRoles.isOfficerRoleCode(role.getCode()));
+        user.getRoles().add(requireRole(ROLE_MEMBER));
+        String platformRole = CooperativeOfficerRoles.platformRole(roleInCoop);
+        if (platformRole != null) {
+            user.getRoles().add(requireRole(platformRole));
         }
     }
 

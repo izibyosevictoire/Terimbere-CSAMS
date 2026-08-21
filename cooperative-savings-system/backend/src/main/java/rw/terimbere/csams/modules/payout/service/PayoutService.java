@@ -40,6 +40,7 @@ import rw.terimbere.csams.modules.payout.repository.PayoutLineRepository;
 import rw.terimbere.csams.modules.payout.repository.PayoutRunRepository;
 import rw.terimbere.csams.modules.specialcontribution.repository.SpecialContributionRepository;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
+import rw.terimbere.csams.security.CooperativeOfficerRoles;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.auditing.AuditableAction;
 import rw.terimbere.csams.shared.common.dto.PageResponse;
@@ -210,6 +211,7 @@ public class PayoutService {
         Cooperative cooperative = requireCooperative(cooperativeId);
         UserPrincipal principal = authorizationService.currentPrincipal();
         authorizationService.requireMembership(cooperativeId);
+        CooperativeOfficerRoles.requireFundAuthorize(principal);
         PayoutRun run = requireRun(cooperativeId, runId);
 
         if (run.getStatus() != PayoutRunStatus.PREVIEWED) {

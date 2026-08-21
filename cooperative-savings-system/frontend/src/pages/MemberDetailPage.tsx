@@ -20,6 +20,7 @@ import { loanStatusColor } from '@/features/loans'
 import { formatPayoutPercentage, payoutStatusColor } from '@/features/payouts'
 import { socialStatusColor } from '@/features/socialFund'
 import { MemberFormDialog } from '@/features/members/MemberFormDialog'
+import { selectIsLeadership } from '@/app/store/authSlice'
 import { useAppSelector } from '@/app/store/hooks'
 import { fetchContributions } from '@/shared/api/contributions'
 import { fetchFines } from '@/shared/api/fines'
@@ -626,6 +627,7 @@ export function MemberDetailPage() {
   const queryClient = useQueryClient()
   const { enqueueSnackbar } = useSnackbar()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
+  const canChangeStatus = useAppSelector(selectIsLeadership)
   const [editOpen, setEditOpen] = useState(false)
   const [statusTarget, setStatusTarget] = useState<MembershipStatus | null>(null)
   const locationPassword = (location.state as { temporaryPassword?: string } | null)
@@ -805,6 +807,7 @@ export function MemberDetailPage() {
 
           <MemberFinancialSummaryPanel cooperativeId={cooperativeId!} userId={userId} />
 
+          {canChangeStatus ? (
           <Paper
             elevation={0}
             sx={{ p: { xs: 2.5, md: 3 }, border: '1px solid', borderColor: 'divider' }}
@@ -825,6 +828,7 @@ export function MemberDetailPage() {
               ))}
             </Stack>
           </Paper>
+          ) : null}
 
           <MemberContributionsSection cooperativeId={cooperativeId} memberUserId={userId} />
           <MemberLoansSection

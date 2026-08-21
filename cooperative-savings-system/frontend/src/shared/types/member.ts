@@ -1,6 +1,36 @@
 export type MembershipStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'PENDING'
 export type AccountStatus = 'ACTIVE' | 'INACTIVE' | 'LOCKED' | 'PENDING' | 'SUSPENDED'
-export type RoleInCooperative = 'MEMBER' | 'COOPERATIVE_ADMIN'
+export type RoleInCooperative =
+  | 'MEMBER'
+  | 'PRESIDENT'
+  | 'VICE_PRESIDENT'
+  | 'SECRETARY'
+  | 'ACCOUNTANT'
+  | 'LOAN_OFFICER'
+  | 'COOPERATIVE_ADMIN'
+
+export const ROLES_IN_COOPERATIVE: RoleInCooperative[] = [
+  'MEMBER',
+  'PRESIDENT',
+  'VICE_PRESIDENT',
+  'SECRETARY',
+  'ACCOUNTANT',
+  'LOAN_OFFICER',
+]
+
+export function normalizeRoleInCooperative(role: string | null | undefined): RoleInCooperative {
+  if (role === 'COOPERATIVE_ADMIN') return 'PRESIDENT'
+  if (
+    role === 'PRESIDENT' ||
+    role === 'VICE_PRESIDENT' ||
+    role === 'SECRETARY' ||
+    role === 'ACCOUNTANT' ||
+    role === 'LOAN_OFFICER'
+  ) {
+    return role
+  }
+  return 'MEMBER'
+}
 
 export const MEMBERSHIP_STATUSES: MembershipStatus[] = [
   'ACTIVE',

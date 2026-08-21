@@ -18,9 +18,9 @@ import { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectIsSuperAdmin } from '@/app/store/authSlice'
+import { selectIsLeadership, selectIsSuperAdmin } from '@/app/store/authSlice'
 import type { Member } from '@/shared/types/member'
-import { ROLES_IN_COOPERATIVE } from '@/shared/types/member'
+import { ROLES_IN_COOPERATIVE, normalizeRoleInCooperative, type RoleInCooperative } from '@/shared/types/member'
 import {
   memberCreateSchema,
   memberFormDefaults,
@@ -51,8 +51,7 @@ function fromMember(member: Member): MemberFormValues {
     address: member.address ?? '',
     membershipDate: member.membershipDate ?? '',
     temporaryPassword: '',
-    roleInCooperative:
-      member.roleInCooperative === 'COOPERATIVE_ADMIN' ? 'COOPERATIVE_ADMIN' : 'MEMBER',
+    roleInCooperative: normalizeRoleInCooperative(member.roleInCooperative),
   }
 }
 
@@ -75,11 +74,18 @@ export function MemberFormDialog({
   const { t } = useTranslation()
   const isCreate = mode === 'create'
   const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
+  const isLeadership = useAppSelector(selectIsLeadership)
+  const canAssignRoles = isSuperAdmin || isLeadership
   const roleOptions = isSuperAdmin
     ? ROLES_IN_COOPERATIVE
-    : ROLES_IN_COOPERATIVE.filter(
-        (role) => role === 'MEMBER' || role === initial?.roleInCooperative,
-      )
+    : isLeadership
+      ? ROLES_IN_COOPERATIVE.filter((role) => role !== 'PRESIDENT')
+      : Array.from(
+          new Set<RoleInCooperative>([
+            'MEMBER',
+            normalizeRoleInCooperative(initial?.roleInCooperative),
+          ]),
+        )
 
   const {
     register,
@@ -177,6 +183,7 @@ export function MemberFormDialog({
                   select
                   label={t('members.fields.roleInCooperative')}
                   fullWidth
+                  disabled={!canAssignRoles}
                 >
                   {roleOptions.map((role) => (
                     <MenuItem key={role} value={role}>

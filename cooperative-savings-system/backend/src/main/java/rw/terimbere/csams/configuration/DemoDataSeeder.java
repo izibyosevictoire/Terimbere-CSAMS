@@ -93,7 +93,7 @@ public class DemoDataSeeder implements ApplicationRunner {
         }
 
         Role memberRole = requireRole("MEMBER");
-        Role coopAdminRole = requireRole("COOPERATIVE_ADMIN");
+        Role presidentRole = requireRole("PRESIDENT");
 
         Cooperative coop = cooperativeRepository.save(Cooperative.builder()
                 .name("DEMO — Umurenge Savings Group")
@@ -116,7 +116,7 @@ public class DemoDataSeeder implements ApplicationRunner {
                 "demo.admin@terimbere.local",
                 "Demo",
                 "Administrator",
-                Set.of(memberRole, coopAdminRole));
+                Set.of(memberRole, presidentRole));
         List<User> members = List.of(
                 saveUser("demo.jean", "demo.jean@terimbere.local", "Jean", "Uwimana", Set.of(memberRole)),
                 saveUser("demo.aline", "demo.aline@terimbere.local", "Aline", "Mukamana", Set.of(memberRole)),
@@ -128,7 +128,7 @@ public class DemoDataSeeder implements ApplicationRunner {
                         "Ingabire",
                         Set.of(memberRole)));
 
-        addMembership(coop.getId(), admin.getId(), "COOPERATIVE_ADMIN");
+        addMembership(coop.getId(), admin.getId(), "PRESIDENT");
         members.forEach(member -> addMembership(coop.getId(), member.getId(), "MEMBER"));
 
         if (!loanSettingsRepository.existsByCooperativeId(coop.getId())) {

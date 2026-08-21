@@ -151,7 +151,7 @@ public class SocialFundController {
     }
 
     @PostMapping("/disbursements/{disbursementId}/approve")
-    @PreAuthorize("hasAuthority('SOCIAL_WRITE')")
+    @PreAuthorize("hasAuthority('FUND_AUTHORIZE')")
     @Operation(summary = "Approve disbursement if social fund balance is sufficient (posts ledger debit)")
     public ResponseEntity<ApiResponse<SocialDisbursementResponse>> approveDisbursement(
             @PathVariable UUID cooperativeId,

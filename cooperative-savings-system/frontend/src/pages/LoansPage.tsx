@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectIsCooperativeAdmin } from '@/app/store/authSlice'
+import { selectCanManageLoans } from '@/app/store/authSlice'
 import {
   LoanRequestPanel,
   LoanSettingsPanel,
@@ -18,7 +18,7 @@ import { PageHeader } from '@/shared/components/PageHeader'
 export function LoansPage() {
   const { t } = useTranslation()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
-  const isAdmin = useAppSelector(selectIsCooperativeAdmin)
+  const isAdmin = useAppSelector(selectCanManageLoans)
   const [tab, setTab] = useState(0)
 
   const summaryQuery = useQuery({

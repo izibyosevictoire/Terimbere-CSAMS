@@ -72,7 +72,7 @@ public class IncomeExpenseController {
     }
 
     @PostMapping("/{transactionId}/approve")
-    @PreAuthorize("hasAuthority('INCOME_EXPENSE_WRITE')")
+    @PreAuthorize("hasAuthority('FUND_AUTHORIZE')")
     @Operation(summary = "Approve and post to ledger")
     public ResponseEntity<ApiResponse<IncomeExpenseResponse>> approve(
             @PathVariable UUID cooperativeId,

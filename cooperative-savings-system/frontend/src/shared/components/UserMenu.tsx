@@ -15,23 +15,22 @@ import {
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { clearAuth, selectIsCooperativeAdmin, selectIsSuperAdmin } from '@/app/store/authSlice'
+import { clearAuth, selectIsSuperAdmin } from '@/app/store/authSlice'
 import { useAppDispatch, useAppSelector } from '@/app/store/hooks'
 import { logout as logoutRequest } from '@/shared/api/auth'
 import { ROUTES } from '@/shared/constants/routes'
+import { primaryRole } from '@/shared/types/auth'
 
 export function UserMenu() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const user = useAppSelector((s) => s.auth.user)
-  const isCoopAdmin = useAppSelector(selectIsCooperativeAdmin)
   const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
+  const role = primaryRole(user?.roles ?? [])
   const badgeLabel = isSuperAdmin
     ? t('roles.superAdminBadge')
-    : isCoopAdmin
-      ? t('roles.adminBadge')
-      : t('roles.memberBadge')
+    : t(`roles.${role}`, { defaultValue: t('roles.memberBadge') })
   const [anchor, setAnchor] = useState<null | HTMLElement>(null)
   const [loggingOut, setLoggingOut] = useState(false)
 
