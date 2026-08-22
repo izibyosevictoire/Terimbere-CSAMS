@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +51,7 @@ public class ReportController {
             HttpServletRequest httpRequest) {
         ReportBinaryExport export = reportService.export(cooperativeId, request, httpRequest);
         ContentDisposition disposition = ContentDisposition.attachment()
-                .filename(export.filename())
+                .filename(export.filename(), StandardCharsets.UTF_8)
                 .build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())

@@ -14,10 +14,15 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 import rw.terimbere.csams.modules.audit.entity.AuditLog;
 import rw.terimbere.csams.modules.audit.repository.AuditLogRepository;
@@ -84,6 +89,8 @@ import rw.terimbere.csams.shared.utilities.MoneyUtils;
 @RequiredArgsConstructor
 public class ReportService {
 
+    private static final Logger log = LoggerFactory.getLogger(ReportService.class);
+
     private final CooperativeRepository cooperativeRepository;
     private final CooperativeMembershipRepository membershipRepository;
     private final UserRepository userRepository;
@@ -105,6 +112,7 @@ public class ReportService {
     private final CooperativeAuthorizationService authorizationService;
     private final AuditService auditService;
     private final ReportExporter reportExporter;
+    private final PlatformTransactionManager transactionManager;
 
     @Transactional(readOnly = true)
     public List<ReportTypeResponse> listTypes(UUID cooperativeId) {
@@ -157,22 +165,28 @@ public class ReportService {
         List<ReportSheetData> sheets = buildSheets(cooperativeId, type, request);
         byte[] bytes = reportExporter.export(header, sheets);
 
-        auditService.record(
-                principal.getId(),
-                cooperativeId,
-                AuditableAction.EXPORT,
-                "Report",
-                null,
-                null,
-                "{\"reportType\":\""
-                        + type.name()
-                        + "\",\"period\":\""
-                        + period.replace("\"", "'")
-                        + "\",\"bytes\":"
-                        + bytes.length
-                        + "}",
-                clientIp(httpRequest),
-                userAgent(httpRequest));
+        try {
+            TransactionTemplate auditTx = new TransactionTemplate(transactionManager);
+            auditTx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            auditTx.executeWithoutResult(status -> auditService.record(
+                    principal.getId(),
+                    cooperativeId,
+                    AuditableAction.EXPORT,
+                    "Report",
+                    null,
+                    null,
+                    "{\"reportType\":\""
+                            + type.name()
+                            + "\",\"period\":\""
+                            + period.replace("\\", "\\\\").replace("\"", "'")
+                            + "\",\"bytes\":"
+                            + bytes.length
+                            + "}",
+                    clientIp(httpRequest),
+                    userAgent(httpRequest)));
+        } catch (RuntimeException ex) {
+            log.warn("Report export succeeded but audit log failed for cooperative {}", cooperativeId, ex);
+        }
 
         String filename = sanitizeFilename(cooperative.getName())
                 + "_"
@@ -259,15 +273,15 @@ public class ReportService {
         BigDecimal paidTotal = BigDecimal.ZERO;
         BigDecimal expectedTotal = BigDecimal.ZERO;
         for (Contribution c : list) {
-            paidTotal = MoneyUtils.add(paidTotal, c.getPaidAmount());
-            expectedTotal = MoneyUtils.add(expectedTotal, c.getExpectedAmount());
+            paidTotal = MoneyUtils.add(paidTotal, nvl(c.getPaidAmount()));
+            expectedTotal = MoneyUtils.add(expectedTotal, nvl(c.getExpectedAmount()));
             rows.add(cells(
                     names.getOrDefault(c.getMemberUserId(), ""),
                     c.getYear(),
                     c.getMonth(),
-                    MoneyUtils.scale(c.getExpectedAmount()),
-                    MoneyUtils.scale(c.getPaidAmount()),
-                    MoneyUtils.scale(c.getOutstandingAmount()),
+                    MoneyUtils.scale(nvl(c.getExpectedAmount())),
+                    MoneyUtils.scale(nvl(c.getPaidAmount())),
+                    MoneyUtils.scale(nvl(c.getOutstandingAmount())),
                     c.getStatus() == null ? "" : c.getStatus().name(),
                     c.getPaymentDate(),
                     nullToEmpty(c.getPaymentReference()),
@@ -650,14 +664,14 @@ public class ReportService {
         BigDecimal amountTotal = BigDecimal.ZERO;
         BigDecimal remainingTotal = BigDecimal.ZERO;
         for (Investment inv : investments) {
-            amountTotal = MoneyUtils.add(amountTotal, inv.getAmount());
-            remainingTotal = MoneyUtils.add(remainingTotal, inv.getRemainingCapital());
+            amountTotal = MoneyUtils.add(amountTotal, nvl(inv.getAmount()));
+            remainingTotal = MoneyUtils.add(remainingTotal, nvl(inv.getRemainingCapital()));
             rows.add(cells(
                     nullToEmpty(inv.getName()),
-                    MoneyUtils.scale(inv.getAmount()),
-                    MoneyUtils.scale(inv.getRemainingCapital()),
-                    MoneyUtils.scale(inv.getTotalCapitalReturned()),
-                    MoneyUtils.scale(inv.getTotalProfitReturned()),
+                    MoneyUtils.scale(nvl(inv.getAmount())),
+                    MoneyUtils.scale(nvl(inv.getRemainingCapital())),
+                    MoneyUtils.scale(nvl(inv.getTotalCapitalReturned())),
+                    MoneyUtils.scale(nvl(inv.getTotalProfitReturned())),
                     inv.getStatus() == null ? "" : inv.getStatus().name(),
                     inv.getExpectedReturnDate(),
                     nullToEmpty(inv.getDescription())));

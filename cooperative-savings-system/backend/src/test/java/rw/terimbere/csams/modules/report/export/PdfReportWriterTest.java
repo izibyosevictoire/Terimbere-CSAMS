@@ -33,4 +33,26 @@ class PdfReportWriterTest {
         assertThat(pdf.length).isGreaterThan(200);
         assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
     }
+
+    @Test
+    void writesPdfWithKinyarwandaAndSmartPunctuation() {
+        byte[] pdf = PdfReportWriter.write(
+                ReportHeaderMeta.builder()
+                        .cooperativeName("Ikibina cy’Iterambere")
+                        .reportTitle("Contributions")
+                        .selectedPeriod("2026-01-01 to 2026-08-22")
+                        .generatedAt(Instant.parse("2026-08-22T08:00:00Z"))
+                        .generatedBy("luanda vicky")
+                        .currency("RWF")
+                        .build(),
+                List.of(ReportSheetData.builder()
+                        .sheetName("Contributions")
+                        .headers(List.of("Member", "Amount"))
+                        .rows(List.of(List.of("Mugwaneza Jean-Baptiste", new BigDecimal("20000.0000"))))
+                        .totalsRow(List.of("TOTAL", new BigDecimal("20000.0000")))
+                        .build()));
+
+        assertThat(pdf.length).isGreaterThan(200);
+        assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
+    }
 }

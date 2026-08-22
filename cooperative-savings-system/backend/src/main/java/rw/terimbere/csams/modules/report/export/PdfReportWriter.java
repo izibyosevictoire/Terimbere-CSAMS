@@ -56,11 +56,15 @@ public final class PdfReportWriter {
 
             document.close();
             return out.toByteArray();
-        } catch (DocumentException ex) {
+        } catch (Exception ex) {
             throw new IllegalStateException("Failed to build PDF report", ex);
         } finally {
             if (document.isOpen()) {
-                document.close();
+                try {
+                    document.close();
+                } catch (Exception ignored) {
+                    // Prefer the original exception from the try block.
+                }
             }
         }
     }
@@ -70,8 +74,7 @@ public final class PdfReportWriter {
         Font labelFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Color.DARK_GRAY);
         Font valueFont = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.BLACK);
 
-        Paragraph title = new Paragraph(
-                header.getReportTitle() == null ? "Report" : header.getReportTitle(), titleFont);
+        Paragraph title = new Paragraph(pdfText(header.getReportTitle(), "Report"), titleFont);
         title.setSpacingAfter(8);
         document.add(title);
 
@@ -100,7 +103,7 @@ public final class PdfReportWriter {
         labelCell.setPadding(3);
         table.addCell(labelCell);
 
-        PdfPCell valueCell = new PdfPCell(new Phrase(value == null ? "" : value, valueFont));
+        PdfPCell valueCell = new PdfPCell(new Phrase(pdfText(value, ""), valueFont));
         valueCell.setBorder(0);
         valueCell.setPadding(3);
         table.addCell(valueCell);
@@ -108,7 +111,7 @@ public final class PdfReportWriter {
 
     private static Paragraph sectionTitle(String name) {
         Font font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, BRAND_BLUE);
-        Paragraph paragraph = new Paragraph(name == null || name.isBlank() ? "Data" : name, font);
+        Paragraph paragraph = new Paragraph(pdfText(name, "Data"), font);
         paragraph.setSpacingBefore(6);
         paragraph.setSpacingAfter(6);
         return paragraph;
@@ -169,7 +172,7 @@ public final class PdfReportWriter {
     }
 
     private static PdfPCell headerCell(String text, Font font) {
-        PdfPCell cell = new PdfPCell(new Phrase(text == null ? "" : text, font));
+        PdfPCell cell = new PdfPCell(new Phrase(pdfText(text, ""), font));
         cell.setBackgroundColor(HEADER_BG);
         cell.setPadding(5);
         cell.setHorizontalAlignment(Element.ALIGN_LEFT);
@@ -178,7 +181,7 @@ public final class PdfReportWriter {
     }
 
     private static PdfPCell bodyCell(String text, Font font, boolean zebra) {
-        PdfPCell cell = new PdfPCell(new Phrase(text == null ? "" : text, font));
+        PdfPCell cell = new PdfPCell(new Phrase(pdfText(text, ""), font));
         cell.setPadding(4);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         if (zebra) {
@@ -206,6 +209,35 @@ public final class PdfReportWriter {
         if (value instanceof Boolean bool) {
             return bool ? "Yes" : "No";
         }
-        return String.valueOf(value);
+        return pdfText(String.valueOf(value), "");
+    }
+
+    /**
+     * Helvetica is WinAnsi-only. Unknown characters throw on some JREs (e.g. Alpine on Render).
+     */
+    private static String pdfText(String text, String blankFallback) {
+        if (text == null || text.isBlank()) {
+            return blankFallback == null ? "" : blankFallback;
+        }
+        String normalized = text
+                .replace('\u2018', '\'')
+                .replace('\u2019', '\'')
+                .replace('\u201C', '"')
+                .replace('\u201D', '"')
+                .replace('\u2013', '-')
+                .replace('\u2014', '-')
+                .replace('\u00A0', ' ');
+        StringBuilder safe = new StringBuilder(normalized.length());
+        for (int i = 0; i < normalized.length(); i++) {
+            char ch = normalized.charAt(i);
+            if (ch == '\n' || ch == '\r' || ch == '\t') {
+                safe.append(' ');
+            } else if (ch == ' ' || ch == '\'' || ch == '"' || (ch >= 0x20 && ch <= 0x7E) || (ch >= 0xA0 && ch <= 0xFF)) {
+                safe.append(ch);
+            } else {
+                safe.append('?');
+            }
+        }
+        return safe.toString();
     }
 }
