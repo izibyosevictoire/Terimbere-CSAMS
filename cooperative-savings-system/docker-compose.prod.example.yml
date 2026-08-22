@@ -50,7 +50,6 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
       FILE_STORAGE_TYPE: ${FILE_STORAGE_TYPE:-local}
       FILE_STORAGE_BASE_PATH: /app/uploads
-      APP_SEED_DEMO_DATA: ${APP_SEED_DEMO_DATA:-false}
     volumes:
       - uploads_data:/app/uploads
     expose:

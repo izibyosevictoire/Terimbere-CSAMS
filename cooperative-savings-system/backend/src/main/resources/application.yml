@@ -56,7 +56,6 @@ app:
   version: ${APP_VERSION:1.0.0-SNAPSHOT}
   seed:
     default-admin: ${APP_SEED_DEFAULT_ADMIN:false}
-    demo-data: ${APP_SEED_DEMO_DATA:false}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   jwt:
