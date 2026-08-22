@@ -88,9 +88,27 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config
 })
 
+/** When responseType is blob, error bodies arrive as Blob — parse JSON so callers see the API message. */
+async function hydrateBlobErrorBody(error: AxiosError): Promise<void> {
+  const data = error.response?.data
+  if (typeof Blob === 'undefined' || !(data instanceof Blob)) {
+    return
+  }
+  const text = await data.text()
+  if (!text) {
+    return
+  }
+  try {
+    error.response!.data = JSON.parse(text)
+  } catch {
+    error.response!.data = { message: text }
+  }
+}
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    await hydrateBlobErrorBody(error)
     const originalRequest = error.config as RetryConfig | undefined
     const status = error.response?.status
 

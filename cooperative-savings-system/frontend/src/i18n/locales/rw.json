@@ -1099,7 +1099,7 @@
   },
   "reports": {
     "selectCooperativeTitle": "Hitamo ikoperative",
-    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo umanure raporo cyangwa winjize amafaranga ashyizweho.",
+    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo umanure raporo.",
     "primaryTitle": "Raporo z'ingenzi",
     "advancedTitle": "Izindi raporo",
     "openAll": "Fungura ikigo cy'raporo",
@@ -1150,7 +1150,7 @@
       "member": "Umunyamuryango",
       "status": "Imiterere",
       "transactionType": "Ubwoko bw'igikorwa",
-      "submit": "Manura PDF",
+      "submit": "Manura raporo",
       "exporting": "Birimo gumanurwa…",
       "success": "Byamanuye {{filename}}",
       "validation": {
@@ -1456,7 +1456,7 @@
     },
     "reports": {
       "title": "Ikigo cy'raporo",
-      "description": "Manura raporo za PDF kandi winjize amafaranga ashyizweho."
+      "description": "Manura raporo za PDF z'ikoperative wahisemo."
     },
     "settings": {
       "title": "Igenamiterere",

@@ -1118,7 +1118,7 @@
   },
   "reports": {
     "selectCooperativeTitle": "Select a cooperative",
-    "selectCooperativeDescription": "Choose a cooperative in the top bar to export reports or import contributions.",
+    "selectCooperativeDescription": "Choose a cooperative in the top bar to download reports.",
     "primaryTitle": "Primary reports",
     "advancedTitle": "Advanced reports",
     "openAll": "Open report centre",
@@ -1169,8 +1169,8 @@
       "member": "Member",
       "status": "Status",
       "transactionType": "Transaction type",
-      "submit": "Export PDF",
-      "exporting": "Exporting…",
+      "submit": "Download report",
+      "exporting": "Downloading…",
       "success": "Downloaded {{filename}}",
       "validation": {
         "required": "From date and to date are required.",
@@ -1475,7 +1475,7 @@
     },
     "reports": {
       "title": "Report Centre",
-      "description": "Export PDF reports and import monthly contributions from spreadsheets."
+      "description": "Download PDF reports for the selected cooperative."
     },
     "settings": {
       "title": "Settings",

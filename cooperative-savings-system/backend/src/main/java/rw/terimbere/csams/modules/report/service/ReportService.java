@@ -119,7 +119,8 @@ public class ReportService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
+    /** Not read-only: export also writes an audit log (Postgres rejects INSERTs in read-only txs). */
+    @Transactional
     public ReportBinaryExport export(
             UUID cooperativeId, ReportExportRequest request, HttpServletRequest httpRequest) {
         Cooperative cooperative = requireCooperative(cooperativeId);
