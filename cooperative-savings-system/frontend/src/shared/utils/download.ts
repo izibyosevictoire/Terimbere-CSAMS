@@ -28,15 +28,21 @@ export function parseContentDispositionFilename(
 
 /** Trigger a browser file download from a Blob via a temporary object URL. */
 export function triggerBlobDownload(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob)
+  const typed =
+    blob.type && blob.type !== 'application/octet-stream'
+      ? blob
+      : new Blob([blob], { type: filename.toLowerCase().endsWith('.pdf') ? 'application/pdf' : blob.type || 'application/octet-stream' })
+  const url = URL.createObjectURL(typed)
   const anchor = document.createElement('a')
   anchor.href = url
   anchor.download = filename
+  anchor.rel = 'noopener'
   anchor.style.display = 'none'
   document.body.appendChild(anchor)
   anchor.click()
   anchor.remove()
-  URL.revokeObjectURL(url)
+  // Chrome can cancel the download if the object URL is revoked in the same tick.
+  window.setTimeout(() => URL.revokeObjectURL(url), 2000)
 }
 
 /** If the blob is JSON (API error wrapped as blob), parse and throw its message. */

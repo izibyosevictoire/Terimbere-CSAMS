@@ -59,6 +59,8 @@ export async function exportReport(
     response.headers['content-disposition'] as string | undefined,
     fallbackFilename,
   )
-  triggerBlobDownload(blob, filename)
+  const pdfBlob =
+    blob.type === 'application/pdf' ? blob : new Blob([blob], { type: 'application/pdf' })
+  triggerBlobDownload(pdfBlob, filename.endsWith('.pdf') ? filename : `${filename}.pdf`)
   return { filename }
 }

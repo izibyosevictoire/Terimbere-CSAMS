@@ -16,11 +16,11 @@ import { getErrorMessage } from '@/shared/api/client'
 import { fetchCooperative } from '@/shared/api/cooperatives'
 import { fetchMembers } from '@/shared/api/members'
 import { exportReport, fetchReportTypes } from '@/shared/api/reports'
-import { ErrorState } from '@/shared/components/ErrorState'
 import { LoadingState } from '@/shared/components/LoadingState'
 import { CONTRIBUTION_STATUSES } from '@/shared/types/contribution'
 import { LEDGER_TRANSACTION_TYPES } from '@/shared/types/ledger'
 import { memberDisplayName } from '@/shared/types/member'
+import { REPORT_TYPES } from '@/shared/types/report'
 import {
   defaultExportFilename,
   defaultReportFromDate,
@@ -154,21 +154,14 @@ export function ReportsExportPanel({
     },
   })
 
+  const types =
+    typesQuery.data && typesQuery.data.length > 0
+      ? typesQuery.data
+      : REPORT_TYPES.map((type) => ({ type, label: type }))
+
   if (typesQuery.isLoading) {
     return <LoadingState />
   }
-
-  if (typesQuery.isError) {
-    return (
-      <ErrorState
-        title={t('common.errorTitle')}
-        message={getErrorMessage(typesQuery.error, t('errors.generic'))}
-        onRetry={() => void typesQuery.refetch()}
-      />
-    )
-  }
-
-  const types = typesQuery.data ?? []
 
   const primaryCards = [
     {
@@ -198,6 +191,19 @@ export function ReportsExportPanel({
 
   return (
     <Box>
+      {typesQuery.isError ? (
+        <Alert
+          severity="warning"
+          sx={{ mb: 2 }}
+          action={
+            <Button color="inherit" size="small" onClick={() => void typesQuery.refetch()}>
+              {t('common.retry')}
+            </Button>
+          }
+        >
+          {getErrorMessage(typesQuery.error, t('errors.generic'))}
+        </Alert>
+      ) : null}
       <Typography variant="h6" gutterBottom>
         {t('reports.export.timelineTitle')}
       </Typography>
