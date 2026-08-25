@@ -1,5 +1,6 @@
 import { yupResolver } from '@hookform/resolvers/yup'
 import {
+  Alert,
   Button,
   Dialog,
   DialogActions,
@@ -8,20 +9,31 @@ import {
   MenuItem,
   Stack,
   TextField,
+  Typography,
 } from '@mui/material'
 import { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import type { Cooperative } from '@/shared/types/cooperative'
 import {
+  MAX_CONTRIBUTION_DUE_DAY,
+  MIN_CONTRIBUTION_DUE_DAY,
+  MIN_REGISTRATION_DATE,
+  RWANDA_CURRENCY,
+} from '@/shared/utils/rwandaCooperative'
+import {
   cooperativeFormDefaults,
   cooperativeFormSchema,
   toCooperativePayload,
+  todayInKigaliIso,
   type CooperativeFormValues,
 } from './cooperativeFormSchema'
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
-const DUE_DAYS = Array.from({ length: 28 }, (_, i) => i + 1)
+const DUE_DAYS = Array.from(
+  { length: MAX_CONTRIBUTION_DUE_DAY - MIN_CONTRIBUTION_DUE_DAY + 1 },
+  (_, i) => MIN_CONTRIBUTION_DUE_DAY + i,
+)
 
 interface CooperativeFormDialogProps {
   open: boolean
@@ -40,7 +52,7 @@ function fromCooperative(coop: Cooperative): CooperativeFormValues {
     contactEmail: coop.contactEmail ?? '',
     contactPhone: coop.contactPhone ?? '',
     address: coop.address ?? '',
-    currency: coop.currency ?? 'RWF',
+    currency: RWANDA_CURRENCY,
     financialYearStartMonth: coop.financialYearStartMonth ?? 1,
     monthlyContributionAmount: String(coop.monthlyContributionAmount ?? '0'),
     contributionDueDay: coop.contributionDueDay ?? 1,
@@ -57,6 +69,7 @@ export function CooperativeFormDialog({
   onSubmit,
 }: CooperativeFormDialogProps) {
   const { t } = useTranslation()
+  const todayIso = todayInKigaliIso()
   const {
     register,
     control,
@@ -84,6 +97,9 @@ export function CooperativeFormDialog({
       >
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 0.5 }}>
+            {mode === 'create' ? (
+              <Alert severity="info">{t('cooperatives.createWelcome')}</Alert>
+            ) : null}
             <TextField
               label={t('cooperatives.fields.name')}
               required
@@ -103,20 +119,39 @@ export function CooperativeFormDialog({
             />
             <TextField
               label={t('cooperatives.fields.registrationNumber')}
+              required
               fullWidth
+              placeholder={t('cooperatives.fields.registrationNumberPlaceholder')}
+              error={Boolean(errors.registrationNumber)}
+              helperText={
+                errors.registrationNumber?.message ??
+                t('cooperatives.fields.registrationNumberHint')
+              }
               {...register('registrationNumber')}
             />
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
                 label={t('cooperatives.fields.contactEmail')}
+                required
                 fullWidth
+                type="email"
+                autoComplete="email"
                 error={Boolean(errors.contactEmail)}
                 helperText={errors.contactEmail?.message}
                 {...register('contactEmail')}
               />
               <TextField
                 label={t('cooperatives.fields.contactPhone')}
+                required
                 fullWidth
+                placeholder="07XXXXXXXX"
+                error={Boolean(errors.contactPhone)}
+                helperText={
+                  errors.contactPhone?.message ?? t('cooperatives.fields.contactPhoneHint')
+                }
+                slotProps={{
+                  htmlInput: { inputMode: 'numeric', maxLength: 13 },
+                }}
                 {...register('contactPhone')}
               />
             </Stack>
@@ -128,19 +163,35 @@ export function CooperativeFormDialog({
               {...register('address')}
             />
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <TextField
-                label={t('cooperatives.fields.currency')}
-                required
-                fullWidth
-                error={Boolean(errors.currency)}
-                helperText={errors.currency?.message}
-                {...register('currency')}
+              <Controller
+                name="currency"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    value={RWANDA_CURRENCY}
+                    label={t('cooperatives.fields.currency')}
+                    required
+                    fullWidth
+                    disabled
+                    helperText={t('cooperatives.fields.currencyLocked')}
+                    slotProps={{ input: { readOnly: true } }}
+                  />
+                )}
               />
               <TextField
                 label={t('cooperatives.fields.registrationDate')}
                 type="date"
+                required
                 fullWidth
-                slotProps={{ inputLabel: { shrink: true } }}
+                error={Boolean(errors.registrationDate)}
+                helperText={
+                  errors.registrationDate?.message ?? t('cooperatives.fields.registrationDateHint')
+                }
+                slotProps={{
+                  inputLabel: { shrink: true },
+                  htmlInput: { min: MIN_REGISTRATION_DATE, max: todayIso },
+                }}
                 {...register('registrationDate')}
               />
             </Stack>
@@ -173,10 +224,14 @@ export function CooperativeFormDialog({
                   <TextField
                     {...field}
                     select
+                    required
                     label={t('cooperatives.fields.contributionDueDay')}
                     fullWidth
                     error={Boolean(errors.contributionDueDay)}
-                    helperText={errors.contributionDueDay?.message}
+                    helperText={
+                      errors.contributionDueDay?.message ??
+                      t('cooperatives.fields.contributionDueDayHint')
+                    }
                     onChange={(e) => field.onChange(Number(e.target.value))}
                   >
                     {DUE_DAYS.map((d) => (
@@ -196,6 +251,11 @@ export function CooperativeFormDialog({
               helperText={errors.monthlyContributionAmount?.message}
               {...register('monthlyContributionAmount')}
             />
+            {mode === 'create' ? (
+              <Typography variant="caption" color="text.secondary">
+                {t('cooperatives.createWelcomeFooter')}
+              </Typography>
+            ) : null}
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>

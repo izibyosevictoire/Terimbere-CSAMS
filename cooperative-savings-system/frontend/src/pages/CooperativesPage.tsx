@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom'
 import { CooperativeFormDialog } from '@/features/cooperatives/CooperativeFormDialog'
 import { createCooperative, fetchCooperatives } from '@/shared/api/cooperatives'
 import { getErrorMessage } from '@/shared/api/client'
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { LoadingState } from '@/shared/components/LoadingState'
@@ -54,6 +55,7 @@ export function CooperativesPage() {
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(10)
   const [createOpen, setCreateOpen] = useState(false)
+  const [welcomeCoop, setWelcomeCoop] = useState<Cooperative | null>(null)
 
   const query = useQuery({
     queryKey: ['cooperatives', 'list', debouncedSearch, status, page, size],
@@ -69,10 +71,12 @@ export function CooperativesPage() {
   const createMutation = useMutation({
     mutationFn: (payload: CooperativeCreateRequest) => createCooperative(payload),
     onSuccess: (created) => {
-      enqueueSnackbar(t('cooperatives.createSuccess'), { variant: 'success' })
+      enqueueSnackbar(t('cooperatives.createSuccess', { name: created.name }), {
+        variant: 'success',
+      })
       setCreateOpen(false)
+      setWelcomeCoop(created)
       void queryClient.invalidateQueries({ queryKey: ['cooperatives'] })
-      navigate(ROUTES.cooperativeDetail(created.id))
     },
     onError: (error) => {
       enqueueSnackbar(getErrorMessage(error, t('errors.generic')), { variant: 'error' })
@@ -208,6 +212,20 @@ export function CooperativesPage() {
         loading={createMutation.isPending}
         onClose={() => setCreateOpen(false)}
         onSubmit={(payload) => createMutation.mutate(payload)}
+      />
+
+      <ConfirmDialog
+        open={Boolean(welcomeCoop)}
+        title={t('cooperatives.welcomeDialogTitle')}
+        message={t('cooperatives.welcomeDialogMessage', { name: welcomeCoop?.name ?? '' })}
+        confirmLabel={t('cooperatives.welcomeDialogContinue')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={() => {
+          const id = welcomeCoop?.id
+          setWelcomeCoop(null)
+          if (id) navigate(ROUTES.cooperativeDetail(id))
+        }}
+        onCancel={() => setWelcomeCoop(null)}
       />
     </Box>
   )

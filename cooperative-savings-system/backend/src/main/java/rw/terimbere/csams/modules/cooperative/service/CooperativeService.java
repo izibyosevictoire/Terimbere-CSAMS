@@ -37,6 +37,7 @@ import rw.terimbere.csams.shared.exceptions.ConflictException;
 import rw.terimbere.csams.shared.exceptions.ForbiddenException;
 import rw.terimbere.csams.shared.exceptions.ResourceNotFoundException;
 import rw.terimbere.csams.shared.pagination.PageMapper;
+import rw.terimbere.csams.shared.validation.CooperativeFieldRules;
 
 @Service
 @RequiredArgsConstructor
@@ -61,13 +62,11 @@ public class CooperativeService {
         Cooperative cooperative = Cooperative.builder()
                 .name(request.getName().trim())
                 .description(trimToNull(request.getDescription()))
-                .registrationNumber(trimToNull(request.getRegistrationNumber()))
-                .contactEmail(trimToNull(request.getContactEmail()))
-                .contactPhone(trimToNull(request.getContactPhone()))
+                .registrationNumber(CooperativeFieldRules.normalizeRegistrationNumber(request.getRegistrationNumber()))
+                .contactEmail(request.getContactEmail().trim().toLowerCase(Locale.ROOT))
+                .contactPhone(CooperativeFieldRules.normalizePhone(request.getContactPhone()))
                 .address(trimToNull(request.getAddress()))
-                .currency(StringUtils.hasText(request.getCurrency())
-                        ? request.getCurrency().trim().toUpperCase(Locale.ROOT)
-                        : "RWF")
+                .currency(CooperativeFieldRules.CURRENCY_RWF)
                 .financialYearStartMonth(
                         request.getFinancialYearStartMonth() != null ? request.getFinancialYearStartMonth() : 1)
                 .monthlyContributionAmount(
@@ -161,13 +160,11 @@ public class CooperativeService {
         String previous = "{\"name\":\"" + escape(cooperative.getName()) + "\"}";
         cooperative.setName(request.getName().trim());
         cooperative.setDescription(trimToNull(request.getDescription()));
-        cooperative.setRegistrationNumber(trimToNull(request.getRegistrationNumber()));
-        cooperative.setContactEmail(trimToNull(request.getContactEmail()));
-        cooperative.setContactPhone(trimToNull(request.getContactPhone()));
+        cooperative.setRegistrationNumber(CooperativeFieldRules.normalizeRegistrationNumber(request.getRegistrationNumber()));
+        cooperative.setContactEmail(request.getContactEmail().trim().toLowerCase(Locale.ROOT));
+        cooperative.setContactPhone(CooperativeFieldRules.normalizePhone(request.getContactPhone()));
         cooperative.setAddress(trimToNull(request.getAddress()));
-        if (StringUtils.hasText(request.getCurrency())) {
-            cooperative.setCurrency(request.getCurrency().trim().toUpperCase(Locale.ROOT));
-        }
+        cooperative.setCurrency(CooperativeFieldRules.CURRENCY_RWF);
         if (request.getFinancialYearStartMonth() != null) {
             cooperative.setFinancialYearStartMonth(request.getFinancialYearStartMonth());
         }
@@ -253,7 +250,7 @@ public class CooperativeService {
     }
 
     private void validateRegistrationNumber(String registrationNumber, UUID excludeId) {
-        String value = trimToNull(registrationNumber);
+        String value = CooperativeFieldRules.normalizeRegistrationNumber(registrationNumber);
         if (value == null) {
             return;
         }

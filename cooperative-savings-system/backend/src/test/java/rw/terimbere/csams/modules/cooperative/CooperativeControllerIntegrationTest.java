@@ -86,20 +86,12 @@ class CooperativeControllerIntegrationTest {
         MvcResult createResult = mockMvc.perform(post("/api/v1/cooperatives")
                         .header("Authorization", "Bearer " + superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "name":"%s",
-                                  "currency":"RWF",
-                                  "monthlyContributionAmount":5000,
-                                  "contributionDueDay":5,
-                                  "registrationNumber":"REG-%s"
-                                }
-                                """
-                                .formatted(uniqueName, UUID.randomUUID().toString().substring(0, 8))))
+                        .content(CooperativeTestFixtures.createBody(uniqueName, "5000", 5)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.name").value(uniqueName))
                 .andExpect(jsonPath("$.data.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.data.currency").value("RWF"))
                 .andReturn();
 
         UUID coopId = UUID.fromString(objectMapper
@@ -146,9 +138,7 @@ class CooperativeControllerIntegrationTest {
         MvcResult createResult = mockMvc.perform(post("/api/v1/cooperatives")
                         .header("Authorization", "Bearer " + superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"name":"%s","currency":"RWF"}
-                                """.formatted(uniqueName)))
+                        .content(CooperativeTestFixtures.createBody(uniqueName)))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -167,9 +157,8 @@ class CooperativeControllerIntegrationTest {
         MvcResult createA = mockMvc.perform(post("/api/v1/cooperatives")
                         .header("Authorization", "Bearer " + superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"name":"Member Coop %s","currency":"RWF"}
-                                """.formatted(UUID.randomUUID().toString().substring(0, 8))))
+                        .content(CooperativeTestFixtures.createBody(
+                                "Member Coop " + UUID.randomUUID().toString().substring(0, 8))))
                 .andExpect(status().isOk())
                 .andReturn();
         UUID coopA = UUID.fromString(objectMapper
@@ -224,8 +213,52 @@ class CooperativeControllerIntegrationTest {
         mockMvc.perform(post("/api/v1/cooperatives")
                         .header("Authorization", "Bearer " + memberToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Nope\",\"currency\":\"RWF\"}"))
+                        .content(CooperativeTestFixtures.createBody("Nope")))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void create_rejectsInvalidPhoneAndForcesRwf() throws Exception {
+        String uniqueName = "Bad Phone Coop " + UUID.randomUUID().toString().substring(0, 8);
+        mockMvc.perform(post("/api/v1/cooperatives")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name":"%s",
+                                  "currency":"USD",
+                                  "monthlyContributionAmount":1000,
+                                  "contributionDueDay":5,
+                                  "financialYearStartMonth":1,
+                                  "registrationNumber":"RCA/TEST/%s",
+                                  "contactEmail":"badphone@test.local",
+                                  "contactPhone":"12345",
+                                  "registrationDate":"2024-01-15"
+                                }
+                                """
+                                .formatted(uniqueName, UUID.randomUUID().toString().substring(0, 8))))
+                .andExpect(status().isBadRequest());
+
+        String okName = "Forced RWF Coop " + UUID.randomUUID().toString().substring(0, 8);
+        mockMvc.perform(post("/api/v1/cooperatives")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name":"%s",
+                                  "currency":"USD",
+                                  "monthlyContributionAmount":1000,
+                                  "contributionDueDay":5,
+                                  "financialYearStartMonth":1,
+                                  "registrationNumber":"RCA/TEST/%s",
+                                  "contactEmail":"rwf@test.local",
+                                  "contactPhone":"0789998877",
+                                  "registrationDate":"2024-01-15"
+                                }
+                                """
+                                .formatted(okName, UUID.randomUUID().toString().substring(0, 8))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.currency").value("RWF"));
     }
 
     private String loginAccessToken(String username, String password) throws Exception {

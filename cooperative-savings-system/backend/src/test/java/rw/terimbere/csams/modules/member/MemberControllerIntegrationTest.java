@@ -1,5 +1,7 @@
 package rw.terimbere.csams.modules.member;
 
+import rw.terimbere.csams.modules.cooperative.CooperativeTestFixtures;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -47,9 +49,7 @@ class MemberControllerIntegrationTest {
         MvcResult create = mockMvc.perform(post("/api/v1/cooperatives")
                         .header("Authorization", "Bearer " + superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"name":"%s","currency":"RWF","monthlyContributionAmount":1000}
-                                """.formatted(name)))
+                        .content(CooperativeTestFixtures.createBody(name)))
                 .andExpect(status().isOk())
                 .andReturn();
         cooperativeId = UUID.fromString(objectMapper

@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import rw.terimbere.csams.modules.cooperative.CooperativeTestFixtures;
 import rw.terimbere.csams.modules.ledger.entity.LedgerEntryStatus;
 import rw.terimbere.csams.modules.ledger.repository.LedgerEntryRepository;
 import rw.terimbere.csams.modules.socialfund.repository.SocialContributionRepository;
@@ -60,14 +61,7 @@ class SocialFundControllerIntegrationTest {
         MvcResult create = mockMvc.perform(post("/api/v1/cooperatives")
                         .header("Authorization", "Bearer " + superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "name":"%s",
-                                  "currency":"RWF",
-                                  "monthlyContributionAmount":1000.0000,
-                                  "contributionDueDay":1
-                                }
-                                """.formatted(name)))
+                        .content(CooperativeTestFixtures.createBody(name)))
                 .andExpect(status().isOk())
                 .andReturn();
         cooperativeId = UUID.fromString(objectMapper
@@ -262,14 +256,7 @@ class SocialFundControllerIntegrationTest {
         MvcResult other = mockMvc.perform(post("/api/v1/cooperatives")
                         .header("Authorization", "Bearer " + superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "name":"%s",
-                                  "currency":"RWF",
-                                  "monthlyContributionAmount":1000.0000,
-                                  "contributionDueDay":1
-                                }
-                                """.formatted(otherName)))
+                        .content(CooperativeTestFixtures.createBody(otherName)))
                 .andExpect(status().isOk())
                 .andReturn();
         UUID otherCoopId = UUID.fromString(objectMapper

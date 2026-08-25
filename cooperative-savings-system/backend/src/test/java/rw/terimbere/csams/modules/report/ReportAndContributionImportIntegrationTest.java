@@ -1,5 +1,7 @@
 package rw.terimbere.csams.modules.report;
 
+import rw.terimbere.csams.modules.cooperative.CooperativeTestFixtures;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -340,9 +342,7 @@ class ReportAndContributionImportIntegrationTest {
         MvcResult create = mockMvc.perform(post("/api/v1/cooperatives")
                         .header("Authorization", "Bearer " + superAdminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"name":"%s","currency":"RWF","monthlyContributionAmount":1000.0000}
-                                """.formatted(name)))
+                        .content(CooperativeTestFixtures.createBody(name)))
                 .andExpect(status().isOk())
                 .andReturn();
         return UUID.fromString(objectMapper
