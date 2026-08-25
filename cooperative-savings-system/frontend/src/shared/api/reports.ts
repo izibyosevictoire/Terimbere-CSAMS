@@ -45,7 +45,13 @@ export async function exportReport(
   const response = await apiClient.post(
     `/cooperatives/${cooperativeId}/reports/export`,
     toExportBody(payload),
-    { responseType: 'blob' },
+    {
+      responseType: 'blob',
+      timeout: 120000,
+      headers: {
+        Accept: 'application/pdf, application/json',
+      },
+    },
   )
   const blob = response.data as Blob
   await throwIfBlobError(blob, 'Report export failed')

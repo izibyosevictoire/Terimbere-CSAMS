@@ -217,6 +217,7 @@ class ReportAndContributionImportIntegrationTest {
 
         MvcResult export = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/export")
                         .header("Authorization", "Bearer " + superAdminToken)
+                        .header("Accept", "application/json")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -236,6 +237,28 @@ class ReportAndContributionImportIntegrationTest {
         assertThat(body.length).isGreaterThan(200);
         assertThat(new String(body, 0, 4)).isEqualTo("%PDF");
         assertThat(export.getResponse().getHeader("Content-Disposition")).contains(".pdf");
+    }
+
+    @Test
+    void export_clampsFromDateBeforeRegistration() throws Exception {
+        MvcResult export = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/export")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .header("Accept", "application/json")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reportType":"MEMBERS",
+                                  "fromDate":"2023-12-01",
+                                  "toDate":"2026-06-30"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"))
+                .andReturn();
+
+        byte[] body = export.getResponse().getContentAsByteArray();
+        assertThat(body.length).isGreaterThan(200);
+        assertThat(new String(body, 0, 4)).isEqualTo("%PDF");
     }
 
     @Test

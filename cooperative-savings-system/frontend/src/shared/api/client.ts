@@ -149,6 +149,8 @@ apiClient.interceptors.response.use(
 export function getErrorMessage(error: unknown, fallback = 'Something went wrong'): string {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as ApiErrorBody | undefined
+    const fieldMessage = data?.fieldErrors?.find((item) => item.message)?.message
+    if (fieldMessage) return fieldMessage
     if (data?.message) return data.message
     if (error.response?.status === 501) {
       return 'This endpoint is not implemented yet.'

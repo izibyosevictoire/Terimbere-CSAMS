@@ -41,12 +41,16 @@ export function triggerBlobDownload(blob: Blob, filename: string): void {
 
 /** If the blob is JSON (API error wrapped as blob), parse and throw its message. */
 export async function throwIfBlobError(blob: Blob, fallback = 'Download failed'): Promise<void> {
-  if (!blob.type || !blob.type.includes('application/json')) return
+  const peek = await blob.slice(0, 8).text()
+  if (peek.startsWith('%PDF')) return
+  const looksJson =
+    (blob.type && blob.type.includes('application/json')) || peek.trimStart().startsWith('{')
+  if (!looksJson) return
   const text = await blob.text()
   let message = fallback
   try {
-    const json = JSON.parse(text) as { message?: string }
-    if (json.message) message = json.message
+    const json = JSON.parse(text) as { message?: string; fieldErrors?: Array<{ message?: string }> }
+    message = json.fieldErrors?.find((item) => item.message)?.message || json.message || fallback
   } catch {
     // keep fallback
   }

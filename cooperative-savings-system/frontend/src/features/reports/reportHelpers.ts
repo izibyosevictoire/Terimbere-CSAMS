@@ -153,13 +153,21 @@ export type ReportTimelineIssue =
   | 'futureFrom'
   | 'futureTo'
   | 'rangeTooLong'
+  | 'beforeRegistration'
   | 'incompleteYearMonth'
   | 'futureYearMonth'
 
 const MAX_RANGE_YEARS = 5
 
-export function defaultReportFromDate(today = dayjs()): string {
-  return today.startOf('year').format('YYYY-MM-DD')
+export function defaultReportFromDate(today = dayjs(), registrationDate?: string | null): string {
+  const startOfYear = today.startOf('year')
+  if (registrationDate) {
+    const registered = dayjs(registrationDate)
+    if (registered.isValid() && startOfYear.isBefore(registered, 'day')) {
+      return registered.format('YYYY-MM-DD')
+    }
+  }
+  return startOfYear.format('YYYY-MM-DD')
 }
 
 export function defaultReportToDate(today = dayjs()): string {
@@ -170,6 +178,7 @@ export function validateReportTimeline(
   fromDate: string,
   toDate: string,
   today = dayjs(),
+  registrationDate?: string | null,
 ): ReportTimelineIssue | null {
   if (!fromDate || !toDate) return 'required'
   const from = dayjs(fromDate)
@@ -180,6 +189,10 @@ export function validateReportTimeline(
   if (to.isAfter(todayDate, 'day')) return 'futureTo'
   if (to.isBefore(from, 'day')) return 'fromAfterTo'
   if (to.diff(from, 'year', true) > MAX_RANGE_YEARS) return 'rangeTooLong'
+  if (registrationDate) {
+    const registered = dayjs(registrationDate)
+    if (registered.isValid() && from.isBefore(registered, 'day')) return 'beforeRegistration'
+  }
   return null
 }
 

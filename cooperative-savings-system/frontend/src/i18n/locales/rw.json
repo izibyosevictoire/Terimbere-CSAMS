@@ -1181,7 +1181,8 @@
         "futureTo": "Ntushobora gukora raporo irangira mu gihe kitageze.",
         "rangeTooLong": "Igihe cya raporo ntigishobora kurenza imyaka 5.",
         "incompleteYearMonth": "Hitamo umwaka n'ukwezi, cyangwa usige byombi nk'uko biri.",
-        "futureYearMonth": "Ntushobora gukora raporo y'ukwezi kutageze."
+        "futureYearMonth": "Ntushobora gukora raporo y'ukwezi kutageze.",
+        "beforeRegistration": "Italiki yo gutangiriraho ntishobora kuba mbere y'italiki yanditsweho ikoperative."
       }
     },
     "import": {

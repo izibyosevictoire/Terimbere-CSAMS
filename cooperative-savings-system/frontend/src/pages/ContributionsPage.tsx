@@ -1,5 +1,5 @@
-import { Box, Button, Tab, Tabs } from '@mui/material'
-import { useState } from 'react'
+import { Box, Button, Stack, Tab, Tabs } from '@mui/material'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
@@ -15,17 +15,21 @@ import { EmptyState } from '@/shared/components/EmptyState'
 import { PageHeader } from '@/shared/components/PageHeader'
 import { ROUTES } from '@/shared/constants/routes'
 
-function initialTabFromQuery(tabParam: string | null, isAdmin: boolean): number {
-  if (isAdmin) {
-    if (tabParam === 'monthly') return 0
-    if (tabParam === 'approvals') return 1
-    if (tabParam === 'history') return 2
-    if (tabParam === 'special') return 3
-    return 1
+type ContributionTab = 'monthly' | 'submit' | 'approvals' | 'history' | 'special'
+
+function tabsForRole(canRecord: boolean): ContributionTab[] {
+  if (canRecord) {
+    // Officers still pay as members, so they get monthly entry and self-submit.
+    return ['monthly', 'submit', 'approvals', 'history', 'special']
   }
-  if (tabParam === 'submit') return 0
-  if (tabParam === 'history' || tabParam === 'mine') return 1
-  if (tabParam === 'special') return 2
+  return ['submit', 'history', 'special']
+}
+
+function initialTabFromQuery(tabParam: string | null, tabs: ContributionTab[]): number {
+  const requested = tabParam === 'mine' ? 'history' : tabParam
+  if (requested && tabs.includes(requested as ContributionTab)) {
+    return tabs.indexOf(requested as ContributionTab)
+  }
   return 0
 }
 
@@ -34,8 +38,10 @@ export function ContributionsPage() {
   const { campaignId } = useParams()
   const [searchParams] = useSearchParams()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
-  const isAdmin = useAppSelector(selectCanRecordContributions)
-  const [tab, setTab] = useState(() => initialTabFromQuery(searchParams.get('tab'), isAdmin))
+  const canRecord = useAppSelector(selectCanRecordContributions)
+  const tabs = useMemo(() => tabsForRole(canRecord), [canRecord])
+  const [tab, setTab] = useState(() => initialTabFromQuery(searchParams.get('tab'), tabs))
+  const active = tabs[tab] ?? tabs[0]
 
   if (!cooperativeId) {
     return (
@@ -62,7 +68,7 @@ export function ContributionsPage() {
         />
         <SpecialCampaignsPanel
           cooperativeId={cooperativeId}
-          canWrite={isAdmin}
+          canWrite={canRecord}
           campaignId={campaignId}
         />
       </Box>
@@ -75,15 +81,24 @@ export function ContributionsPage() {
         title={t('pages.contributions.title')}
         description={t('pages.contributions.description')}
         actions={
-          isAdmin ? (
-            <Button variant="outlined" size="small" onClick={() => setTab(1)}>
-              {t('contributions.tabs.approvals')}
-            </Button>
-          ) : (
-            <Button variant="contained" size="small" onClick={() => setTab(0)}>
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => setTab(Math.max(0, tabs.indexOf('submit')))}
+            >
               {t('contributions.submit.action')}
             </Button>
-          )
+            {canRecord ? (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => setTab(Math.max(0, tabs.indexOf('approvals')))}
+              >
+                {t('contributions.tabs.approvals')}
+              </Button>
+            ) : null}
+          </Stack>
         }
       />
 
@@ -94,31 +109,32 @@ export function ContributionsPage() {
         allowScrollButtonsMobile
         sx={{ mb: 2.5, borderBottom: 1, borderColor: 'divider' }}
       >
-        {isAdmin ? <Tab label={t('contributions.tabs.monthly')} /> : (
-          <Tab label={t('contributions.tabs.submit')} />
-        )}
-        {isAdmin ? <Tab label={t('contributions.tabs.approvals')} /> : null}
-        <Tab label={isAdmin ? t('contributions.tabs.history') : t('contributions.tabs.mine')} />
-        <Tab label={t('contributions.tabs.special')} />
+        {tabs.map((item) => (
+          <Tab
+            key={item}
+            label={
+              item === 'history' && !canRecord
+                ? t('contributions.tabs.mine')
+                : t(`contributions.tabs.${item}`)
+            }
+          />
+        ))}
       </Tabs>
 
-      {isAdmin && tab === 0 ? (
-        <MonthlyEntryPanel cooperativeId={cooperativeId} canWrite={isAdmin} />
+      {active === 'monthly' ? (
+        <MonthlyEntryPanel cooperativeId={cooperativeId} canWrite={canRecord} />
       ) : null}
-      {!isAdmin && tab === 0 ? (
+      {active === 'submit' ? (
         <MemberContributionSubmitPanel cooperativeId={cooperativeId} />
       ) : null}
-
-      {isAdmin && tab === 1 ? (
+      {active === 'approvals' ? (
         <ContributionApprovalsPanel cooperativeId={cooperativeId} />
       ) : null}
-
-      {((isAdmin && tab === 2) || (!isAdmin && tab === 1)) ? (
-        <HistoryPanel cooperativeId={cooperativeId} isAdmin={isAdmin} />
+      {active === 'history' ? (
+        <HistoryPanel cooperativeId={cooperativeId} isAdmin={canRecord} />
       ) : null}
-
-      {((isAdmin && tab === 3) || (!isAdmin && tab === 2)) ? (
-        <SpecialCampaignsPanel cooperativeId={cooperativeId} canWrite={isAdmin} />
+      {active === 'special' ? (
+        <SpecialCampaignsPanel cooperativeId={cooperativeId} canWrite={canRecord} />
       ) : null}
     </Box>
   )

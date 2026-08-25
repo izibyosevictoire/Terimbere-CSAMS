@@ -13,6 +13,7 @@ export interface ApiErrorBody {
   details?: unknown
   path?: string
   timestamp?: string
+  fieldErrors?: Array<{ field?: string; message?: string }>
 }
 
 export interface PageResponse<T> {

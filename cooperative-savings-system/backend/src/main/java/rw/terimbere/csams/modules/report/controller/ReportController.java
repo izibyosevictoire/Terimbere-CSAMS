@@ -4,14 +4,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,20 +43,28 @@ public class ReportController {
         return ResponseEntity.ok(ApiResponse.ok(reportService.listTypes(cooperativeId)));
     }
 
+    /**
+     * Writes the PDF to the servlet response so Spring content negotiation cannot turn a
+     * successful export into 406/500 when the browser sends {@code Accept: application/json}.
+     */
     @PostMapping("/export")
     @PreAuthorize("hasAuthority('REPORT_READ')")
     @Operation(summary = "Export a report as PDF")
-    public ResponseEntity<byte[]> export(
+    public void export(
             @PathVariable UUID cooperativeId,
             @Valid @RequestBody ReportExportRequest request,
-            HttpServletRequest httpRequest) {
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse)
+            throws IOException {
         ReportBinaryExport export = reportService.export(cooperativeId, request, httpRequest);
         ContentDisposition disposition = ContentDisposition.attachment()
                 .filename(export.filename(), StandardCharsets.UTF_8)
                 .build();
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
-                .contentType(MediaType.parseMediaType(export.contentType()))
-                .body(export.content());
+        httpResponse.setStatus(HttpServletResponse.SC_OK);
+        httpResponse.setContentType(export.contentType());
+        httpResponse.setHeader(HttpHeaders.CONTENT_DISPOSITION, disposition.toString());
+        httpResponse.setContentLength(export.content().length);
+        httpResponse.getOutputStream().write(export.content());
+        httpResponse.flushBuffer();
     }
 }

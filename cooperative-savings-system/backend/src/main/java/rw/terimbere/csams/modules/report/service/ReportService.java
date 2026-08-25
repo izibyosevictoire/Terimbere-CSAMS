@@ -146,6 +146,7 @@ public class ReportService {
             throw new ForbiddenException("REPORT_READ required");
         }
 
+        clampToRegistrationDate(request, cooperative.getRegistrationDate());
         ReportTimelineValidator.validate(
                 request,
                 LocalDate.now(ReportTimelineValidator.ZONE),
@@ -1017,6 +1018,22 @@ public class ReportService {
             names.put(user.getId(), user.getFullName());
         }
         return names;
+    }
+
+    /**
+     * If the requested start is before the cooperative existed, slide the range forward so
+     * a default Jan-1 timeline still downloads instead of failing validation.
+     */
+    private static void clampToRegistrationDate(ReportExportRequest request, LocalDate registrationDate) {
+        if (registrationDate == null) {
+            return;
+        }
+        if (request.getFromDate() != null && request.getFromDate().isBefore(registrationDate)) {
+            request.setFromDate(registrationDate);
+        }
+        if (request.getToDate() != null && request.getToDate().isBefore(registrationDate)) {
+            request.setToDate(registrationDate);
+        }
     }
 
     private static String formatPeriod(ReportExportRequest request) {

@@ -10,9 +10,10 @@ import {
 import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { useSnackbar } from 'notistack'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getErrorMessage } from '@/shared/api/client'
+import { fetchCooperative } from '@/shared/api/cooperatives'
 import { fetchMembers } from '@/shared/api/members'
 import { exportReport, fetchReportTypes } from '@/shared/api/reports'
 import { ErrorState } from '@/shared/components/ErrorState'
@@ -57,6 +58,22 @@ export function ReportsExportPanel({
   const [month, setMonth] = useState('')
   const [transactionType, setTransactionType] = useState('')
 
+  const cooperativeQuery = useQuery({
+    queryKey: ['cooperatives', cooperativeId],
+    queryFn: () => fetchCooperative(cooperativeId),
+    enabled: Boolean(cooperativeId),
+  })
+  const registrationDate = cooperativeQuery.data?.registrationDate ?? null
+
+  useEffect(() => {
+    if (!registrationDate) return
+    setFromDate((current) =>
+      dayjs(current).isBefore(dayjs(registrationDate), 'day')
+        ? registrationDate
+        : current,
+    )
+  }, [registrationDate])
+
   const typesQuery = useQuery({
     queryKey: ['reports', 'types', cooperativeId],
     queryFn: () => fetchReportTypes(cooperativeId),
@@ -96,7 +113,7 @@ export function ReportsExportPanel({
     }))
   }, [today, year])
 
-  const timelineIssue = validateReportTimeline(fromDate, toDate, today)
+  const timelineIssue = validateReportTimeline(fromDate, toDate, today, registrationDate)
   const yearMonthIssue = showYearMonth
     ? validateReportYearMonth(year, month, today)
     : null
@@ -104,7 +121,7 @@ export function ReportsExportPanel({
 
   const exportMutation = useMutation({
     mutationFn: ({ type, includeFilters }: { type: string; includeFilters: boolean }) => {
-      const issue = validateReportTimeline(fromDate, toDate, today)
+      const issue = validateReportTimeline(fromDate, toDate, today, registrationDate)
       if (issue) {
         throw new Error(t(`reports.export.validation.${issue}`))
       }
@@ -214,7 +231,10 @@ export function ReportsExportPanel({
           }
           slotProps={{
             inputLabel: { shrink: true },
-            htmlInput: { max: todayIso },
+            htmlInput: {
+              max: todayIso,
+              min: registrationDate || undefined,
+            },
           }}
           fullWidth
         />

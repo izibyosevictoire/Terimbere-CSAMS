@@ -137,6 +137,16 @@ describe('report timeline validation', () => {
     expect(validateReportTimeline('2026-01-01', '2026-08-20', today)).toBeNull()
   })
 
+  it('rejects a start date before cooperative registration', () => {
+    expect(validateReportTimeline('2026-01-01', '2026-08-20', today, '2026-03-01')).toBe(
+      'beforeRegistration',
+    )
+  })
+
+  it('defaults from registration date when that is after Jan 1', () => {
+    expect(defaultReportFromDate(today, '2026-03-15')).toBe('2026-03-15')
+  })
+
   it('rejects incomplete or future year/month filters', () => {
     expect(validateReportYearMonth('2026', '', today)).toBe('incompleteYearMonth')
     expect(validateReportYearMonth('2026', '9', today)).toBe('futureYearMonth')

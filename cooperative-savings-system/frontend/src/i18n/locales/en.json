@@ -1199,7 +1199,8 @@
         "futureTo": "You cannot generate a report that ends in the future.",
         "rangeTooLong": "The report timeline cannot be longer than 5 years.",
         "incompleteYearMonth": "Choose both year and month, or leave both as All.",
-        "futureYearMonth": "You cannot generate a report for a future month."
+        "futureYearMonth": "You cannot generate a report for a future month.",
+        "beforeRegistration": "From date cannot be before the cooperative registration date."
       }
     },
     "import": {
