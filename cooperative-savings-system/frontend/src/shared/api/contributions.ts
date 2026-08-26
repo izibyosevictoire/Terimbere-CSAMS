@@ -25,6 +25,8 @@ function toListParams(query: ContributionListQuery = {}) {
   if (query.year != null) params.year = query.year
   if (query.month != null) params.month = query.month
   if (query.memberUserId) params.memberUserId = query.memberUserId
+  if (query.fromDate) params.fromDate = query.fromDate
+  if (query.toDate) params.toDate = query.toDate
   if (query.page != null) params.page = query.page
   if (query.size != null) params.size = query.size
   if (query.sort) params.sort = query.sort

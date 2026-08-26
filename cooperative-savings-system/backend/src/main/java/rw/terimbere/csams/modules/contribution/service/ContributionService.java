@@ -54,6 +54,7 @@ import rw.terimbere.csams.shared.exceptions.ResourceNotFoundException;
 import rw.terimbere.csams.shared.exceptions.ValidationException;
 import rw.terimbere.csams.shared.financial.LedgerTransactionType;
 import rw.terimbere.csams.shared.pagination.PageMapper;
+import rw.terimbere.csams.shared.utilities.DateRangeValidator;
 import rw.terimbere.csams.shared.utilities.MoneyUtils;
 
 @Service
@@ -242,6 +243,7 @@ public class ContributionService {
         if (month != null) {
             validateMonth(month);
         }
+        DateRangeValidator.validateOptional(fromDate, toDate);
 
         Page<Contribution> page = contributionRepository.search(
                 cooperativeId, memberUserId, year, month, status, fromDate, toDate, pageable);
@@ -267,6 +269,19 @@ public class ContributionService {
                 .stream()
                 .map(c -> toResponse(c, name, true))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<ContributionResponse> myContributions(
+            UUID cooperativeId,
+            Integer year,
+            Integer month,
+            ContributionStatus status,
+            LocalDate fromDate,
+            LocalDate toDate,
+            Pageable pageable) {
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        return history(cooperativeId, principal.getId(), year, month, status, fromDate, toDate, pageable);
     }
 
     @Transactional(readOnly = true)

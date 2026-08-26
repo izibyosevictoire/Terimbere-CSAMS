@@ -28,6 +28,7 @@ import {
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
+import { ListQueryBody } from '@/shared/components/ListQueryBody'
 import { LoadingState } from '@/shared/components/LoadingState'
 import { ResponsiveTable, type TableColumn } from '@/shared/components/ResponsiveTable'
 import { ROUTES } from '@/shared/constants/routes'
@@ -424,16 +425,6 @@ export function SpecialCampaignsPanel({
     )
   }
 
-  if (listQuery.isLoading) return <LoadingState variant="skeleton" rows={4} />
-  if (listQuery.isError) {
-    return (
-      <ErrorState
-        message={getErrorMessage(listQuery.error)}
-        onRetry={() => void listQuery.refetch()}
-      />
-    )
-  }
-
   const campaigns = asCampaignList(listQuery.data)
 
   return (
@@ -465,6 +456,12 @@ export function SpecialCampaignsPanel({
         ) : null}
       </Stack>
 
+      <ListQueryBody
+        isLoading={listQuery.isLoading}
+        isError={listQuery.isError}
+        error={listQuery.error}
+        onRetry={() => void listQuery.refetch()}
+      >
       {campaigns.length === 0 ? (
         <EmptyState
           title={t('contributions.campaigns.emptyTitle')}
@@ -478,6 +475,7 @@ export function SpecialCampaignsPanel({
           onRowClick={(row) => navigate(ROUTES.specialCampaign(row.id))}
         />
       )}
+      </ListQueryBody>
 
       <CampaignFormDialog
         open={createOpen}

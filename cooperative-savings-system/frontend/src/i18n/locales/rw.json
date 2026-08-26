@@ -254,7 +254,22 @@
     "closeMenu": "Funga menu",
     "back": "Subira inyuma",
     "backToDashboard": "Subira ku mbonerahamwe",
-    "close": "Funga"
+    "apply": "Koresha",
+    "clear": "Siba",
+    "clearFilters": "Siba muyunguruzi",
+    "filter": "Muyunguruzi",
+    "fromDate": "Italiki yo gutangiriraho",
+    "toDate": "Italiki yo kurangiriraho",
+    "close": "Funga",
+    "filterValidation": {
+      "invalid": "Andika italiki nyayo.",
+      "fromAfterTo": "Italiki yo gutangiriraho igomba kuba mbere cyangwa ku ya kurangiriraho.",
+      "futureFrom": "Italiki yo gutangiriraho ntishobora kuba mu gihe kitageze.",
+      "futureTo": "Italiki yo kurangiriraho ntishobora kuba mu gihe kitageze.",
+      "invalidYear": "Umwaka ugomba kuba hagati ya 2000 na 2100.",
+      "invalidMonth": "Ukwezi kugomba kuba hagati ya 1 na 12.",
+      "futureYearMonth": "Ntushobora gushungura ukwezi kutageze."
+    }
   },
   "files": {
     "previewTitle": "Icyemezo cy'ubwishyu",

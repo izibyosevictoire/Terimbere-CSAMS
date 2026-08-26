@@ -44,11 +44,30 @@ export async function fetchFines(
   }
 }
 
-export async function fetchMyFines(cooperativeId: string): Promise<Fine[]> {
-  const response = await apiClient.get<ApiResponse<Fine[]>>(
+export async function fetchMyFines(
+  cooperativeId: string,
+  query: FineListQuery = {},
+): Promise<PageResponse<Fine>> {
+  const response = await apiClient.get<ApiResponse<PageResponse<Fine> | Fine[]>>(
     `/cooperatives/${cooperativeId}/fines/my`,
+    { params: toListParams(query) },
   )
-  return (unwrapApiData(response.data) ?? []).map(mapFine)
+  const data = unwrapApiData(response.data)
+  if (Array.isArray(data)) {
+    return {
+      content: data.map(mapFine),
+      page: 0,
+      size: data.length,
+      totalElements: data.length,
+      totalPages: 1,
+      first: true,
+      last: true,
+    }
+  }
+  return {
+    ...data,
+    content: (data.content ?? []).map(mapFine),
+  }
 }
 
 export async function fetchFine(cooperativeId: string, fineId: string): Promise<Fine> {

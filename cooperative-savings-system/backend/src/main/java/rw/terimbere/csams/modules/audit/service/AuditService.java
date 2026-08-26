@@ -1,6 +1,7 @@
 package rw.terimbere.csams.modules.audit.service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import rw.terimbere.csams.shared.auditing.AuditableAction;
 import rw.terimbere.csams.shared.common.dto.PageResponse;
 import rw.terimbere.csams.shared.exceptions.ResourceNotFoundException;
 import rw.terimbere.csams.shared.pagination.PageMapper;
+import rw.terimbere.csams.shared.utilities.DateRangeValidator;
 
 @Service
 @RequiredArgsConstructor
@@ -82,13 +84,18 @@ public class AuditService {
             String action,
             UUID userId,
             String entityType,
-            Instant from,
-            Instant to,
+            LocalDate from,
+            LocalDate to,
             Pageable pageable) {
         requireCooperative(cooperativeId);
         authorizationService.requireMembership(cooperativeId);
+        DateRangeValidator.validateOptional(from, to);
+        Instant fromInstant = from == null ? null : from.atStartOfDay(DateRangeValidator.ZONE).toInstant();
+        Instant toInstant = to == null
+                ? null
+                : to.plusDays(1).atStartOfDay(DateRangeValidator.ZONE).minusNanos(1).toInstant();
         Page<AuditLog> page = auditLogRepository.findAll(
-                AuditLogSpecs.filtered(cooperativeId, action, userId, entityType, from, to),
+                AuditLogSpecs.filtered(cooperativeId, action, userId, entityType, fromInstant, toInstant),
                 pageable);
         return PageMapper.toPageResponse(page, this::toResponse);
     }

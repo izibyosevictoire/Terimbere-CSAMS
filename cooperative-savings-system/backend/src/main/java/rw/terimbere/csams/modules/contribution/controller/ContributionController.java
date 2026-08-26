@@ -85,9 +85,16 @@ public class ContributionController {
     @GetMapping("/my")
     @PreAuthorize("hasAuthority('CONTRIBUTION_READ')")
     @Operation(summary = "Current user's contribution history")
-    public ResponseEntity<ApiResponse<List<ContributionResponse>>> myContributions(
-            @PathVariable UUID cooperativeId) {
-        return ResponseEntity.ok(ApiResponse.ok(contributionService.getMyContributions(cooperativeId)));
+    public ResponseEntity<ApiResponse<PageResponse<ContributionResponse>>> myContributions(
+            @PathVariable UUID cooperativeId,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) ContributionStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            @PageableDefault(size = 20, sort = "year", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.ok(contributionService.myContributions(
+                cooperativeId, year, month, status, fromDate, toDate, pageable)));
     }
 
     @GetMapping("/my/period-preview")

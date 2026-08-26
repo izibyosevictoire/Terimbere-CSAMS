@@ -137,15 +137,26 @@ export type SocialFundReportFormValues = {
 
 export const socialFundReportDefaults = (): SocialFundReportFormValues => {
   const now = new Date()
-  const year = now.getFullYear()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
   return {
-    from: `${year}-01-01`,
-    to: now.toISOString().slice(0, 10),
+    from: `${now.getFullYear()}-01-01`,
+    to: today,
   }
 }
 
 export const socialFundReportSchema: yup.ObjectSchema<SocialFundReportFormValues> = yup.object({
-  from: yup.string().trim().required('Start date is required'),
+  from: yup
+    .string()
+    .trim()
+    .required('Start date is required')
+    .test('not-future', 'Start date cannot be in the future', (value) => {
+      if (!value) return true
+      const now = new Date()
+      const pad = (n: number) => String(n).padStart(2, '0')
+      const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+      return value <= today
+    }),
   to: yup
     .string()
     .trim()
@@ -154,5 +165,12 @@ export const socialFundReportSchema: yup.ObjectSchema<SocialFundReportFormValues
       const { from } = this.parent as SocialFundReportFormValues
       if (!from || !value) return true
       return value >= from
+    })
+    .test('not-future', 'End date cannot be in the future', (value) => {
+      if (!value) return true
+      const now = new Date()
+      const pad = (n: number) => String(n).padStart(2, '0')
+      const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+      return value <= today
     }),
 })

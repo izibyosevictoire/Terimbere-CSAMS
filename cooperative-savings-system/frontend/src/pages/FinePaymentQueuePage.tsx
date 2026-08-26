@@ -19,6 +19,7 @@ import { fetchDashboardSummary } from '@/shared/api/dashboard'
 import { approveFinePayment, fetchFinePaymentQueue, rejectFinePayment } from '@/shared/api/fines'
 import { AuthenticatedFileLink } from '@/shared/components/AuthenticatedFileLink'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
+import { DateRangeFields } from '@/shared/components/DateRangeFields'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { LoadingState } from '@/shared/components/LoadingState'
 import { MetricCard } from '@/shared/components/MetricCard'
@@ -27,6 +28,7 @@ import { ResponsiveTable, type TableColumn } from '@/shared/components/Responsiv
 import { EmptyState } from '@/shared/components/EmptyState'
 import { FINE_PAYMENT_STATUSES, finePaymentDisplayName, type FinePayment } from '@/shared/types/fine'
 import { formatMoney } from '@/shared/utils/formatMoney'
+import { validateOptionalDateRange } from '@/shared/utils/filterValidation'
 
 export function FinePaymentQueuePage() {
   const { t } = useTranslation()
@@ -47,6 +49,9 @@ export function FinePaymentQueuePage() {
     action: 'approve' | 'reject'
   } | null>(null)
 
+  const dateIssue = validateOptionalDateRange(fromDate, toDate)
+  const appliedDateIssue = validateOptionalDateRange(filters.fromDate, filters.toDate)
+
   const summaryQuery = useQuery({
     queryKey: ['dashboard', 'summary', cooperativeId],
     queryFn: () => fetchDashboardSummary(cooperativeId!),
@@ -65,7 +70,7 @@ export function FinePaymentQueuePage() {
         size,
         sort: 'createdAt,desc',
       }),
-    enabled: Boolean(cooperativeId),
+    enabled: Boolean(cooperativeId) && !appliedDateIssue,
   })
 
   const invalidate = () => {
@@ -97,6 +102,7 @@ export function FinePaymentQueuePage() {
   })
 
   const applyFilters = () => {
+    if (dateIssue) return
     setFilters({ q: search.trim(), status, fromDate, toDate })
     setPage(0)
   }
@@ -306,23 +312,16 @@ export function FinePaymentQueuePage() {
             </MenuItem>
           ))}
         </TextField>
-        <TextField
-          type="date"
-          size="small"
-          label={t('reports.export.fromDate')}
-          value={fromDate}
-          onChange={(e) => setFromDate(e.target.value)}
-          slotProps={{ inputLabel: { shrink: true } }}
+        <DateRangeFields
+          from={fromDate}
+          to={toDate}
+          onFromChange={setFromDate}
+          onToChange={setToDate}
+          fromLabel={t('common.fromDate')}
+          toLabel={t('common.toDate')}
+          issue={dateIssue}
         />
-        <TextField
-          type="date"
-          size="small"
-          label={t('reports.export.toDate')}
-          value={toDate}
-          onChange={(e) => setToDate(e.target.value)}
-          slotProps={{ inputLabel: { shrink: true } }}
-        />
-        <Button variant="contained" onClick={applyFilters}>
+        <Button variant="contained" onClick={applyFilters} disabled={Boolean(dateIssue)}>
           {t('finePayments.filters.apply')}
         </Button>
         <Button variant="text" onClick={clearFilters}>
@@ -339,7 +338,7 @@ export function FinePaymentQueuePage() {
         />
       ) : null}
 
-      {queueQuery.isSuccess ? (
+      {!appliedDateIssue && queueQuery.isSuccess ? (
         <Box>
           <ResponsiveTable
             columns={columns}

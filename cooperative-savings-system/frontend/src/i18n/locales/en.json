@@ -260,8 +260,20 @@
     "backToDashboard": "Back to dashboard",
     "apply": "Apply",
     "clear": "Clear",
+    "clearFilters": "Clear filters",
     "filter": "Filter",
-    "close": "Close"
+    "fromDate": "From date",
+    "toDate": "To date",
+    "close": "Close",
+    "filterValidation": {
+      "invalid": "Enter a valid date.",
+      "fromAfterTo": "From date must be on or before to date.",
+      "futureFrom": "From date cannot be in the future.",
+      "futureTo": "To date cannot be in the future.",
+      "invalidYear": "Year must be between 2000 and 2100.",
+      "invalidMonth": "Month must be between 1 and 12.",
+      "futureYearMonth": "You cannot filter to a future month."
+    }
   },
   "files": {
     "previewTitle": "Payment proof",

@@ -150,6 +150,8 @@ export interface ContributionListQuery {
   year?: number
   month?: number
   memberUserId?: string
+  fromDate?: string
+  toDate?: string
   page?: number
   size?: number
   sort?: string

@@ -10,10 +10,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { getErrorMessage } from '@/shared/api/client'
 import { fetchLoans, fetchMyLoans } from '@/shared/api/loans'
-import { ErrorState } from '@/shared/components/ErrorState'
-import { LoadingState } from '@/shared/components/LoadingState'
+import { ListQueryBody } from '@/shared/components/ListQueryBody'
 import { ResponsiveTable, type TableColumn } from '@/shared/components/ResponsiveTable'
 import { ROUTES } from '@/shared/constants/routes'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
@@ -118,16 +116,6 @@ export function LoansListPanel({ cooperativeId, mode }: LoansListPanelProps) {
     [isAll, isApprovals, t],
   )
 
-  if (query.isLoading) return <LoadingState variant="skeleton" rows={4} />
-  if (query.isError) {
-    return (
-      <ErrorState
-        message={getErrorMessage(query.error)}
-        onRetry={() => void query.refetch()}
-      />
-    )
-  }
-
   const rows = query.data?.content ?? []
 
   return (
@@ -172,6 +160,12 @@ export function LoansListPanel({ cooperativeId, mode }: LoansListPanelProps) {
         )}
       </Stack>
 
+      <ListQueryBody
+        isLoading={query.isLoading}
+        isError={query.isError}
+        error={query.error}
+        onRetry={() => void query.refetch()}
+      >
       <ResponsiveTable
         columns={columns}
         rows={rows}
@@ -195,6 +189,7 @@ export function LoansListPanel({ cooperativeId, mode }: LoansListPanelProps) {
         }}
         rowsPerPageOptions={[5, 10, 25]}
       />
+      </ListQueryBody>
     </Box>
   )
 }

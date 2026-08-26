@@ -16,6 +16,7 @@ import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import rw.terimbere.csams.shared.common.dto.ErrorResponse;
 import rw.terimbere.csams.shared.common.dto.ErrorResponse.FieldErrorDetail;
@@ -71,6 +72,19 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Validation failed", request, fieldErrors);
     }
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        String name = ex.getName() == null ? "parameter" : ex.getName();
+        String message = "Invalid value for " + name;
+        if (isDateParam(name)) {
+            message = "Invalid date for " + name + ". Use YYYY-MM-DD.";
+        } else if (ex.getRequiredType() != null && ex.getRequiredType().isEnum()) {
+            message = "Invalid " + name;
+        }
+        return build(HttpStatus.BAD_REQUEST, message, request, null);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request, null);
@@ -114,6 +128,13 @@ public class GlobalExceptionHandler {
                 .fieldErrors(fieldErrors)
                 .build();
         return ResponseEntity.status(status).body(body);
+    }
+
+    private static boolean isDateParam(String name) {
+        return "from".equals(name)
+                || "to".equals(name)
+                || "fromDate".equals(name)
+                || "toDate".equals(name);
     }
 
     private String requestId() {

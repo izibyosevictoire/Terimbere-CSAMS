@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Chip,
   MenuItem,
   Stack,
@@ -9,17 +10,21 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getErrorMessage } from '@/shared/api/client'
 import { fetchContributions, fetchMyContributions } from '@/shared/api/contributions'
 import { ApprovalHistory } from '@/shared/components/ApprovalHistory'
+import { DateRangeFields } from '@/shared/components/DateRangeFields'
 import { EmptyState } from '@/shared/components/EmptyState'
-import { ErrorState } from '@/shared/components/ErrorState'
-import { LoadingState } from '@/shared/components/LoadingState'
+import { ListQueryBody } from '@/shared/components/ListQueryBody'
 import { ResponsiveTable, type TableColumn } from '@/shared/components/ResponsiveTable'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import type { Contribution } from '@/shared/types/contribution'
 import { CONTRIBUTION_STATUSES } from '@/shared/types/contribution'
 import { formatMoney } from '@/shared/utils/formatMoney'
+import {
+  filterValidationMessageKey,
+  validateOptionalDateRange,
+  validateOptionalYearMonth,
+} from '@/shared/utils/filterValidation'
 import { contributionStatusColor } from './contributionHelpers'
 
 interface HistoryPanelProps {
@@ -34,9 +39,15 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
   const [status, setStatus] = useState('')
   const [year, setYear] = useState('')
   const [month, setMonth] = useState('')
+  const [fromDate, setFromDate] = useState('')
+  const [toDate, setToDate] = useState('')
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(10)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  const dateIssue = validateOptionalDateRange(fromDate, toDate)
+  const yearMonthIssue = validateOptionalYearMonth(year, month)
+  const filtersValid = !dateIssue && !yearMonthIssue
 
   const query = useQuery({
     queryKey: [
@@ -47,6 +58,8 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
       status,
       year,
       month,
+      fromDate,
+      toDate,
       page,
       size,
     ],
@@ -56,6 +69,8 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
         status: status || undefined,
         year: year ? Number(year) : undefined,
         month: month ? Number(month) : undefined,
+        fromDate: fromDate || undefined,
+        toDate: toDate || undefined,
         page,
         size,
       }
@@ -63,7 +78,7 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
         ? fetchContributions(cooperativeId, params)
         : fetchMyContributions(cooperativeId, params)
     },
-    enabled: Boolean(cooperativeId),
+    enabled: Boolean(cooperativeId) && filtersValid,
   })
 
   const columns: TableColumn<Contribution>[] = useMemo(
@@ -139,18 +154,9 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
 
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: 8 }, (_, i) => currentYear - 3 + i)
-
-  if (query.isLoading) return <LoadingState variant="skeleton" rows={4} />
-  if (query.isError) {
-    return (
-      <ErrorState
-        message={getErrorMessage(query.error)}
-        onRetry={() => void query.refetch()}
-      />
-    )
-  }
-
   const rows = query.data?.content ?? []
+
+  const resetPage = () => setPage(0)
 
   return (
     <Box>
@@ -167,7 +173,7 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
-              setPage(0)
+              resetPage()
             }}
             sx={{ minWidth: 200 }}
           />
@@ -179,7 +185,7 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
           value={status}
           onChange={(e) => {
             setStatus(e.target.value)
-            setPage(0)
+            resetPage()
           }}
           sx={{ minWidth: 160 }}
         >
@@ -197,8 +203,12 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
           value={year}
           onChange={(e) => {
             setYear(e.target.value)
-            setPage(0)
+            resetPage()
           }}
+          error={Boolean(yearMonthIssue)}
+          helperText={
+            yearMonthIssue ? t(filterValidationMessageKey(yearMonthIssue)!) : undefined
+          }
           sx={{ minWidth: 110 }}
         >
           <MenuItem value="">{t('common.all')}</MenuItem>
@@ -215,8 +225,9 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
           value={month}
           onChange={(e) => {
             setMonth(e.target.value)
-            setPage(0)
+            resetPage()
           }}
+          error={Boolean(yearMonthIssue && month)}
           sx={{ minWidth: 120 }}
         >
           <MenuItem value="">{t('common.all')}</MenuItem>
@@ -226,6 +237,36 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
             </MenuItem>
           ))}
         </TextField>
+        <DateRangeFields
+          from={fromDate}
+          to={toDate}
+          onFromChange={(value) => {
+            setFromDate(value)
+            resetPage()
+          }}
+          onToChange={(value) => {
+            setToDate(value)
+            resetPage()
+          }}
+          fromLabel={t('common.fromDate')}
+          toLabel={t('common.toDate')}
+          issue={dateIssue}
+        />
+        <Button
+          variant="outlined"
+          onClick={() => {
+            setSearch('')
+            setStatus('')
+            setYear('')
+            setMonth('')
+            setFromDate('')
+            setToDate('')
+            resetPage()
+          }}
+          sx={{ minHeight: 40 }}
+        >
+          {t('common.clearFilters')}
+        </Button>
       </Stack>
 
       {!isAdmin ? (
@@ -234,40 +275,48 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
         </Box>
       ) : null}
 
-      {rows.length === 0 ? (
-        <EmptyState
-          title={t('contributions.historyEmptyTitle')}
-          description={t('contributions.historyEmptyDescription')}
-        />
-      ) : (
-        <>
-          <ResponsiveTable
-            columns={columns}
-            rows={rows}
-            getRowId={(row) => row.id}
-            onRowClick={(row) => setSelectedId(row.id)}
+      <ListQueryBody
+        isLoading={query.isLoading}
+        isError={query.isError}
+        error={query.error}
+        onRetry={() => void query.refetch()}
+        enabled={filtersValid}
+      >
+        {rows.length === 0 ? (
+          <EmptyState
+            title={t('contributions.historyEmptyTitle')}
+            description={t('contributions.historyEmptyDescription')}
           />
-          <TablePagination
-            component="div"
-            count={query.data?.totalElements ?? 0}
-            page={page}
-            onPageChange={(_, next) => setPage(next)}
-            rowsPerPage={size}
-            onRowsPerPageChange={(e) => {
-              setSize(Number(e.target.value))
-              setPage(0)
-            }}
-            rowsPerPageOptions={[5, 10, 25]}
-          />
-          {selectedId ? (
-            <Box sx={{ mt: 2 }}>
-              <ApprovalHistory
-                events={rows.find((row) => row.id === selectedId)?.approvalHistory}
-              />
-            </Box>
-          ) : null}
-        </>
-      )}
+        ) : (
+          <>
+            <ResponsiveTable
+              columns={columns}
+              rows={rows}
+              getRowId={(row) => row.id}
+              onRowClick={(row) => setSelectedId(row.id)}
+            />
+            <TablePagination
+              component="div"
+              count={query.data?.totalElements ?? 0}
+              page={page}
+              onPageChange={(_, next) => setPage(next)}
+              rowsPerPage={size}
+              onRowsPerPageChange={(e) => {
+                setSize(Number(e.target.value))
+                resetPage()
+              }}
+              rowsPerPageOptions={[5, 10, 25]}
+            />
+            {selectedId ? (
+              <Box sx={{ mt: 2 }}>
+                <ApprovalHistory
+                  events={rows.find((row) => row.id === selectedId)?.approvalHistory}
+                />
+              </Box>
+            ) : null}
+          </>
+        )}
+      </ListQueryBody>
     </Box>
   )
 }

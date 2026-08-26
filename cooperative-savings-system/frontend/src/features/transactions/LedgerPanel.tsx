@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   MenuItem,
   Stack,
   TablePagination,
@@ -8,14 +9,14 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getErrorMessage } from '@/shared/api/client'
 import { fetchLedgerEntries } from '@/shared/api/ledger'
-import { ErrorState } from '@/shared/components/ErrorState'
-import { LoadingState } from '@/shared/components/LoadingState'
+import { DateRangeFields } from '@/shared/components/DateRangeFields'
+import { ListQueryBody } from '@/shared/components/ListQueryBody'
 import { ResponsiveTable, type TableColumn } from '@/shared/components/ResponsiveTable'
 import type { LedgerEntry } from '@/shared/types/ledger'
 import { LEDGER_TRANSACTION_TYPES } from '@/shared/types/ledger'
 import { formatMoney } from '@/shared/utils/formatMoney'
+import { validateOptionalDateRange } from '@/shared/utils/filterValidation'
 
 interface LedgerPanelProps {
   cooperativeId: string
@@ -29,6 +30,9 @@ export function LedgerPanel({ cooperativeId }: LedgerPanelProps) {
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(10)
 
+  const dateIssue = validateOptionalDateRange(from, to)
+  const filtersValid = !dateIssue
+
   const query = useQuery({
     queryKey: ['ledger', cooperativeId, transactionType, from, to, page, size],
     queryFn: () =>
@@ -40,7 +44,7 @@ export function LedgerPanel({ cooperativeId }: LedgerPanelProps) {
         size,
         sort: 'transactionDate,desc',
       }),
-    enabled: Boolean(cooperativeId),
+    enabled: Boolean(cooperativeId) && filtersValid,
   })
 
   const columns: TableColumn<LedgerEntry>[] = useMemo(
@@ -90,16 +94,6 @@ export function LedgerPanel({ cooperativeId }: LedgerPanelProps) {
     [t],
   )
 
-  if (query.isLoading) return <LoadingState variant="skeleton" rows={4} />
-  if (query.isError) {
-    return (
-      <ErrorState
-        message={getErrorMessage(query.error)}
-        onRetry={() => void query.refetch()}
-      />
-    )
-  }
-
   const rows = query.data?.content ?? []
 
   return (
@@ -128,48 +122,63 @@ export function LedgerPanel({ cooperativeId }: LedgerPanelProps) {
             </MenuItem>
           ))}
         </TextField>
-        <TextField
-          size="small"
-          type="date"
-          label={t('ledger.fields.from')}
-          value={from}
-          onChange={(e) => {
-            setFrom(e.target.value)
+        <DateRangeFields
+          from={from}
+          to={to}
+          onFromChange={(value) => {
+            setFrom(value)
             setPage(0)
           }}
-        />
-        <TextField
-          size="small"
-          type="date"
-          label={t('ledger.fields.to')}
-          value={to}
-          onChange={(e) => {
-            setTo(e.target.value)
+          onToChange={(value) => {
+            setTo(value)
             setPage(0)
           }}
+          fromLabel={t('ledger.fields.from')}
+          toLabel={t('ledger.fields.to')}
+          issue={dateIssue}
         />
+        <Button
+          variant="outlined"
+          onClick={() => {
+            setTransactionType('')
+            setFrom('')
+            setTo('')
+            setPage(0)
+          }}
+          sx={{ minHeight: 40 }}
+        >
+          {t('common.clearFilters')}
+        </Button>
       </Stack>
 
-      <ResponsiveTable
-        columns={columns}
-        rows={rows}
-        getRowId={(row) => row.id}
-        emptyTitle={t('ledger.emptyTitle')}
-        emptyDescription={t('ledger.emptyDescription')}
-      />
+      <ListQueryBody
+        isLoading={query.isLoading}
+        isError={query.isError}
+        error={query.error}
+        onRetry={() => void query.refetch()}
+        enabled={filtersValid}
+      >
+        <ResponsiveTable
+          columns={columns}
+          rows={rows}
+          getRowId={(row) => row.id}
+          emptyTitle={t('ledger.emptyTitle')}
+          emptyDescription={t('ledger.emptyDescription')}
+        />
 
-      <TablePagination
-        component="div"
-        count={query.data?.totalElements ?? 0}
-        page={page}
-        onPageChange={(_, next) => setPage(next)}
-        rowsPerPage={size}
-        onRowsPerPageChange={(e) => {
-          setSize(Number(e.target.value))
-          setPage(0)
-        }}
-        rowsPerPageOptions={[5, 10, 25]}
-      />
+        <TablePagination
+          component="div"
+          count={query.data?.totalElements ?? 0}
+          page={page}
+          onPageChange={(_, next) => setPage(next)}
+          rowsPerPage={size}
+          onRowsPerPageChange={(e) => {
+            setSize(Number(e.target.value))
+            setPage(0)
+          }}
+          rowsPerPageOptions={[5, 10, 25]}
+        />
+      </ListQueryBody>
     </Box>
   )
 }

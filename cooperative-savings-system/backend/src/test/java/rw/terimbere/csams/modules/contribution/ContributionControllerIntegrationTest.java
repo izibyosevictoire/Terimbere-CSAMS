@@ -364,7 +364,28 @@ class ContributionControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/contributions/my")
                         .header("Authorization", "Bearer " + memberToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].id").value(contributionId.toString()));
+                .andExpect(jsonPath("$.data.content[0].id").value(contributionId.toString()));
+
+        mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/contributions/my")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .param("year", "2026")
+                        .param("month", "5")
+                        .param("status", "PARTIALLY_PAID"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].id").value(contributionId.toString()))
+                .andExpect(jsonPath("$.data.totalElements").value(1));
+
+        mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/contributions/my")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .param("year", "2025"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0));
+
+        mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/contributions/my")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .param("fromDate", "2026-06-01")
+                        .param("toDate", "2026-05-01"))
+                .andExpect(status().isBadRequest());
 
         mockMvc.perform(patch("/api/v1/cooperatives/" + cooperativeId + "/contributions/" + contributionId)
                         .header("Authorization", "Bearer " + superAdminToken)

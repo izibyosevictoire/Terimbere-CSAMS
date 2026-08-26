@@ -26,8 +26,8 @@ import {
   rejectTransaction,
 } from '@/shared/api/transactions'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
-import { ErrorState } from '@/shared/components/ErrorState'
-import { LoadingState } from '@/shared/components/LoadingState'
+import { DateRangeFields } from '@/shared/components/DateRangeFields'
+import { ListQueryBody } from '@/shared/components/ListQueryBody'
 import { ResponsiveTable, type TableColumn } from '@/shared/components/ResponsiveTable'
 import type { IncomeExpenseTransaction } from '@/shared/types/incomeExpense'
 import {
@@ -35,6 +35,7 @@ import {
   INCOME_EXPENSE_CATEGORIES,
 } from '@/shared/types/incomeExpense'
 import { formatMoney } from '@/shared/utils/formatMoney'
+import { validateOptionalDateRange } from '@/shared/utils/filterValidation'
 import {
   canApproveTransaction,
   canRejectTransaction,
@@ -76,6 +77,9 @@ export function TransactionsListPanel({
     resolver: yupResolver(transactionRejectSchema),
   })
 
+  const dateIssue = validateOptionalDateRange(from, to)
+  const filtersValid = !dateIssue
+
   const query = useQuery({
     queryKey: [
       'transactions',
@@ -97,7 +101,7 @@ export function TransactionsListPanel({
         size,
         sort: 'transactionDate,desc',
       }),
-    enabled: Boolean(cooperativeId),
+    enabled: Boolean(cooperativeId) && filtersValid,
   })
 
   const invalidate = () => {
@@ -226,16 +230,6 @@ export function TransactionsListPanel({
     [isAdmin, t],
   )
 
-  if (query.isLoading) return <LoadingState variant="skeleton" rows={4} />
-  if (query.isError) {
-    return (
-      <ErrorState
-        message={getErrorMessage(query.error)}
-        onRetry={() => void query.refetch()}
-      />
-    )
-  }
-
   return (
     <Box>
       <Stack spacing={1.5} sx={{ mb: 2 }}>
@@ -297,29 +291,31 @@ export function TransactionsListPanel({
               </MenuItem>
             ))}
           </TextField>
-          <TextField
-            size="small"
-            type="date"
-            label={t('transactions.fields.from')}
-            value={from}
-            onChange={(e) => {
-              setFrom(e.target.value)
+          <DateRangeFields
+            from={from}
+            to={to}
+            onFromChange={(value) => {
+              setFrom(value)
               setPage(0)
             }}
-          />
-          <TextField
-            size="small"
-            type="date"
-            label={t('transactions.fields.to')}
-            value={to}
-            onChange={(e) => {
-              setTo(e.target.value)
+            onToChange={(value) => {
+              setTo(value)
               setPage(0)
             }}
+            fromLabel={t('transactions.fields.from')}
+            toLabel={t('transactions.fields.to')}
+            issue={dateIssue}
           />
         </Stack>
       </Stack>
 
+      <ListQueryBody
+        isLoading={query.isLoading}
+        isError={query.isError}
+        error={query.error}
+        onRetry={() => void query.refetch()}
+        enabled={filtersValid}
+      >
       <ResponsiveTable
         columns={columns}
         rows={rows}
@@ -340,6 +336,7 @@ export function TransactionsListPanel({
         }}
         rowsPerPageOptions={[5, 10, 25]}
       />
+      </ListQueryBody>
 
       <ConfirmDialog
         open={Boolean(approveId)}

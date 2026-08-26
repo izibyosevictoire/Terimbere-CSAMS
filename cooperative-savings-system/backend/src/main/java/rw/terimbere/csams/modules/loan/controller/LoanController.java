@@ -71,8 +71,11 @@ public class LoanController {
     @GetMapping("/my")
     @PreAuthorize("hasAuthority('LOAN_READ')")
     @Operation(summary = "List current user's loans")
-    public ResponseEntity<ApiResponse<List<LoanResponse>>> myLoans(@PathVariable UUID cooperativeId) {
-        return ResponseEntity.ok(ApiResponse.ok(loanService.myLoans(cooperativeId)));
+    public ResponseEntity<ApiResponse<PageResponse<LoanResponse>>> myLoans(
+            @PathVariable UUID cooperativeId,
+            @RequestParam(required = false) LoanStatus status,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.ok(loanService.myLoans(cooperativeId, status, pageable)));
     }
 
     @GetMapping("/application-preview")

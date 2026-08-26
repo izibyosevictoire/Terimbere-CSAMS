@@ -10,10 +10,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { getErrorMessage } from '@/shared/api/client'
 import { fetchFines, fetchMyFines } from '@/shared/api/fines'
-import { ErrorState } from '@/shared/components/ErrorState'
-import { LoadingState } from '@/shared/components/LoadingState'
+import { ListQueryBody } from '@/shared/components/ListQueryBody'
 import { ResponsiveTable, type TableColumn } from '@/shared/components/ResponsiveTable'
 import { ROUTES } from '@/shared/constants/routes'
 import type { Fine } from '@/shared/types/fine'
@@ -46,22 +44,12 @@ export function FinesListPanel({ cooperativeId, mode }: FinesListPanelProps) {
           sort: 'createdAt,desc',
         })
       }
-      const list = await fetchMyFines(cooperativeId)
-      const filtered = status
-        ? list.filter((fine) => String(fine.status) === status)
-        : list
-      const start = page * size
-      const totalElements = filtered.length
-      const totalPages = Math.ceil(totalElements / size) || 0
-      return {
-        content: filtered.slice(start, start + size),
+      return fetchMyFines(cooperativeId, {
+        status: status || undefined,
         page,
         size,
-        totalElements,
-        totalPages,
-        first: page === 0,
-        last: page >= totalPages - 1 || totalElements === 0,
-      }
+        sort: 'createdAt,desc',
+      })
     },
     enabled: Boolean(cooperativeId),
   })
@@ -138,16 +126,6 @@ export function FinesListPanel({ cooperativeId, mode }: FinesListPanelProps) {
     [isAll, t],
   )
 
-  if (query.isLoading) return <LoadingState variant="skeleton" rows={4} />
-  if (query.isError) {
-    return (
-      <ErrorState
-        message={getErrorMessage(query.error)}
-        onRetry={() => void query.refetch()}
-      />
-    )
-  }
-
   const rows = query.data?.content ?? []
 
   return (
@@ -178,6 +156,12 @@ export function FinesListPanel({ cooperativeId, mode }: FinesListPanelProps) {
         </TextField>
       </Stack>
 
+      <ListQueryBody
+        isLoading={query.isLoading}
+        isError={query.isError}
+        error={query.error}
+        onRetry={() => void query.refetch()}
+      >
       <ResponsiveTable
         columns={columns}
         rows={rows}
@@ -201,6 +185,7 @@ export function FinesListPanel({ cooperativeId, mode }: FinesListPanelProps) {
         }}
         rowsPerPageOptions={[5, 10, 25]}
       />
+      </ListQueryBody>
     </Box>
   )
 }

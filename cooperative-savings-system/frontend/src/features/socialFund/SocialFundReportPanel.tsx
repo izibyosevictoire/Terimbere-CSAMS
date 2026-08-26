@@ -23,6 +23,7 @@ import {
   socialDisbursementDisplayName,
 } from '@/shared/types/socialFund'
 import { formatMoney } from '@/shared/utils/formatMoney'
+import { todayIsoDate } from '@/shared/utils/filterValidation'
 import { socialStatusColor } from './socialFundHelpers'
 import {
   socialFundReportDefaults,
@@ -138,7 +139,10 @@ export function SocialFundReportPanel({ cooperativeId }: SocialFundReportPanelPr
           <TextField
             type="date"
             label={t('socialFund.report.from')}
-            slotProps={{ inputLabel: { shrink: true } }}
+            slotProps={{
+              inputLabel: { shrink: true },
+              htmlInput: { max: todayIsoDate() },
+            }}
             error={Boolean(errors.from)}
             helperText={errors.from?.message}
             {...register('from')}
@@ -147,7 +151,10 @@ export function SocialFundReportPanel({ cooperativeId }: SocialFundReportPanelPr
           <TextField
             type="date"
             label={t('socialFund.report.to')}
-            slotProps={{ inputLabel: { shrink: true } }}
+            slotProps={{
+              inputLabel: { shrink: true },
+              htmlInput: { max: todayIsoDate() },
+            }}
             error={Boolean(errors.to)}
             helperText={errors.to?.message}
             {...register('to')}

@@ -16,6 +16,7 @@ import rw.terimbere.csams.shared.common.dto.PageResponse;
 import rw.terimbere.csams.shared.exceptions.ResourceNotFoundException;
 import rw.terimbere.csams.shared.financial.LedgerTransactionType;
 import rw.terimbere.csams.shared.pagination.PageMapper;
+import rw.terimbere.csams.shared.utilities.DateRangeValidator;
 import rw.terimbere.csams.shared.utilities.MoneyUtils;
 
 @Service
@@ -37,6 +38,7 @@ public class LedgerQueryService {
             Pageable pageable) {
         requireCooperative(cooperativeId);
         authorizationService.requireMembership(cooperativeId);
+        DateRangeValidator.validateOptional(from, to);
         Page<LedgerEntry> page = ledgerEntryRepository.findFiltered(
                 cooperativeId, transactionType, from, to, memberUserId, sourceEntityType, pageable);
         return PageMapper.toPageResponse(page, this::toResponse);

@@ -58,8 +58,11 @@ public class FineController {
     @GetMapping("/my")
     @PreAuthorize("hasAuthority('FINE_READ')")
     @Operation(summary = "List current user's fines")
-    public ResponseEntity<ApiResponse<List<FineResponse>>> myFines(@PathVariable UUID cooperativeId) {
-        return ResponseEntity.ok(ApiResponse.ok(fineService.myFines(cooperativeId)));
+    public ResponseEntity<ApiResponse<PageResponse<FineResponse>>> myFines(
+            @PathVariable UUID cooperativeId,
+            @RequestParam(required = false) FineStatus status,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.ok(fineService.myFines(cooperativeId, status, pageable)));
     }
 
     @GetMapping("/payments")

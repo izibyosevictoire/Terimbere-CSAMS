@@ -13,15 +13,17 @@ import dayjs from 'dayjs'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppSelector } from '@/app/store/hooks'
-import { formatJsonBlock, toIsoDateEnd, toIsoDateStart } from '@/features/auditLogs'
+import { formatJsonBlock } from '@/features/auditLogs'
 import { fetchAuditLog, fetchAuditLogs } from '@/shared/api/auditLogs'
 import { getErrorMessage } from '@/shared/api/client'
+import { DateRangeFields } from '@/shared/components/DateRangeFields'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { LoadingState } from '@/shared/components/LoadingState'
 import { PageHeader } from '@/shared/components/PageHeader'
 import { ResponsiveTable, type TableColumn } from '@/shared/components/ResponsiveTable'
 import type { AuditLog } from '@/shared/types/auditLog'
+import { validateOptionalDateRange } from '@/shared/utils/filterValidation'
 
 export function AuditLogsPage() {
   const { t } = useTranslation()
@@ -34,19 +36,22 @@ export function AuditLogsPage() {
   const [size, setSize] = useState(10)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
+  const dateIssue = validateOptionalDateRange(from, to)
+  const filtersValid = !dateIssue
+
   const listQuery = useQuery({
     queryKey: ['audit-logs', cooperativeId, action, entityType, from, to, page, size],
     queryFn: () =>
       fetchAuditLogs(cooperativeId!, {
         action: action || undefined,
         entityType: entityType || undefined,
-        from: toIsoDateStart(from),
-        to: toIsoDateEnd(to),
+        from: from || undefined,
+        to: to || undefined,
         page,
         size,
         sort: 'createdAt,desc',
       }),
-    enabled: Boolean(cooperativeId),
+    enabled: Boolean(cooperativeId) && filtersValid,
   })
 
   const detailQuery = useQuery({
@@ -140,29 +145,20 @@ export function AuditLogsPage() {
           }}
           sx={{ minWidth: { xs: '100%', sm: 180 } }}
         />
-        <TextField
-          size="small"
-          type="date"
-          label={t('auditLogs.fields.from')}
-          value={from}
-          onChange={(e) => {
-            setFrom(e.target.value)
+        <DateRangeFields
+          from={from}
+          to={to}
+          onFromChange={(value) => {
+            setFrom(value)
             setPage(0)
           }}
-          slotProps={{ inputLabel: { shrink: true } }}
-          sx={{ minWidth: { xs: '100%', sm: 160 } }}
-        />
-        <TextField
-          size="small"
-          type="date"
-          label={t('auditLogs.fields.to')}
-          value={to}
-          onChange={(e) => {
-            setTo(e.target.value)
+          onToChange={(value) => {
+            setTo(value)
             setPage(0)
           }}
-          slotProps={{ inputLabel: { shrink: true } }}
-          sx={{ minWidth: { xs: '100%', sm: 160 } }}
+          fromLabel={t('auditLogs.fields.from')}
+          toLabel={t('auditLogs.fields.to')}
+          issue={dateIssue}
         />
         <Button
           variant="outlined"
@@ -181,14 +177,14 @@ export function AuditLogsPage() {
 
       {listQuery.isLoading ? <LoadingState variant="skeleton" rows={5} /> : null}
 
-      {listQuery.isError ? (
+      {filtersValid && listQuery.isError ? (
         <ErrorState
           message={getErrorMessage(listQuery.error)}
           onRetry={() => void listQuery.refetch()}
         />
       ) : null}
 
-      {!listQuery.isLoading && !listQuery.isError ? (
+      {filtersValid && !listQuery.isLoading && !listQuery.isError ? (
         <>
           <ResponsiveTable
             columns={columns}

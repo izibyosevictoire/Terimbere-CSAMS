@@ -376,7 +376,7 @@ class LoanControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/loans/my")
                         .header("Authorization", "Bearer " + memberToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(1));
+                .andExpect(jsonPath("$.data.content.length()").value(1));
     }
 
     @Test

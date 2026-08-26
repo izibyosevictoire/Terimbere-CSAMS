@@ -59,6 +59,7 @@ import rw.terimbere.csams.shared.exceptions.ResourceNotFoundException;
 import rw.terimbere.csams.shared.exceptions.ValidationException;
 import rw.terimbere.csams.shared.financial.LedgerTransactionType;
 import rw.terimbere.csams.shared.pagination.PageMapper;
+import rw.terimbere.csams.shared.utilities.DateRangeValidator;
 import rw.terimbere.csams.shared.utilities.MoneyUtils;
 
 @Service
@@ -101,16 +102,9 @@ public class FineService {
     }
 
     @Transactional(readOnly = true)
-    public List<FineResponse> myFines(UUID cooperativeId) {
-        Cooperative cooperative = requireCooperative(cooperativeId);
+    public PageResponse<FineResponse> myFines(UUID cooperativeId, FineStatus status, Pageable pageable) {
         UserPrincipal principal = authorizationService.currentPrincipal();
-        authorizationService.requireMembership(cooperativeId);
-        return fineRepository
-                .findByCooperativeIdAndMemberUserIdOrderByIssuedDateDescCreatedAtDesc(
-                        cooperativeId, principal.getId())
-                .stream()
-                .map(f -> toResponse(f, cooperative.getCurrency()))
-                .toList();
+        return list(cooperativeId, status, principal.getId(), pageable);
     }
 
     @Transactional(readOnly = true)
@@ -738,6 +732,7 @@ public class FineService {
             Pageable pageable) {
         Cooperative cooperative = requireCooperative(cooperativeId);
         authorizationService.requireMembership(cooperativeId);
+        DateRangeValidator.validateOptional(fromDate, toDate);
 
         String query = StringUtils.hasText(q) ? q.trim() : null;
         Page<FinePayment> page = finePaymentRepository.findQueuePage(

@@ -277,17 +277,9 @@ public class LoanService {
     }
 
     @Transactional
-    public List<LoanResponse> myLoans(UUID cooperativeId) {
-        requireCooperative(cooperativeId);
+    public PageResponse<LoanResponse> myLoans(UUID cooperativeId, LoanStatus status, Pageable pageable) {
         UserPrincipal principal = authorizationService.currentPrincipal();
-        authorizationService.requireMembership(cooperativeId);
-        loanRepository.markOverdue(cooperativeId, LocalDate.now());
-        return loanRepository
-                .findByCooperativeIdAndMemberUserIdOrderByRequestDateDescCreatedAtDesc(
-                        cooperativeId, principal.getId())
-                .stream()
-                .map(loan -> toResponse(loan, null, true))
-                .toList();
+        return list(cooperativeId, status, principal.getId(), false, pageable);
     }
 
     @Transactional
