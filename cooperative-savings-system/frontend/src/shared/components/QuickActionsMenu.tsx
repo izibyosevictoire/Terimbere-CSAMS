@@ -24,7 +24,16 @@ import type { SvgIconComponent } from '@mui/icons-material'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import { useAppSelector } from '@/app/store/hooks'
+import { selectAuthUser } from '@/app/store/authSlice'
 import { ROUTES } from '@/shared/constants/routes'
+import {
+  hasAnyRole,
+  hasPermission,
+  PERMISSION_MEMBERSHIP_MANAGE,
+  SECRETARY_ACCESS_ROLES,
+  type AuthUser,
+} from '@/shared/types/auth'
 
 export interface QuickActionItem {
   id: string
@@ -41,6 +50,10 @@ export interface QuickActionItem {
   icon: SvgIconComponent
   path: string
   group: 'quick' | 'group'
+  /** Required permission to show this action. Super Admin always qualifies. */
+  permission?: string
+  /** Required roles to show this action (e.g. members list). */
+  roles?: readonly string[]
 }
 
 export const QUICK_ACTIONS: QuickActionItem[] = [
@@ -52,6 +65,7 @@ export const QUICK_ACTIONS: QuickActionItem[] = [
     icon: AddIcon,
     path: `${ROUTES.members}?action=register`,
     group: 'quick',
+    permission: PERMISSION_MEMBERSHIP_MANAGE,
   },
   {
     id: 'update-contributions',
@@ -106,6 +120,7 @@ export const QUICK_ACTIONS: QuickActionItem[] = [
     icon: GroupsIcon,
     path: ROUTES.members,
     group: 'quick',
+    roles: SECRETARY_ACCESS_ROLES,
   },
   {
     id: 'change-password',
@@ -145,6 +160,22 @@ export const QUICK_ACTIONS: QuickActionItem[] = [
   },
 ]
 
+export function canShowQuickAction(
+  item: QuickActionItem,
+  user: Pick<AuthUser, 'roles' | 'permissions'> | null | undefined,
+): boolean {
+  if (item.permission && !hasPermission(user, item.permission)) return false
+  if (item.roles?.length && !hasAnyRole(user?.roles, item.roles)) return false
+  return true
+}
+
+export function quickActionsForUser(
+  user: Pick<AuthUser, 'roles' | 'permissions'> | null | undefined,
+  group: 'quick' | 'group',
+): QuickActionItem[] {
+  return QUICK_ACTIONS.filter((item) => item.group === group && canShowQuickAction(item, user))
+}
+
 interface QuickActionsMenuProps {
   buttonVariant?: 'contained' | 'outlined' | 'text'
   size?: 'small' | 'medium'
@@ -156,10 +187,11 @@ export function QuickActionsMenu({
 }: QuickActionsMenuProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const user = useAppSelector(selectAuthUser)
   const [anchor, setAnchor] = useState<null | HTMLElement>(null)
 
-  const quick = QUICK_ACTIONS.filter((a) => a.group === 'quick')
-  const group = QUICK_ACTIONS.filter((a) => a.group === 'group')
+  const quick = quickActionsForUser(user, 'quick')
+  const group = quickActionsForUser(user, 'group')
 
   const go = (path: string) => {
     setAnchor(null)
@@ -202,19 +234,27 @@ export function QuickActionsMenu({
         onClose={() => setAnchor(null)}
         slotProps={{ paper: { sx: { minWidth: 320, maxHeight: 520 } } }}
       >
-        <Box sx={{ px: 2, pt: 1.5, pb: 0.5 }}>
-          <Typography variant="overline" color="text.secondary">
-            {t('actions.quickActions')}
-          </Typography>
-        </Box>
-        {quick.map(renderItem)}
-        <Divider sx={{ my: 1 }} />
-        <Box sx={{ px: 2, pt: 0.5, pb: 0.5 }}>
-          <Typography variant="overline" color="text.secondary">
-            {t('actions.groupActions')}
-          </Typography>
-        </Box>
-        {group.map(renderItem)}
+        {quick.length > 0 ? (
+          <>
+            <Box sx={{ px: 2, pt: 1.5, pb: 0.5 }}>
+              <Typography variant="overline" color="text.secondary">
+                {t('actions.quickActions')}
+              </Typography>
+            </Box>
+            {quick.map(renderItem)}
+          </>
+        ) : null}
+        {quick.length > 0 && group.length > 0 ? <Divider sx={{ my: 1 }} /> : null}
+        {group.length > 0 ? (
+          <>
+            <Box sx={{ px: 2, pt: 0.5, pb: 0.5 }}>
+              <Typography variant="overline" color="text.secondary">
+                {t('actions.groupActions')}
+              </Typography>
+            </Box>
+            {group.map(renderItem)}
+          </>
+        ) : null}
       </Menu>
     </>
   )

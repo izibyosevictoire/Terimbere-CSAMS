@@ -20,11 +20,7 @@ import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import type { Contribution } from '@/shared/types/contribution'
 import { CONTRIBUTION_STATUSES } from '@/shared/types/contribution'
 import { formatMoney } from '@/shared/utils/formatMoney'
-import {
-  filterValidationMessageKey,
-  validateOptionalDateRange,
-  validateOptionalYearMonth,
-} from '@/shared/utils/filterValidation'
+import { validateOptionalDateRange } from '@/shared/utils/filterValidation'
 import { contributionStatusColor } from './contributionHelpers'
 
 interface HistoryPanelProps {
@@ -37,8 +33,6 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebouncedValue(search, 300)
   const [status, setStatus] = useState('')
-  const [year, setYear] = useState('')
-  const [month, setMonth] = useState('')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
   const [page, setPage] = useState(0)
@@ -46,8 +40,7 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const dateIssue = validateOptionalDateRange(fromDate, toDate)
-  const yearMonthIssue = validateOptionalYearMonth(year, month)
-  const filtersValid = !dateIssue && !yearMonthIssue
+  const filtersValid = !dateIssue
 
   const query = useQuery({
     queryKey: [
@@ -56,8 +49,6 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
       cooperativeId,
       debouncedSearch,
       status,
-      year,
-      month,
       fromDate,
       toDate,
       page,
@@ -67,8 +58,6 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
       const params = {
         q: debouncedSearch || undefined,
         status: status || undefined,
-        year: year ? Number(year) : undefined,
-        month: month ? Number(month) : undefined,
         fromDate: fromDate || undefined,
         toDate: toDate || undefined,
         page,
@@ -152,8 +141,6 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
     [isAdmin, t],
   )
 
-  const currentYear = new Date().getFullYear()
-  const years = Array.from({ length: 8 }, (_, i) => currentYear - 3 + i)
   const rows = query.data?.content ?? []
 
   const resetPage = () => setPage(0)
@@ -196,47 +183,6 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
             </MenuItem>
           ))}
         </TextField>
-        <TextField
-          select
-          size="small"
-          label={t('contributions.fields.year')}
-          value={year}
-          onChange={(e) => {
-            setYear(e.target.value)
-            resetPage()
-          }}
-          error={Boolean(yearMonthIssue)}
-          helperText={
-            yearMonthIssue ? t(filterValidationMessageKey(yearMonthIssue)!) : undefined
-          }
-          sx={{ minWidth: 110 }}
-        >
-          <MenuItem value="">{t('common.all')}</MenuItem>
-          {years.map((y) => (
-            <MenuItem key={y} value={String(y)}>
-              {y}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
-          select
-          size="small"
-          label={t('contributions.fields.month')}
-          value={month}
-          onChange={(e) => {
-            setMonth(e.target.value)
-            resetPage()
-          }}
-          error={Boolean(yearMonthIssue && month)}
-          sx={{ minWidth: 120 }}
-        >
-          <MenuItem value="">{t('common.all')}</MenuItem>
-          {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-            <MenuItem key={m} value={String(m)}>
-              {m}
-            </MenuItem>
-          ))}
-        </TextField>
         <DateRangeFields
           from={fromDate}
           to={toDate}
@@ -257,8 +203,6 @@ export function HistoryPanel({ cooperativeId, isAdmin }: HistoryPanelProps) {
           onClick={() => {
             setSearch('')
             setStatus('')
-            setYear('')
-            setMonth('')
             setFromDate('')
             setToDate('')
             resetPage()
