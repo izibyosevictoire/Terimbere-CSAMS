@@ -35,36 +35,16 @@ public interface FinePaymentRepository
                 Sort.by(Sort.Direction.DESC, "paymentDate").and(Sort.by(Sort.Direction.DESC, "createdAt")));
     }
 
-    @Query(
-            """
-            SELECT p FROM FinePayment p
-            WHERE p.cooperativeId = :cooperativeId
-              AND (:status IS NULL OR p.status = :status)
-              AND (:fromDate IS NULL OR p.paymentDate >= :fromDate)
-              AND (:toDate IS NULL OR p.paymentDate <= :toDate)
-              AND (
-                    :q IS NULL
-                    OR LOWER(COALESCE(p.paymentReference, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-                    OR EXISTS (
-                        SELECT 1 FROM rw.terimbere.csams.modules.user.entity.User u
-                        WHERE u.id = p.memberUserId
-                          AND (
-                            LOWER(COALESCE(u.firstName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-                            OR LOWER(COALESCE(u.lastName, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-                            OR LOWER(COALESCE(u.username, '')) LIKE LOWER(CONCAT('%', :q, '%'))
-                            OR LOWER(CONCAT(COALESCE(u.firstName, ''), ' ', COALESCE(u.lastName, '')))
-                                LIKE LOWER(CONCAT('%', :q, '%'))
-                          )
-                    )
-                  )
-            """)
-    Page<FinePayment> findQueuePage(
-            @Param("cooperativeId") UUID cooperativeId,
-            @Param("status") FinePaymentStatus status,
-            @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate,
-            @Param("q") String q,
-            Pageable pageable);
+    default Page<FinePayment> findQueuePage(
+            UUID cooperativeId,
+            FinePaymentStatus status,
+            LocalDate fromDate,
+            LocalDate toDate,
+            String q,
+            Pageable pageable) {
+        Pageable page = pageable == null ? Pageable.unpaged() : pageable;
+        return findAll(FinePaymentSpecs.queue(cooperativeId, status, fromDate, toDate, q), page);
+    }
 
     @Query(
             """

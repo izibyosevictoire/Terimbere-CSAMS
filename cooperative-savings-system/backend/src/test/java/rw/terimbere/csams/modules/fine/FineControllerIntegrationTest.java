@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,6 +27,8 @@ import rw.terimbere.csams.modules.contribution.repository.ContributionRepository
 import rw.terimbere.csams.modules.cooperative.CooperativeTestFixtures;
 import rw.terimbere.csams.modules.fine.entity.Fine;
 import rw.terimbere.csams.modules.fine.entity.FineStatus;
+import rw.terimbere.csams.modules.fine.entity.FinePaymentStatus;
+import rw.terimbere.csams.modules.fine.repository.FinePaymentRepository;
 import rw.terimbere.csams.modules.fine.repository.FineRepository;
 import rw.terimbere.csams.modules.ledger.entity.LedgerEntryStatus;
 import rw.terimbere.csams.modules.ledger.repository.LedgerEntryRepository;
@@ -44,6 +47,9 @@ class FineControllerIntegrationTest {
 
     @Autowired
     private FineRepository fineRepository;
+
+    @Autowired
+    private FinePaymentRepository finePaymentRepository;
 
     @Autowired
     private ContributionRepository contributionRepository;
@@ -448,6 +454,76 @@ class FineControllerIntegrationTest {
                 .andExpect(jsonPath("$.data.availableGroupFunds").value(1300.0))
                 .andExpect(jsonPath("$.data.approvedFineIncome").value(300.0))
                 .andExpect(jsonPath("$.data.unpaidFines").value(0));
+    }
+
+    @Test
+    void paymentQueue_withNullableFilters_listsAndSearches() throws Exception {
+        UUID fineId = createManualFine(1000.0000);
+        String memberToken = loginAccessToken(memberUsername, memberPassword);
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/fines/" + fineId + "/payments")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "amount": 250.0000,
+                                  "paymentDate": "2026-08-01",
+                                  "paymentMethod": "MOBILE_MONEY",
+                                  "paymentReference": "FP-QUEUE-1"
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/fines/payments")
+                        .header("Authorization", "Bearer " + superAdminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].paymentReference").value("FP-QUEUE-1"));
+
+        mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/fines/payments")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .param("fromDate", "2026-08-01")
+                        .param("toDate", "2026-08-26")
+                        .param("status", "PENDING")
+                        .param("q", "FP-QUEUE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1));
+
+        mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/fines/payments")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .param("q", "Fine"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1));
+
+        mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/fines/payments")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .param("q", "no-such-payment"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(0));
+
+        assertThat(finePaymentRepository
+                        .findQueuePage(cooperativeId, null, null, null, null, Pageable.unpaged())
+                        .getTotalElements())
+                .isEqualTo(1);
+        assertThat(finePaymentRepository
+                        .findQueuePage(
+                                cooperativeId,
+                                FinePaymentStatus.PENDING,
+                                java.time.LocalDate.of(2026, 8, 1),
+                                null,
+                                null,
+                                Pageable.unpaged())
+                        .getTotalElements())
+                .isEqualTo(1);
+        assertThat(finePaymentRepository
+                        .findQueuePage(
+                                cooperativeId,
+                                null,
+                                null,
+                                java.time.LocalDate.of(2026, 8, 1),
+                                null,
+                                Pageable.unpaged())
+                        .getTotalElements())
+                .isEqualTo(1);
     }
 
     private UUID createManualFine(double amount) throws Exception {
