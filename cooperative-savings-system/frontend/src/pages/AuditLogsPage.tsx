@@ -13,7 +13,7 @@ import dayjs from 'dayjs'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppSelector } from '@/app/store/hooks'
-import { formatJsonBlock } from '@/features/auditLogs'
+import { auditEntityLabel, auditUserLabel, formatJsonBlock } from '@/features/auditLogs'
 import { fetchAuditLog, fetchAuditLogs } from '@/shared/api/auditLogs'
 import { getErrorMessage } from '@/shared/api/client'
 import { DateRangeFields } from '@/shared/components/DateRangeFields'
@@ -82,13 +82,13 @@ export function AuditLogsPage() {
         id: 'entityId',
         label: t('auditLogs.fields.entityId'),
         hideOnMobile: true,
-        render: (row) => row.entityId || '—',
+        render: (row) => auditEntityLabel(row),
       },
       {
         id: 'userId',
         label: t('auditLogs.fields.userId'),
         hideOnMobile: true,
-        render: (row) => row.userId || '—',
+        render: (row) => auditUserLabel(row),
       },
     ],
     [t],
@@ -258,9 +258,9 @@ export function AuditLogsPage() {
             />
             <DetailRow
               label={t('auditLogs.fields.entityId')}
-              value={detail.entityId || '—'}
+              value={auditEntityLabel(detail)}
             />
-            <DetailRow label={t('auditLogs.fields.userId')} value={detail.userId || '—'} />
+            <DetailRow label={t('auditLogs.fields.userId')} value={auditUserLabel(detail)} />
             <DetailRow
               label={t('auditLogs.fields.ipAddress')}
               value={detail.ipAddress || '—'}

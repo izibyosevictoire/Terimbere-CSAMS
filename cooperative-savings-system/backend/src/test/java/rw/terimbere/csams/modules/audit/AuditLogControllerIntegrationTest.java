@@ -86,6 +86,8 @@ class AuditLogControllerIntegrationTest {
                         .header("Authorization", "Bearer " + superAdminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.data.content[0].userName").value("System Administrator"))
+                .andExpect(jsonPath("$.data.content[0].entityLabel").value(org.hamcrest.Matchers.containsString("Audit Coop")))
                 .andReturn();
 
         var content = objectMapper
@@ -103,7 +105,9 @@ class AuditLogControllerIntegrationTest {
                         .header("Authorization", "Bearer " + superAdminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(auditId.toString()))
-                .andExpect(jsonPath("$.data.cooperativeId").value(cooperativeId.toString()));
+                .andExpect(jsonPath("$.data.cooperativeId").value(cooperativeId.toString()))
+                .andExpect(jsonPath("$.data.userName").value("System Administrator"))
+                .andExpect(jsonPath("$.data.entityLabel").value(org.hamcrest.Matchers.containsString("Audit Coop")));
 
         mockMvc.perform(get("/api/v1/cooperatives/" + otherCooperativeId + "/audit-logs/" + auditId)
                         .header("Authorization", "Bearer " + superAdminToken))

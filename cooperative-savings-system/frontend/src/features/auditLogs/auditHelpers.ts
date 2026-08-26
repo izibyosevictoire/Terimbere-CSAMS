@@ -1,3 +1,5 @@
+import type { AuditLog } from '@/shared/types/auditLog'
+
 export function formatJsonBlock(value?: string | null): string {
   if (value == null || value === '') return '—'
   try {
@@ -25,4 +27,16 @@ export function toIsoDateStart(date: string): string | undefined {
 export function toIsoDateEnd(date: string): string | undefined {
   if (!date) return undefined
   return `${date}T23:59:59Z`
+}
+
+export function auditUserLabel(
+  log: Pick<AuditLog, 'userName' | 'username' | 'userId'>,
+): string {
+  return log.userName?.trim() || log.username?.trim() || '—'
+}
+
+export function auditEntityLabel(
+  log: Pick<AuditLog, 'entityLabel' | 'entityType'>,
+): string {
+  return log.entityLabel?.trim() || '—'
 }

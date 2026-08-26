@@ -1414,8 +1414,8 @@
     "fields": {
       "action": "Igikorwa",
       "entityType": "Ubwoko bw'ikintu",
-      "entityId": "ID y'ikintu",
-      "userId": "ID y'ukoresha",
+      "entityId": "Ikintu",
+      "userId": "Ukoresha",
       "createdAt": "Igihe",
       "from": "Kuva",
       "to": "Kugeza",

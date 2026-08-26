@@ -1429,8 +1429,8 @@
     "fields": {
       "action": "Action",
       "entityType": "Entity type",
-      "entityId": "Entity ID",
-      "userId": "User ID",
+      "entityId": "Entity",
+      "userId": "User",
       "createdAt": "When",
       "from": "From",
       "to": "To",

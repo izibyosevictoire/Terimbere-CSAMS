@@ -1,4 +1,6 @@
 export {
+  auditEntityLabel,
+  auditUserLabel,
   formatJsonBlock,
   parseJsonSafe,
   toIsoDateEnd,

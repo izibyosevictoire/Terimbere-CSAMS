@@ -29,6 +29,7 @@ public class AuditService {
     private final AuditLogRepository auditLogRepository;
     private final CooperativeRepository cooperativeRepository;
     private final CooperativeAuthorizationService authorizationService;
+    private final AuditLogLabelResolver labelResolver;
 
     @Transactional
     public void record(
@@ -97,7 +98,7 @@ public class AuditService {
         Page<AuditLog> page = auditLogRepository.findAll(
                 AuditLogSpecs.filtered(cooperativeId, action, userId, entityType, fromInstant, toInstant),
                 pageable);
-        return PageMapper.toPageResponse(page, this::toResponse);
+        return PageMapper.toPageResponse(page, labelResolver.toResponses(page.getContent()));
     }
 
     /** Used by PDF report export — Specification avoids PostgreSQL null Instant binding issues. */
@@ -116,29 +117,13 @@ public class AuditService {
         AuditLog log = auditLogRepository
                 .findByIdAndCooperativeId(auditId, cooperativeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Audit log not found"));
-        return toResponse(log);
+        return labelResolver.toResponse(log);
     }
 
     private void requireCooperative(UUID cooperativeId) {
         if (!cooperativeRepository.existsById(cooperativeId)) {
             throw new ResourceNotFoundException("Cooperative not found");
         }
-    }
-
-    private AuditLogResponse toResponse(AuditLog log) {
-        return AuditLogResponse.builder()
-                .id(log.getId())
-                .userId(log.getUserId())
-                .cooperativeId(log.getCooperativeId())
-                .action(log.getAction())
-                .entityType(log.getEntityType())
-                .entityId(log.getEntityId())
-                .previousValues(log.getPreviousValues())
-                .newValues(log.getNewValues())
-                .ipAddress(log.getIpAddress())
-                .userAgent(log.getUserAgent())
-                .createdAt(log.getCreatedAt())
-                .build();
     }
 
     private static String truncate(String value, int max) {
