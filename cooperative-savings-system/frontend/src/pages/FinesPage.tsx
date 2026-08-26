@@ -8,11 +8,11 @@ import {
   Tabs,
 } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectCanManageFines } from '@/app/store/authSlice'
+import { selectCanManageFines, selectIsSuperAdmin } from '@/app/store/authSlice'
 import {
   FineGeneratePanel,
   FineIssuePanel,
@@ -25,11 +25,25 @@ import { MetricCard } from '@/shared/components/MetricCard'
 import { PageHeader } from '@/shared/components/PageHeader'
 import { ROUTES } from '@/shared/constants/routes'
 
+type FineTab = 'mine' | 'all' | 'issue' | 'settings'
+
+function fineTabsForUser(isAdmin: boolean, isSuperAdmin: boolean): FineTab[] {
+  if (isSuperAdmin) return ['all', 'issue', 'settings']
+  if (isAdmin) return ['mine', 'all', 'issue', 'settings']
+  return ['mine']
+}
+
 export function FinesPage() {
   const { t } = useTranslation()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
   const isAdmin = useAppSelector(selectCanManageFines)
+  const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
+  const tabs = useMemo(
+    () => fineTabsForUser(isAdmin, isSuperAdmin),
+    [isAdmin, isSuperAdmin],
+  )
   const [tab, setTab] = useState(0)
+  const active = tabs[tab] ?? tabs[0]
 
   const summaryQuery = useQuery({
     queryKey: ['dashboard', 'summary', cooperativeId],
@@ -128,28 +142,27 @@ export function FinesPage() {
         allowScrollButtonsMobile
         sx={{ mb: 2.5, borderBottom: 1, borderColor: 'divider' }}
       >
-        <Tab label={t('fines.tabs.mine')} />
-        {isAdmin ? <Tab label={t('fines.tabs.all')} /> : null}
-        {isAdmin ? <Tab label={t('fines.tabs.issue')} /> : null}
-        {isAdmin ? <Tab label={t('fines.tabs.settings')} /> : null}
+        {tabs.map((item) => (
+          <Tab key={item} label={t(`fines.tabs.${item}`)} />
+        ))}
       </Tabs>
 
-      {tab === 0 ? (
+      {active === 'mine' ? (
         <FinesListPanel cooperativeId={cooperativeId} mode="mine" />
       ) : null}
 
-      {isAdmin && tab === 1 ? (
+      {active === 'all' ? (
         <Box>
           <FineGeneratePanel cooperativeId={cooperativeId} />
           <FinesListPanel cooperativeId={cooperativeId} mode="all" />
         </Box>
       ) : null}
 
-      {isAdmin && tab === 2 ? (
+      {active === 'issue' ? (
         <FineIssuePanel cooperativeId={cooperativeId} />
       ) : null}
 
-      {isAdmin && tab === 3 ? (
+      {active === 'settings' ? (
         <FineSettingsPanel cooperativeId={cooperativeId} />
       ) : null}
     </Box>

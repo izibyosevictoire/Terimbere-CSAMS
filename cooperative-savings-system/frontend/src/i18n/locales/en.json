@@ -140,15 +140,18 @@
     "super": {
       "title": "Platform dashboard",
       "welcome": "Welcome, {{name}}",
-      "description": "You have full control of TERIMBERE: cooperatives, members, savings, loans, fines, and settings. Select a cooperative to operate it, or create a new one.",
+      "description": "You own the platform. You are not a member of any cooperative. Open any group to see its activity and step in when the President or officers need help.",
       "totalCooperatives": "Cooperatives",
-      "shownOnPage": "Recently updated",
-      "listHint": "Latest cooperatives on this list",
-      "recentTitle": "Cooperatives"
+      "shownOnPage": "On this list",
+      "listHint": "Select a cooperative to operate it with full control",
+      "recentTitle": "All cooperatives",
+      "allCooperatives": "All cooperatives",
+      "operatingHint": "You are not a member of this group. You have full control so you can help the President and officers when something goes wrong."
     },
     "admin": {
       "title": "Admin Dashboard",
       "titlePresident": "President dashboard",
+      "titleSuperAdmin": "Cooperative operations",
       "titleVicePresident": "Vice President dashboard",
       "titleSecretary": "Secretary dashboard",
       "titleAccountant": "Accountant dashboard",
@@ -257,7 +260,13 @@
     "backToDashboard": "Back to dashboard",
     "apply": "Apply",
     "clear": "Clear",
-    "filter": "Filter"
+    "filter": "Filter",
+    "close": "Close"
+  },
+  "files": {
+    "previewTitle": "Payment proof",
+    "download": "Download",
+    "openFailed": "Could not open the file"
   },
   "approvals": {
     "historyTitle": "Approval History / Audit Trail",
@@ -1542,7 +1551,7 @@
     "MEMBER": "MEMBER",
     "dutiesTitle": "What the {{role}} does",
     "duties": {
-      "SUPER_ADMIN": "Full platform access: create cooperatives, appoint Presidents, and operate any group.",
+      "SUPER_ADMIN": "Platform owner: not a member of any cooperative. Create groups, appoint Presidents, see every cooperative, and take full control when officers need help.",
       "MEMBER": "Save each month, request loans, and view your own fines, social fund, and share-out.",
       "PRESIDENT": "Chair the group, settle disputes, suspend members, approve rule changes, and co-sign money leaving the fund.",
       "VICE_PRESIDENT": "Act for the President when they are away, with the same authority, and head the loan committee.",

@@ -1,10 +1,10 @@
 import { Box, Button, Grid, Tab, Tabs } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectCanManageLoans } from '@/app/store/authSlice'
+import { selectCanManageLoans, selectIsSuperAdmin } from '@/app/store/authSlice'
 import {
   LoanRequestPanel,
   LoanSettingsPanel,
@@ -17,17 +17,33 @@ import { EmptyState } from '@/shared/components/EmptyState'
 import { MetricCard } from '@/shared/components/MetricCard'
 import { PageHeader } from '@/shared/components/PageHeader'
 
+type LoanTab = 'mine' | 'approvals' | 'all' | 'issue' | 'guarantor' | 'settings'
+
+function loanTabsForUser(isAdmin: boolean, isSuperAdmin: boolean): LoanTab[] {
+  if (isSuperAdmin) return ['approvals', 'all', 'issue', 'guarantor', 'settings']
+  if (isAdmin) return ['mine', 'approvals', 'all', 'issue', 'guarantor', 'settings']
+  return ['mine', 'issue', 'guarantor']
+}
+
 export function LoansPage() {
   const { t } = useTranslation()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
   const isAdmin = useAppSelector(selectCanManageLoans)
+  const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
+  const tabs = useMemo(
+    () => loanTabsForUser(isAdmin, isSuperAdmin),
+    [isAdmin, isSuperAdmin],
+  )
   const [searchParams] = useSearchParams()
   const [tab, setTab] = useState(() => {
     const requested = searchParams.get('tab')
-    if (requested === 'approvals' && isAdmin) return 1
-    if (requested === 'request') return isAdmin ? 3 : 1
+    if (requested === 'approvals') return Math.max(0, tabs.indexOf('approvals'))
+    if (requested === 'request' || requested === 'issue') {
+      return Math.max(0, tabs.indexOf('issue'))
+    }
     return 0
   })
+  const active = tabs[tab] ?? tabs[0]
 
   const summaryQuery = useQuery({
     queryKey: ['dashboard', 'summary', cooperativeId],
@@ -75,11 +91,19 @@ export function LoansPage() {
         description={t('pages.loans.description')}
         actions={
           isAdmin ? (
-            <Button variant="outlined" size="small" onClick={() => setTab(3)}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => setTab(Math.max(0, tabs.indexOf('issue')))}
+            >
               {t('loans.tabs.issue')}
             </Button>
           ) : (
-            <Button variant="contained" size="small" onClick={() => setTab(1)}>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => setTab(Math.max(0, tabs.indexOf('issue')))}
+            >
               {t('loans.request.apply')}
             </Button>
           )
@@ -146,35 +170,39 @@ export function LoansPage() {
         allowScrollButtonsMobile
         sx={{ mb: 2.5, borderBottom: 1, borderColor: 'divider' }}
       >
-        <Tab label={t('loans.tabs.mine')} />
-        {isAdmin ? <Tab label={t('loans.tabs.approvals')} /> : null}
-        {isAdmin ? <Tab label={t('loans.tabs.all')} /> : null}
-        <Tab label={isAdmin ? t('loans.tabs.issue') : t('loans.tabs.request')} />
-        <Tab label={t('loans.tabs.guarantor')} />
-        {isAdmin ? <Tab label={t('loans.tabs.settings')} /> : null}
+        {tabs.map((item) => (
+          <Tab
+            key={item}
+            label={
+              item === 'issue'
+                ? t(isAdmin ? 'loans.tabs.issue' : 'loans.tabs.request')
+                : t(`loans.tabs.${item}`)
+            }
+          />
+        ))}
       </Tabs>
 
-      {tab === 0 ? (
+      {active === 'mine' ? (
         <LoansListPanel cooperativeId={cooperativeId} mode="mine" />
       ) : null}
 
-      {isAdmin && tab === 1 ? (
+      {active === 'approvals' ? (
         <LoansListPanel cooperativeId={cooperativeId} mode="approvals" />
       ) : null}
 
-      {isAdmin && tab === 2 ? (
+      {active === 'all' ? (
         <LoansListPanel cooperativeId={cooperativeId} mode="all" />
       ) : null}
 
-      {((isAdmin && tab === 3) || (!isAdmin && tab === 1)) ? (
+      {active === 'issue' ? (
         <LoanRequestPanel cooperativeId={cooperativeId} isAdmin={isAdmin} />
       ) : null}
 
-      {((isAdmin && tab === 4) || (!isAdmin && tab === 2)) ? (
+      {active === 'guarantor' ? (
         <GuarantorRequestsPanel cooperativeId={cooperativeId} />
       ) : null}
 
-      {isAdmin && tab === 5 ? (
+      {active === 'settings' ? (
         <LoanSettingsPanel cooperativeId={cooperativeId} />
       ) : null}
     </Box>

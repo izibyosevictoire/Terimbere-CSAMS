@@ -5,7 +5,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Link,
   Stack,
   TablePagination,
   TextField,
@@ -21,7 +20,7 @@ import {
   fetchPendingContributionReviews,
   rejectContributionSubmission,
 } from '@/shared/api/contributions'
-import { fileDownloadPath } from '@/shared/api/files'
+import { AuthenticatedFileLink } from '@/shared/components/AuthenticatedFileLink'
 import { ApprovalHistory } from '@/shared/components/ApprovalHistory'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { ErrorState } from '@/shared/components/ErrorState'
@@ -108,9 +107,9 @@ export function ContributionApprovalsPanel({
         label: t('contributions.submit.proof'),
         render: (row) =>
           row.evidenceFileKey ? (
-            <Link href={fileDownloadPath(row.evidenceFileKey)} target="_blank" rel="noreferrer">
+            <AuthenticatedFileLink storageKey={row.evidenceFileKey}>
               {t('contributions.approvals.viewProof')}
-            </Link>
+            </AuthenticatedFileLink>
           ) : (
             '—'
           ),

@@ -3,6 +3,7 @@ import {
   computeOutstandingAmount,
   contributionStatusColor,
   contributionStatusLabelKey,
+  contributionTabsForUser,
   deriveContributionStatus,
   isNonNegativeMoney,
   moneyToScaledInt,
@@ -41,6 +42,31 @@ describe('deriveContributionStatus', () => {
 
   it('preserves waived/cancelled', () => {
     expect(deriveContributionStatus('1000', '0', 'WAIVED')).toBe('WAIVED')
+  })
+})
+
+describe('contributionTabsForUser', () => {
+  it('gives officers member self-submit plus operations tabs', () => {
+    expect(contributionTabsForUser(true, false)).toEqual([
+      'monthly',
+      'submit',
+      'approvals',
+      'history',
+      'special',
+    ])
+  })
+
+  it('hides personal submit for the platform super admin', () => {
+    expect(contributionTabsForUser(true, true)).toEqual([
+      'monthly',
+      'approvals',
+      'history',
+      'special',
+    ])
+  })
+
+  it('keeps member self-service tabs for ordinary members', () => {
+    expect(contributionTabsForUser(false, false)).toEqual(['submit', 'history', 'special'])
   })
 })
 

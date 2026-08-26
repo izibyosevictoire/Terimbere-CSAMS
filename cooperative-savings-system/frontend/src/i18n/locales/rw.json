@@ -140,15 +140,18 @@
     "super": {
       "title": "Imbonerahamwe y'urubuga",
       "welcome": "Murakaza neza, {{name}}",
-      "description": "Ufite ububasha bwose kuri TERIMBERE: amakoperative, abanyamuryango, ubwizigame, inguzanyo, amahane, n'igenamiterere. Hitamo ikoperative uyicunge, cyangwa ufungure nshya.",
+      "description": "Ni we nyir'urubuga. Si umunyamuryango w'ikoperative. Fungura itsinda iryo ari ryo ryose urebe ibikorwa byaryo, kandi ufasha Perezida n'abayobozi iyo bibaye ngombwa.",
       "totalCooperatives": "Amakoperative",
-      "shownOnPage": "Aheruka kuvugururwa",
-      "listHint": "Amakoperative aheruka kuri uru rutonde",
-      "recentTitle": "Amakoperative"
+      "shownOnPage": "Kuri uru rutonde",
+      "listHint": "Hitamo ikoperative uyicunge ufite ububasha bwose",
+      "recentTitle": "Amakoperative yose",
+      "allCooperatives": "Amakoperative yose",
+      "operatingHint": "Si umunyamuryango w'iki tsinda. Ufite ububasha bwose kugira ngo ufasha Perezida n'abayobozi iyo ibintu byagenda nabi."
     },
     "admin": {
       "title": "Imbonerahamwe y'Umuyobozi",
       "titlePresident": "Imbonerahamwe ya Perezida",
+      "titleSuperAdmin": "Imikorere y'ikoperative",
       "titleVicePresident": "Imbonerahamwe ya Visi Perezida",
       "titleSecretary": "Imbonerahamwe ya Munyamabanga",
       "titleAccountant": "Imbonerahamwe y'Umucungamari",
@@ -250,7 +253,13 @@
     "openMenu": "Fungura menu",
     "closeMenu": "Funga menu",
     "back": "Subira inyuma",
-    "backToDashboard": "Subira ku mbonerahamwe"
+    "backToDashboard": "Subira ku mbonerahamwe",
+    "close": "Funga"
+  },
+  "files": {
+    "previewTitle": "Icyemezo cy'ubwishyu",
+    "download": "Pakurura",
+    "openFailed": "Ntibishoboye gufungura dosiye"
   },
   "approvals": {
     "historyTitle": "Amateka yo kwemeza",
@@ -1524,7 +1533,7 @@
     "MEMBER": "UMUNYAMURYANGO",
     "dutiesTitle": "Icyo {{role}} akora",
     "duties": {
-      "SUPER_ADMIN": "Afite ububasha bwose ku rubuga: ashyiraho amakoperative, ashyira Perezida, kandi ashobora gukoresha itsinda iryo ari ryo ryose.",
+      "SUPER_ADMIN": "Nyir'urubuga: si umunyamuryango w'ikoperative. Ashyiraho amatsinda, ashyira Perezida, areba ikoperative yose, kandi afata ububasha bwose iyo abayobozi bakeneye ubufasha.",
       "MEMBER": "Ashyira umusanzu buri kwezi, asaba inguzanyo, kandi areba amande, ikigega cy'imibano, n'isaranganya bye.",
       "PRESIDENT": "Ayobora itsinda, akemura amakimbirane, ahagarika abanyamuryango, yemeza amategeko, kandi asinya amafaranga ava mu kigega.",
       "VICE_PRESIDENT": "Asimbura Perezida iyo adahari, afite ububasha bumwe, kandi ayobora komite y'inguzanyo.",

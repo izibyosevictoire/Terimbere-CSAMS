@@ -7,7 +7,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Link,
   MenuItem,
   Stack,
   TablePagination,
@@ -22,7 +21,7 @@ import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchMembers } from '@/shared/api/members'
-import { fileDownloadPath, uploadCooperativeFile } from '@/shared/api/files'
+import { uploadCooperativeFile } from '@/shared/api/files'
 import {
   approveSocialContribution,
   createSocialContribution,
@@ -30,6 +29,7 @@ import {
   fetchSocialContributions,
   rejectSocialContribution,
 } from '@/shared/api/socialFund'
+import { AuthenticatedFileLink } from '@/shared/components/AuthenticatedFileLink'
 import { ApprovalHistory } from '@/shared/components/ApprovalHistory'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { ErrorState } from '@/shared/components/ErrorState'
@@ -225,9 +225,9 @@ export function SocialContributionsPanel({
         label: t('socialFund.fields.proof'),
         render: (row: SocialContribution) =>
           row.evidenceFileKey ? (
-            <Link href={fileDownloadPath(row.evidenceFileKey)} target="_blank" rel="noreferrer">
+            <AuthenticatedFileLink storageKey={row.evidenceFileKey}>
               {t('socialFund.contributions.viewProof')}
-            </Link>
+            </AuthenticatedFileLink>
           ) : (
             '—'
           ),

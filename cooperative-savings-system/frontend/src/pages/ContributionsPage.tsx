@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectCanRecordContributions } from '@/app/store/authSlice'
+import { selectCanRecordContributions, selectIsSuperAdmin } from '@/app/store/authSlice'
 import {
   ContributionApprovalsPanel,
   HistoryPanel,
@@ -11,19 +11,12 @@ import {
   MonthlyEntryPanel,
   SpecialCampaignsPanel,
 } from '@/features/contributions'
+import { contributionTabsForUser } from '@/features/contributions/contributionHelpers'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { PageHeader } from '@/shared/components/PageHeader'
 import { ROUTES } from '@/shared/constants/routes'
 
 type ContributionTab = 'monthly' | 'submit' | 'approvals' | 'history' | 'special'
-
-function tabsForRole(canRecord: boolean): ContributionTab[] {
-  if (canRecord) {
-    // Officers still pay as members, so they get monthly entry and self-submit.
-    return ['monthly', 'submit', 'approvals', 'history', 'special']
-  }
-  return ['submit', 'history', 'special']
-}
 
 function initialTabFromQuery(tabParam: string | null, tabs: ContributionTab[]): number {
   const requested = tabParam === 'mine' ? 'history' : tabParam
@@ -39,7 +32,11 @@ export function ContributionsPage() {
   const [searchParams] = useSearchParams()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
   const canRecord = useAppSelector(selectCanRecordContributions)
-  const tabs = useMemo(() => tabsForRole(canRecord), [canRecord])
+  const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
+  const tabs = useMemo(
+    () => contributionTabsForUser(canRecord, isSuperAdmin),
+    [canRecord, isSuperAdmin],
+  )
   const [tab, setTab] = useState(() => initialTabFromQuery(searchParams.get('tab'), tabs))
   const active = tabs[tab] ?? tabs[0]
 
@@ -87,13 +84,15 @@ export function ContributionsPage() {
             useFlexGap
             sx={{ flexWrap: 'wrap' }}
           >
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => setTab(Math.max(0, tabs.indexOf('submit')))}
-            >
-              {t('contributions.submit.action')}
-            </Button>
+            {!isSuperAdmin ? (
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => setTab(Math.max(0, tabs.indexOf('submit')))}
+              >
+                {t('contributions.submit.action')}
+              </Button>
+            ) : null}
             {canRecord ? (
               <Button
                 variant="outlined"

@@ -13,8 +13,12 @@ import { Box, Button, Chip, Grid, Paper, Stack, Typography } from '@mui/material
 import { useQuery } from '@tanstack/react-query'
 import { Link as RouterLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAppSelector } from '@/app/store/hooks'
-import { selectCanManageMembers, selectIsSuperAdmin } from '@/app/store/authSlice'
+import { useAppDispatch, useAppSelector } from '@/app/store/hooks'
+import {
+  selectCanManageMembers,
+  selectIsSuperAdmin,
+  setSelectedCooperativeId,
+} from '@/app/store/authSlice'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchMyCooperatives } from '@/shared/api/cooperatives'
 import { fetchDashboardSummary } from '@/shared/api/dashboard'
@@ -149,7 +153,7 @@ function dashboardTitleKey(role: AppRole): string {
     case ROLE_PRESIDENT:
       return 'dashboard.admin.titlePresident'
     case ROLE_SUPER_ADMIN:
-      return 'dashboard.admin.titlePresident'
+      return 'dashboard.admin.titleSuperAdmin'
     default:
       return 'dashboard.admin.title'
   }
@@ -161,6 +165,7 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ cooperativeId }: AdminDashboardProps) {
   const { t } = useTranslation()
+  const dispatch = useAppDispatch()
   const authStatus = useAppSelector((s) => s.auth.status)
   const userRoles = useAppSelector((s) => s.auth.user?.roles ?? [])
   const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
@@ -406,10 +411,25 @@ export function AdminDashboard({ cooperativeId }: AdminDashboardProps) {
           <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
             {cooperativeName || t('dashboard.description')}
           </Typography>
+          {isSuperAdmin ? (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75, maxWidth: 720 }}>
+              {t('dashboard.super.operatingHint')}
+            </Typography>
+          ) : null}
         </Box>
 
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }} useFlexGap>
           <CooperativeSelector />
+          {isSuperAdmin ? (
+            <Button
+              variant="outlined"
+              onClick={() => {
+                dispatch(setSelectedCooperativeId(null))
+              }}
+            >
+              {t('dashboard.super.allCooperatives')}
+            </Button>
+          ) : null}
           <QuickActionsMenu />
           <ReportsMenu />
         </Stack>
@@ -459,19 +479,21 @@ export function AdminDashboard({ cooperativeId }: AdminDashboardProps) {
         <OverdueLoansBanner summary={summary} t={t} />
       ) : null}
 
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 2.5, md: 3 },
-          mb: 3,
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 2,
-          bgcolor: 'rgba(21, 101, 192, 0.04)',
-        }}
-      >
-        <MyMemberStatusSection cooperativeId={cooperativeId} compact showQuickLinks />
-      </Paper>
+      {!isSuperAdmin ? (
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2.5, md: 3 },
+            mb: 3,
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 2,
+            bgcolor: 'rgba(21, 101, 192, 0.04)',
+          }}
+        >
+          <MyMemberStatusSection cooperativeId={cooperativeId} compact showQuickLinks />
+        </Paper>
+      ) : null}
 
       {showMemberTable(officeRole, canManageMembers) ? (
         <Box sx={{ mb: 3 }}>

@@ -35,6 +35,7 @@ import {
   rejectFinePayment,
   waiveFine,
 } from '@/shared/api/fines'
+import { AuthenticatedFileLink } from '@/shared/components/AuthenticatedFileLink'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
@@ -198,14 +199,9 @@ export function FineDetailPage() {
         label: t('fines.payment.evidence'),
         render: (row) =>
           row.evidenceFileKey ? (
-            <Button
-              size="small"
-              href={`/api/v1/files/${String(row.evidenceFileKey).replace(/^\/+/, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <AuthenticatedFileLink storageKey={String(row.evidenceFileKey)} variant="button">
               {t('fines.payment.viewEvidence')}
-            </Button>
+            </AuthenticatedFileLink>
           ) : (
             '—'
           ),

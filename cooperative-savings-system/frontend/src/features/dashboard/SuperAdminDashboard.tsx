@@ -1,7 +1,7 @@
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import AddIcon from '@mui/icons-material/Add'
 import BusinessIcon from '@mui/icons-material/Business'
-import GroupsIcon from '@mui/icons-material/Groups'
+import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety'
 import { Box, Button, Chip, Grid, Paper, Stack, Typography } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
@@ -27,7 +27,7 @@ export function SuperAdminDashboard() {
 
   const query = useQuery({
     queryKey: ['cooperatives', 'list', 'super-home'],
-    queryFn: () => fetchCooperatives({ page: 0, size: 8 }),
+    queryFn: () => fetchCooperatives({ page: 0, size: 50 }),
   })
 
   const rows = query.data?.content ?? []
@@ -57,11 +57,11 @@ export function SuperAdminDashboard() {
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
           <Button
             component={RouterLink}
-            to={ROUTES.members}
+            to={ROUTES.system}
             variant="outlined"
-            startIcon={<GroupsIcon />}
+            startIcon={<HealthAndSafetyIcon />}
           >
-            {t('nav.members')}
+            {t('nav.system')}
           </Button>
           <Button
             component={RouterLink}

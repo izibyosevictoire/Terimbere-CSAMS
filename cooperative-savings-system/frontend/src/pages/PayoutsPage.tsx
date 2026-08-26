@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectCanPreparePayouts } from '@/app/store/authSlice'
+import { selectCanPreparePayouts, selectIsSuperAdmin } from '@/app/store/authSlice'
 import {
   PayoutHistoryPanel,
   PayoutMyPanel,
@@ -17,8 +17,15 @@ export function PayoutsPage() {
   const [searchParams] = useSearchParams()
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
   const isAdmin = useAppSelector(selectCanPreparePayouts)
+  const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
 
   const tabs = useMemo(() => {
+    if (isSuperAdmin) {
+      return [
+        { key: 'new', label: t('payouts.tabs.new') },
+        { key: 'history', label: t('payouts.tabs.history') },
+      ]
+    }
     if (isAdmin) {
       return [
         { key: 'new', label: t('payouts.tabs.new') },
@@ -27,7 +34,7 @@ export function PayoutsPage() {
       ]
     }
     return [{ key: 'my', label: t('payouts.tabs.my') }]
-  }, [isAdmin, t])
+  }, [isAdmin, isSuperAdmin, t])
 
   const [tab, setTab] = useState(() => {
     const requested = searchParams.get('tab')

@@ -17,7 +17,7 @@ import { finePaymentStatusColor } from '@/features/fines'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchDashboardSummary } from '@/shared/api/dashboard'
 import { approveFinePayment, fetchFinePaymentQueue, rejectFinePayment } from '@/shared/api/fines'
-import { fileDownloadPath } from '@/shared/api/files'
+import { AuthenticatedFileLink } from '@/shared/components/AuthenticatedFileLink'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { LoadingState } from '@/shared/components/LoadingState'
@@ -155,15 +155,9 @@ export function FinePaymentQueuePage() {
         label: t('fines.payment.evidence'),
         render: (row) =>
           row.evidenceFileKey ? (
-            <Button
-              size="small"
-              href={fileDownloadPath(String(row.evidenceFileKey))}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <AuthenticatedFileLink storageKey={String(row.evidenceFileKey)} variant="button">
               {t('fines.payment.viewEvidence')}
-            </Button>
+            </AuthenticatedFileLink>
           ) : (
             '—'
           ),

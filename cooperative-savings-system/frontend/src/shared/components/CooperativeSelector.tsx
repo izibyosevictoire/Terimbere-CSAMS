@@ -12,7 +12,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppDispatch, useAppSelector } from '@/app/store/hooks'
-import { setSelectedCooperativeId } from '@/app/store/authSlice'
+import { selectIsSuperAdmin, setSelectedCooperativeId } from '@/app/store/authSlice'
 import { fetchMyCooperatives } from '@/shared/api/cooperatives'
 import { getErrorMessage } from '@/shared/api/client'
 
@@ -21,6 +21,7 @@ export function CooperativeSelector({ onDark = false }: { onDark?: boolean }) {
   const dispatch = useAppDispatch()
   const selected = useAppSelector((s) => s.auth.selectedCooperativeId)
   const authStatus = useAppSelector((s) => s.auth.status)
+  const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
 
   const query = useQuery({
     queryKey: ['cooperatives', 'mine'],
@@ -33,11 +34,14 @@ export function CooperativeSelector({ onDark = false }: { onDark?: boolean }) {
 
   useEffect(() => {
     if (!cooperatives.length) return
-    const stillValid = selected && cooperatives.some((c) => c.id === selected)
-    if (!stillValid) {
-      dispatch(setSelectedCooperativeId(cooperatives[0].id))
+    const stillValid = Boolean(selected && cooperatives.some((c) => c.id === selected))
+    if (stillValid) return
+    if (isSuperAdmin) {
+      if (selected) dispatch(setSelectedCooperativeId(null))
+      return
     }
-  }, [cooperatives, selected, dispatch])
+    dispatch(setSelectedCooperativeId(cooperatives[0].id))
+  }, [cooperatives, selected, dispatch, isSuperAdmin])
 
   if (query.isLoading) {
     return (
@@ -101,10 +105,14 @@ export function CooperativeSelector({ onDark = false }: { onDark?: boolean }) {
           : null),
       }}
     >
-      <InputLabel id="coop-select-label">{t('common.selectCooperative')}</InputLabel>
+      <InputLabel id="coop-select-label" shrink={isSuperAdmin || Boolean(selected)}>
+        {t('common.selectCooperative')}
+      </InputLabel>
       <Select
         labelId="coop-select-label"
         label={t('common.selectCooperative')}
+        displayEmpty={isSuperAdmin}
+        notched={isSuperAdmin || Boolean(selected)}
         value={selected && cooperatives.some((c) => c.id === selected) ? selected : ''}
         onChange={(e) => dispatch(setSelectedCooperativeId(e.target.value || null))}
         startAdornment={
@@ -115,6 +123,11 @@ export function CooperativeSelector({ onDark = false }: { onDark?: boolean }) {
           )
         }
       >
+        {isSuperAdmin ? (
+          <MenuItem value="">
+            {t('dashboard.super.allCooperatives')}
+          </MenuItem>
+        ) : null}
         {cooperatives.map((coop) => (
           <MenuItem key={coop.id} value={coop.id}>
             {coop.name}

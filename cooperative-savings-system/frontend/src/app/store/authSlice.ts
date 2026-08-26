@@ -47,7 +47,9 @@ const authSlice = createSlice({
       state.user = action.payload.user
       state.accessToken = action.payload.accessToken
       state.status = 'authenticated'
+      const isSuperAdmin = action.payload.user.roles?.includes(ROLE_SUPER_ADMIN)
       if (
+        !isSuperAdmin &&
         !state.selectedCooperativeId &&
         action.payload.user.cooperativeIds?.length
       ) {

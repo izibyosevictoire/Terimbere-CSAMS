@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/store/hooks'
-import { selectCanWriteSocial, selectIsCooperativeAdmin } from '@/app/store/authSlice'
+import { selectCanWriteSocial, selectIsCooperativeAdmin, selectIsSuperAdmin } from '@/app/store/authSlice'
 import {
   SocialContributionsPanel,
   SocialDisbursementsPanel,
@@ -20,27 +20,30 @@ export function SocialFundPage() {
   const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
   const isAdmin = useAppSelector(selectIsCooperativeAdmin)
   const canWrite = useAppSelector(selectCanWriteSocial)
+  const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
 
   const tabs = useMemo<SocialTab[]>(() => {
     const items: SocialTab[] = []
     if (isAdmin) items.push('overview')
-    items.push('submit')
+    if (!isSuperAdmin) items.push('submit')
     if (canWrite) items.push('approvals')
     items.push('list', 'disbursements')
     if (isAdmin) items.push('report')
     return items
-  }, [canWrite, isAdmin])
+  }, [canWrite, isAdmin, isSuperAdmin])
 
   const [searchParams] = useSearchParams()
   const [tab, setTab] = useState(() => {
     const requested = searchParams.get('tab')
     if (requested === 'approvals') {
       const index = tabs.indexOf('approvals')
-      return index >= 0 ? index : Math.max(0, tabs.indexOf('submit'))
+      return index >= 0 ? index : 0
     }
-    return Math.max(0, tabs.indexOf('submit'))
+    if (isSuperAdmin) return Math.max(0, tabs.indexOf('overview'))
+    const submitIndex = tabs.indexOf('submit')
+    return submitIndex >= 0 ? submitIndex : 0
   })
-  const active = tabs[tab] ?? 'submit'
+  const active = tabs[tab] ?? tabs[0]
 
   if (!cooperativeId) {
     return (
@@ -63,13 +66,15 @@ export function SocialFundPage() {
         title={t('pages.socialFund.title')}
         description={t('pages.socialFund.description')}
         actions={
-          <Button
-            variant="contained"
-            size="small"
-            onClick={() => setTab(Math.max(0, tabs.indexOf('submit')))}
-          >
-            {t('socialFund.contributions.submitAction')}
-          </Button>
+          isSuperAdmin ? null : (
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => setTab(Math.max(0, tabs.indexOf('submit')))}
+            >
+              {t('socialFund.contributions.submitAction')}
+            </Button>
+          )
         }
       />
 

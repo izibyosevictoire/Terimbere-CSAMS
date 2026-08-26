@@ -80,6 +80,19 @@ export function deriveContributionStatus(
   return 'PARTIALLY_PAID'
 }
 
+export function contributionTabsForUser(
+  canRecord: boolean,
+  isSuperAdmin: boolean,
+): Array<'monthly' | 'submit' | 'approvals' | 'history' | 'special'> {
+  if (isSuperAdmin) {
+    return ['monthly', 'approvals', 'history', 'special']
+  }
+  if (canRecord) {
+    return ['monthly', 'submit', 'approvals', 'history', 'special']
+  }
+  return ['submit', 'history', 'special']
+}
+
 export function isNonNegativeMoney(value: string): boolean {
   const trimmed = value.trim()
   if (!trimmed) return false
