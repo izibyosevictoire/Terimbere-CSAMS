@@ -118,11 +118,15 @@ public class ReportService {
     public List<ReportTypeResponse> listTypes(UUID cooperativeId) {
         requireCooperative(cooperativeId);
         authorizationService.requireMembership(cooperativeId);
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        boolean selfScoped = ReportAccessPolicy.isSelfScoped(principal);
         return Arrays.stream(ReportType.values())
+                .filter(t -> ReportAccessPolicy.canExport(principal, t))
                 .map(t -> ReportTypeResponse.builder()
                         .code(t.name())
                         .label(t.getLabel())
                         .requiresAuditRead(t.requiresAuditRead())
+                        .selfScoped(selfScoped)
                         .build())
                 .toList();
     }
@@ -139,11 +143,14 @@ public class ReportService {
         if (type == null) {
             throw new ValidationException("reportType is required");
         }
-        if (type.requiresAuditRead() && !principal.hasAuthority("AUDIT_READ")) {
-            throw new ForbiddenException("AUDIT_READ required for audit log reports");
+        if (!ReportAccessPolicy.canExport(principal, type)) {
+            throw new ForbiddenException("This report is not available for your role");
         }
-        if (!principal.hasAuthority("REPORT_READ") && !principal.hasRole("SUPER_ADMIN")) {
-            throw new ForbiddenException("REPORT_READ required");
+        if (ReportAccessPolicy.isSelfScoped(principal)) {
+            request.setMemberUserId(principal.getId());
+        }
+        if (type.requiresAuditRead() && !principal.hasAuthority("AUDIT_READ") && !principal.hasRole("SUPER_ADMIN")) {
+            throw new ForbiddenException("AUDIT_READ required for audit log reports");
         }
 
         clampToRegistrationDate(request, cooperative.getRegistrationDate());

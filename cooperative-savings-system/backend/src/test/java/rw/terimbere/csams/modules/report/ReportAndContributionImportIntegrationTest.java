@@ -53,6 +53,7 @@ class ReportAndContributionImportIntegrationTest {
     private UUID cooperativeId;
     private UUID memberUserId;
     private String memberUsername;
+    private String memberPassword;
     private UUID otherCooperativeId;
 
     @BeforeEach
@@ -65,6 +66,7 @@ class ReportAndContributionImportIntegrationTest {
         memberUsername = "rmember_" + UUID.randomUUID().toString().substring(0, 8);
         JsonNode memberData = registerMember(cooperativeId, memberUsername, "Report", "Member");
         memberUserId = UUID.fromString(memberData.path("userId").asText());
+        memberPassword = memberData.path("temporaryPassword").asText();
     }
 
     @Test
@@ -259,6 +261,45 @@ class ReportAndContributionImportIntegrationTest {
         byte[] body = export.getResponse().getContentAsByteArray();
         assertThat(body.length).isGreaterThan(200);
         assertThat(new String(body, 0, 4)).isEqualTo("%PDF");
+    }
+
+    @Test
+    void memberCannotExportFullFinancial_andTypesExcludeCoopWideReports() throws Exception {
+        String memberToken = loginAccessToken(memberUsername, memberPassword);
+
+        mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/reports/types")
+                        .header("Authorization", "Bearer " + memberToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[?(@.code=='CONTRIBUTIONS')]").exists())
+                .andExpect(jsonPath("$.data[?(@.code=='FULL_FINANCIAL')]").doesNotExist())
+                .andExpect(jsonPath("$.data[?(@.code=='FINANCIAL_LEDGER')]").doesNotExist())
+                .andExpect(jsonPath("$.data[?(@.code=='INVESTMENTS')]").doesNotExist())
+                .andExpect(jsonPath("$.data[0].selfScoped").value(true));
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/export")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reportType":"FULL_FINANCIAL",
+                                  "fromDate":"2026-01-01",
+                                  "toDate":"2026-06-30"
+                                }
+                                """))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/export")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reportType":"CONTRIBUTIONS",
+                                  "fromDate":"2026-01-01",
+                                  "toDate":"2026-06-30"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"));
     }
 
     @Test

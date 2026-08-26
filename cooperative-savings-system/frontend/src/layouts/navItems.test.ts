@@ -53,6 +53,7 @@ describe('getMobileNavItems', () => {
   it('returns simplified member navigation', () => {
     const items = getMobileNavItems([ROLE_MEMBER])
     expect(items.some((i) => i.path === '/dashboard')).toBe(true)
+    expect(items.some((i) => i.path === '/reports')).toBe(true)
     expect(items.some((i) => i.path === '/ledger')).toBe(false)
     expect(items.some((i) => i.path === '/audit-logs')).toBe(false)
     expect(items.some((i) => i.path === '/cooperatives')).toBe(false)

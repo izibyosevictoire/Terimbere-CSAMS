@@ -1,3 +1,11 @@
+export const STAFF_PRIMARY_REPORTS = [
+  'CONTRIBUTIONS',
+  'INVESTMENTS',
+  'FULL_FINANCIAL',
+] as const
+
+export const MEMBER_PRIMARY_REPORTS = ['CONTRIBUTIONS', 'LOANS', 'FINES'] as const
+
 export const REPORT_TYPES = [
   'MEMBERS',
   'CONTRIBUTIONS',
@@ -30,6 +38,7 @@ export interface ReportTypeInfo {
   supportsStatus?: boolean
   supportsYearMonth?: boolean
   supportsTransactionType?: boolean
+  selfScoped?: boolean
 }
 
 export interface ReportExportRequest {
@@ -52,5 +61,6 @@ export function mapReportTypeInfo(raw: ReportTypeInfo | string): ReportTypeInfo 
     ...raw,
     type,
     label: raw.label ?? raw.name ?? type,
+    selfScoped: Boolean(raw.selfScoped),
   }
 }

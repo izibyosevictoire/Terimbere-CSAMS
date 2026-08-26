@@ -1152,13 +1152,15 @@
     "primaryTitle": "Raporo z'ingenzi",
     "advancedTitle": "Izindi raporo",
     "openAll": "Fungura ikigo cy'raporo",
+    "memberOnly": "Raporo zawe zerekana gusa ibyawe — si igitabo cyose cy'ikcooperative cyangwa ibikorwa byose.",
     "primary": {
       "contributions": "Amafaranga ashyizweho",
       "contributionsHint": "Manura PDF y'amafaranga ashyizweho ku gihe wahisemo.",
       "investments": "Ishoramari",
       "investmentsHint": "Manura PDF y'ishoramari ku gihe wahisemo.",
       "full": "Raporo yuzuye y'imari",
-      "fullHint": "Manura PDF y'raporo yuzuye y'imari ku gihe wahisemo."
+      "fullHint": "Manura PDF y'raporo yuzuye y'imari ku gihe wahisemo.",
+      "memberHint": "Manura PDF y'ibyawe ku gihe wahisemo."
     },
     "tabs": {
       "reports": "Raporo",
@@ -1199,7 +1201,7 @@
       "member": "Umunyamuryango",
       "status": "Imiterere",
       "transactionType": "Ubwoko bw'igikorwa",
-      "submit": "Manura raporo",
+      "submit": "Manura PDF",
       "exporting": "Birimo gumanurwa…",
       "success": "Byamanuye {{filename}}",
       "validation": {

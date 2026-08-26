@@ -14,4 +14,5 @@ public class ReportTypeResponse {
     private String code;
     private String label;
     private boolean requiresAuditRead;
+    private boolean selfScoped;
 }

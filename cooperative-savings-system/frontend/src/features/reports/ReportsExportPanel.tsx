@@ -20,7 +20,7 @@ import { LoadingState } from '@/shared/components/LoadingState'
 import { CONTRIBUTION_STATUSES } from '@/shared/types/contribution'
 import { LEDGER_TRANSACTION_TYPES } from '@/shared/types/ledger'
 import { memberDisplayName } from '@/shared/types/member'
-import { REPORT_TYPES } from '@/shared/types/report'
+import { MEMBER_PRIMARY_REPORTS, STAFF_PRIMARY_REPORTS } from '@/shared/types/report'
 import {
   defaultExportFilename,
   defaultReportFromDate,
@@ -90,9 +90,20 @@ export function ReportsExportPanel({
     () => typesQuery.data?.find((item) => item.type === reportType) ?? null,
     [typesQuery.data, reportType],
   )
+  const selfScoped = Boolean(typesQuery.data?.some((item) => item.selfScoped))
+
+  useEffect(() => {
+    if (!typesQuery.data) return
+    const allowed = new Set(typesQuery.data.map((item) => String(item.type)))
+    setReportType((current) => {
+      const candidate = current || initialReportType || ''
+      return candidate && allowed.has(candidate) ? candidate : ''
+    })
+  }, [typesQuery.data, initialReportType])
 
   const showDates = reportType ? reportSupportsFromTo(reportType, selectedMeta) : true
-  const showMember = reportType ? reportSupportsMember(reportType, selectedMeta) : false
+  const showMember =
+    reportType && !selfScoped ? reportSupportsMember(reportType, selectedMeta) : false
   const showStatus = reportType ? reportSupportsStatus(reportType, selectedMeta) : false
   const showYearMonth = reportType ? reportSupportsYearMonth(reportType, selectedMeta) : false
   const showTxnType = reportType
@@ -154,32 +165,26 @@ export function ReportsExportPanel({
     },
   })
 
-  const types =
-    typesQuery.data && typesQuery.data.length > 0
-      ? typesQuery.data
-      : REPORT_TYPES.map((type) => ({ type, label: type }))
+  const types = typesQuery.data ?? []
+  const allowed = new Set(types.map((item) => String(item.type)))
 
   if (typesQuery.isLoading) {
     return <LoadingState />
   }
 
-  const primaryCards = [
-    {
-      type: 'CONTRIBUTIONS',
-      titleKey: 'reports.primary.contributions',
-      descriptionKey: 'reports.primary.contributionsHint',
-    },
-    {
-      type: 'INVESTMENTS',
-      titleKey: 'reports.primary.investments',
-      descriptionKey: 'reports.primary.investmentsHint',
-    },
-    {
-      type: 'FULL_FINANCIAL',
-      titleKey: 'reports.primary.full',
-      descriptionKey: 'reports.primary.fullHint',
-    },
-  ] as const
+  const primaryCards = (selfScoped ? MEMBER_PRIMARY_REPORTS : STAFF_PRIMARY_REPORTS)
+    .filter((type) => allowed.has(type))
+    .map((type) => ({
+      type,
+      titleKey: reportTypeLabelKey(type),
+      descriptionKey: selfScoped
+        ? `reports.primary.memberHint`
+        : type === 'CONTRIBUTIONS'
+          ? 'reports.primary.contributionsHint'
+          : type === 'INVESTMENTS'
+            ? 'reports.primary.investmentsHint'
+            : 'reports.primary.fullHint',
+    }))
 
   const runPrimary = (type: string) => {
     if (!timelineValid) {
@@ -202,6 +207,11 @@ export function ReportsExportPanel({
           }
         >
           {getErrorMessage(typesQuery.error, t('errors.generic'))}
+        </Alert>
+      ) : null}
+      {selfScoped ? (
+        <Alert severity="info" sx={{ mb: 2, maxWidth: 720 }}>
+          {t('reports.memberOnly')}
         </Alert>
       ) : null}
       <Typography variant="h6" gutterBottom>
@@ -264,45 +274,49 @@ export function ReportsExportPanel({
         />
       </Stack>
 
-      <Typography variant="h6" gutterBottom>
-        {t('reports.primaryTitle')}
-      </Typography>
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        spacing={2}
-        sx={{ mb: 3 }}
-        useFlexGap
-      >
-        {primaryCards.map((card) => (
-          <Box
-            key={card.type}
-            sx={{
-              flex: 1,
-              p: 2.5,
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: 2,
-              bgcolor: 'background.paper',
-              boxShadow: '0 1px 3px rgba(15, 23, 42, 0.06)',
-            }}
+      {primaryCards.length ? (
+        <>
+          <Typography variant="h6" gutterBottom>
+            {t('reports.primaryTitle')}
+          </Typography>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={2}
+            sx={{ mb: 3 }}
+            useFlexGap
           >
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              {t(card.titleKey)}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
-              {t(card.descriptionKey)}
-            </Typography>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => runPrimary(card.type)}
-              disabled={!timelineValid || exportMutation.isPending}
-            >
-              {t('reports.export.submit')}
-            </Button>
-          </Box>
-        ))}
-      </Stack>
+            {primaryCards.map((card) => (
+              <Box
+                key={card.type}
+                sx={{
+                  flex: 1,
+                  p: 2.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  bgcolor: 'background.paper',
+                  boxShadow: '0 1px 3px rgba(15, 23, 42, 0.06)',
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                  {t(card.titleKey)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
+                  {t(card.descriptionKey)}
+                </Typography>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => runPrimary(card.type)}
+                  disabled={!timelineValid || exportMutation.isPending}
+                >
+                  {t('reports.export.submit')}
+                </Button>
+              </Box>
+            ))}
+          </Stack>
+        </>
+      ) : null}
 
       <Typography variant="h6" gutterBottom>
         {t('reports.advancedTitle')}

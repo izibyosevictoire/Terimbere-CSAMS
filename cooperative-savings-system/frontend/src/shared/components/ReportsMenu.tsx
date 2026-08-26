@@ -10,30 +10,15 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material'
+import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import { useAppSelector } from '@/app/store/hooks'
+import { fetchReportTypes } from '@/shared/api/reports'
 import { ROUTES } from '@/shared/constants/routes'
-
-const PRIMARY_REPORTS = [
-  { type: 'CONTRIBUTIONS', labelKey: 'reports.primary.contributions' },
-  { type: 'INVESTMENTS', labelKey: 'reports.primary.investments' },
-  { type: 'FULL_FINANCIAL', labelKey: 'reports.primary.full' },
-] as const
-
-const ADVANCED_REPORTS = [
-  { type: 'MEMBERS', labelKey: 'reports.types.MEMBERS' },
-  { type: 'LOANS', labelKey: 'reports.types.LOANS' },
-  { type: 'REPAYMENTS', labelKey: 'reports.types.REPAYMENTS' },
-  { type: 'FINES', labelKey: 'reports.types.FINES' },
-  { type: 'FINE_PAYMENTS', labelKey: 'reports.types.FINE_PAYMENTS' },
-  { type: 'SOCIAL_FUND', labelKey: 'reports.types.SOCIAL_FUND' },
-  { type: 'INCOME', labelKey: 'reports.types.INCOME' },
-  { type: 'EXPENSES', labelKey: 'reports.types.EXPENSES' },
-  { type: 'PAYOUTS', labelKey: 'reports.types.PAYOUTS' },
-  { type: 'FINANCIAL_LEDGER', labelKey: 'reports.types.FINANCIAL_LEDGER' },
-  { type: 'AUDIT_LOGS', labelKey: 'reports.types.AUDIT_LOGS' },
-] as const
+import { MEMBER_PRIMARY_REPORTS, STAFF_PRIMARY_REPORTS } from '@/shared/types/report'
+import { reportTypeLabelKey } from '@/features/reports/reportHelpers'
 
 interface ReportsMenuProps {
   buttonVariant?: 'contained' | 'outlined' | 'text'
@@ -43,7 +28,23 @@ interface ReportsMenuProps {
 export function ReportsMenu({ buttonVariant = 'outlined', size = 'medium' }: ReportsMenuProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const cooperativeId = useAppSelector((s) => s.auth.selectedCooperativeId)
   const [anchor, setAnchor] = useState<null | HTMLElement>(null)
+
+  const typesQuery = useQuery({
+    queryKey: ['reports', 'types', cooperativeId],
+    queryFn: () => fetchReportTypes(cooperativeId!),
+    enabled: Boolean(cooperativeId),
+  })
+
+  const types = typesQuery.data ?? []
+  const selfScoped = types.some((item) => item.selfScoped)
+  const allowed = new Set(types.map((item) => String(item.type)))
+  const primaryIds = (selfScoped ? MEMBER_PRIMARY_REPORTS : STAFF_PRIMARY_REPORTS).filter((type) =>
+    allowed.has(type),
+  )
+  const primarySet = new Set<string>(primaryIds)
+  const advanced = types.filter((item) => !primarySet.has(String(item.type)))
 
   const go = (type: string) => {
     setAnchor(null)
@@ -59,6 +60,7 @@ export function ReportsMenu({ buttonVariant = 'outlined', size = 'medium' }: Rep
         onClick={(e) => setAnchor(e.currentTarget)}
         aria-haspopup="menu"
         aria-expanded={Boolean(anchor)}
+        disabled={!cooperativeId}
       >
         {t('nav.reports')}
       </Button>
@@ -68,30 +70,42 @@ export function ReportsMenu({ buttonVariant = 'outlined', size = 'medium' }: Rep
         onClose={() => setAnchor(null)}
         slotProps={{ paper: { sx: { minWidth: 280, maxHeight: 480 } } }}
       >
-        <Box sx={{ px: 2, pt: 1.5, pb: 0.5 }}>
-          <Typography variant="overline" color="text.secondary">
-            {t('reports.primaryTitle')}
-          </Typography>
-        </Box>
-        {PRIMARY_REPORTS.map((item) => (
-          <MenuItem key={item.type} onClick={() => go(item.type)}>
-            <ListItemIcon>
-              <AssessmentIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>{t(item.labelKey)}</ListItemText>
-          </MenuItem>
-        ))}
-        <Divider sx={{ my: 1 }} />
-        <Box sx={{ px: 2, pt: 0.5, pb: 0.5 }}>
-          <Typography variant="overline" color="text.secondary">
-            {t('reports.advancedTitle')}
-          </Typography>
-        </Box>
-        {ADVANCED_REPORTS.map((item) => (
-          <MenuItem key={item.type} onClick={() => go(item.type)}>
-            <ListItemText>{t(item.labelKey, { defaultValue: item.type })}</ListItemText>
-          </MenuItem>
-        ))}
+        {primaryIds.length ? (
+          <>
+            <Box sx={{ px: 2, pt: 1.5, pb: 0.5 }}>
+              <Typography variant="overline" color="text.secondary">
+                {t('reports.primaryTitle')}
+              </Typography>
+            </Box>
+            {primaryIds.map((type) => (
+              <MenuItem key={type} onClick={() => go(type)}>
+                <ListItemIcon>
+                  <AssessmentIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>
+                  {t(reportTypeLabelKey(type), { defaultValue: type })}
+                </ListItemText>
+              </MenuItem>
+            ))}
+          </>
+        ) : null}
+        {advanced.length ? (
+          <>
+            {primaryIds.length ? <Divider sx={{ my: 1 }} /> : null}
+            <Box sx={{ px: 2, pt: 0.5, pb: 0.5 }}>
+              <Typography variant="overline" color="text.secondary">
+                {t('reports.advancedTitle')}
+              </Typography>
+            </Box>
+            {advanced.map((item) => (
+              <MenuItem key={item.type} onClick={() => go(String(item.type))}>
+                <ListItemText>
+                  {t(reportTypeLabelKey(String(item.type)), { defaultValue: item.label ?? item.type })}
+                </ListItemText>
+              </MenuItem>
+            ))}
+          </>
+        ) : null}
         <Divider />
         <MenuItem
           onClick={() => {

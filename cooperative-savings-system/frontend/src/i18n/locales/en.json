@@ -1167,13 +1167,15 @@
     "primaryTitle": "Primary reports",
     "advancedTitle": "Advanced reports",
     "openAll": "Open report centre",
+    "memberOnly": "Your reports only include your own records — not the full cooperative ledger or all transactions.",
     "primary": {
       "contributions": "Contributions",
       "contributionsHint": "Download a PDF of contributions for the selected timeline.",
       "investments": "Investments",
       "investmentsHint": "Download a PDF of investments for the selected timeline.",
       "full": "Full financial report",
-      "fullHint": "Download a PDF of the full financial summary for the selected timeline."
+      "fullHint": "Download a PDF of the full financial summary for the selected timeline.",
+      "memberHint": "Download a PDF of your own records for the selected timeline."
     },
     "tabs": {
       "reports": "Reports",
@@ -1214,7 +1216,7 @@
       "member": "Member",
       "status": "Status",
       "transactionType": "Transaction type",
-      "submit": "Download report",
+      "submit": "Download PDF",
       "exporting": "Downloading…",
       "success": "Downloaded {{filename}}",
       "validation": {
@@ -1521,7 +1523,7 @@
     },
     "reports": {
       "title": "Report Centre",
-      "description": "Download PDF reports for the selected cooperative."
+      "description": "Download print-ready PDF reports for the selected cooperative."
     },
     "settings": {
       "title": "Settings",

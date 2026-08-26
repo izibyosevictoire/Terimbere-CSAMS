@@ -64,6 +64,7 @@ export const memberNavItems: NavItem[] = [
   { labelKey: 'nav.myFines', path: ROUTES.fines, icon: GavelIcon },
   { labelKey: 'nav.mySocial', path: ROUTES.socialFund, icon: FavoriteIcon },
   { labelKey: 'nav.shareOut', path: ROUTES.payouts, icon: PaymentsIcon },
+  { labelKey: 'nav.reports', path: ROUTES.reports, icon: AssessmentIcon },
   { labelKey: 'nav.notifications', path: ROUTES.notifications, icon: NotificationsIcon },
   { labelKey: 'nav.profile', path: ROUTES.profile, icon: PersonIcon },
 ]
