@@ -29,10 +29,8 @@ import {
   reportSupportsMember,
   reportSupportsStatus,
   reportSupportsTransactionType,
-  reportSupportsYearMonth,
   reportTypeLabelKey,
   validateReportTimeline,
-  validateReportYearMonth,
 } from './reportHelpers'
 
 interface ReportsExportPanelProps {
@@ -54,8 +52,6 @@ export function ReportsExportPanel({
   const [toDate, setToDate] = useState(defaultReportToDate(today))
   const [memberUserId, setMemberUserId] = useState('')
   const [status, setStatus] = useState('')
-  const [year, setYear] = useState('')
-  const [month, setMonth] = useState('')
   const [transactionType, setTransactionType] = useState('')
 
   const cooperativeQuery = useQuery({
@@ -105,29 +101,11 @@ export function ReportsExportPanel({
   const showMember =
     reportType && !selfScoped ? reportSupportsMember(reportType, selectedMeta) : false
   const showStatus = reportType ? reportSupportsStatus(reportType, selectedMeta) : false
-  const showYearMonth = reportType ? reportSupportsYearMonth(reportType, selectedMeta) : false
   const showTxnType = reportType
     ? reportSupportsTransactionType(reportType, selectedMeta)
     : false
 
-  const yearOptions = useMemo(() => {
-    const current = today.year()
-    return Array.from({ length: 8 }, (_, i) => current - i)
-  }, [today])
-
-  const monthOptions = useMemo(() => {
-    const selectedYear = year ? Number(year) : null
-    const maxMonth = selectedYear === today.year() ? today.month() + 1 : 12
-    return Array.from({ length: 12 }, (_, i) => i + 1).map((m) => ({
-      value: m,
-      disabled: selectedYear != null && m > maxMonth,
-    }))
-  }, [today, year])
-
   const timelineIssue = validateReportTimeline(fromDate, toDate, today, registrationDate)
-  const yearMonthIssue = showYearMonth
-    ? validateReportYearMonth(year, month, today)
-    : null
   const timelineValid = timelineIssue == null
 
   const exportMutation = useMutation({
@@ -135,12 +113,6 @@ export function ReportsExportPanel({
       const issue = validateReportTimeline(fromDate, toDate, today, registrationDate)
       if (issue) {
         throw new Error(t(`reports.export.validation.${issue}`))
-      }
-      if (includeFilters && showYearMonth) {
-        const ymIssue = validateReportYearMonth(year, month, today)
-        if (ymIssue) {
-          throw new Error(t(`reports.export.validation.${ymIssue}`))
-        }
       }
       return exportReport(
         cooperativeId,
@@ -151,8 +123,6 @@ export function ReportsExportPanel({
           memberUserId: includeFilters && showMember && memberUserId ? memberUserId : null,
           status: includeFilters && showStatus && status ? status : null,
           transactionType: includeFilters && showTxnType && transactionType ? transactionType : null,
-          year: includeFilters && showYearMonth && year ? Number(year) : null,
-          month: includeFilters && showYearMonth && month ? Number(month) : null,
         },
         defaultExportFilename(type),
       )
@@ -337,7 +307,7 @@ export function ReportsExportPanel({
         }}
         onSubmit={(event) => {
           event.preventDefault()
-          if (!reportType || !timelineValid || yearMonthIssue) return
+          if (!reportType || !timelineValid) return
           exportMutation.mutate({ type: reportType, includeFilters: true })
         }}
       >
@@ -366,49 +336,6 @@ export function ReportsExportPanel({
 
         {showDates ? (
           <Alert severity="info">{t('reports.export.usesTimeline')}</Alert>
-        ) : null}
-
-        {showYearMonth ? (
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField
-              select
-              label={t('reports.export.year')}
-              value={year}
-              onChange={(e) => {
-                setYear(e.target.value)
-                setMonth('')
-              }}
-              error={yearMonthIssue === 'incompleteYearMonth' || yearMonthIssue === 'futureYearMonth'}
-              helperText={
-                yearMonthIssue
-                  ? t(`reports.export.validation.${yearMonthIssue}`)
-                  : t('reports.export.yearMonthHint')
-              }
-              fullWidth
-            >
-              <MenuItem value="">{t('common.all')}</MenuItem>
-              {yearOptions.map((y) => (
-                <MenuItem key={y} value={String(y)}>
-                  {y}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              select
-              label={t('reports.export.month')}
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              error={yearMonthIssue === 'incompleteYearMonth' || yearMonthIssue === 'futureYearMonth'}
-              fullWidth
-            >
-              <MenuItem value="">{t('common.all')}</MenuItem>
-              {monthOptions.map((m) => (
-                <MenuItem key={m.value} value={String(m.value)} disabled={m.disabled}>
-                  {dayjs().month(m.value - 1).format('MMMM')}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Stack>
         ) : null}
 
         {showMember ? (
@@ -466,7 +393,7 @@ export function ReportsExportPanel({
           <Button
             type="submit"
             variant="contained"
-            disabled={!reportType || !timelineValid || Boolean(yearMonthIssue) || exportMutation.isPending}
+            disabled={!reportType || !timelineValid || exportMutation.isPending}
           >
             {exportMutation.isPending
               ? t('reports.export.exporting')

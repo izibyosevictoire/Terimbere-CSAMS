@@ -5,7 +5,6 @@ export {
   reportSupportsFromTo,
   reportSupportsMember,
   reportSupportsStatus,
-  reportSupportsYearMonth,
   reportSupportsTransactionType,
   importRowValidityColor,
   importRowValidityLabelKey,

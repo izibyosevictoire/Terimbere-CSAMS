@@ -13,10 +13,8 @@ import {
   importStatusLabelKey,
   reportSupportsMember,
   reportSupportsTransactionType,
-  reportSupportsYearMonth,
   reportTypeLabelKey,
   validateReportTimeline,
-  validateReportYearMonth,
 } from './reportHelpers'
 
 describe('parseContentDispositionFilename', () => {
@@ -90,9 +88,7 @@ describe('canCancelImport', () => {
 })
 
 describe('report filter helpers', () => {
-  it('detects year/month and ledger filters', () => {
-    expect(reportSupportsYearMonth('CONTRIBUTIONS')).toBe(true)
-    expect(reportSupportsYearMonth('MEMBERS')).toBe(false)
+  it('detects member and ledger filters', () => {
     expect(reportSupportsMember('LOANS')).toBe(true)
     expect(reportSupportsTransactionType('FINANCIAL_LEDGER')).toBe(true)
   })
@@ -145,12 +141,5 @@ describe('report timeline validation', () => {
 
   it('defaults from registration date when that is after Jan 1', () => {
     expect(defaultReportFromDate(today, '2026-03-15')).toBe('2026-03-15')
-  })
-
-  it('rejects incomplete or future year/month filters', () => {
-    expect(validateReportYearMonth('2026', '', today)).toBe('incompleteYearMonth')
-    expect(validateReportYearMonth('2026', '9', today)).toBe('futureYearMonth')
-    expect(validateReportYearMonth('2026', '8', today)).toBeNull()
-    expect(validateReportYearMonth('', '', today)).toBeNull()
   })
 })

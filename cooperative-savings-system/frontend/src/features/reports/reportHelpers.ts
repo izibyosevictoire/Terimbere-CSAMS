@@ -11,13 +11,6 @@ export type ChipColor =
   | 'success'
   | 'warning'
 
-const YEAR_MONTH_TYPES = new Set([
-  'CONTRIBUTIONS',
-  'SPECIAL_CONTRIBUTIONS',
-  'PAYOUTS',
-  'SOCIAL_FUND',
-])
-
 const MEMBER_TYPES = new Set([
   'CONTRIBUTIONS',
   'SPECIAL_CONTRIBUTIONS',
@@ -73,14 +66,6 @@ export function reportSupportsStatus(
 ): boolean {
   if (meta?.supportsStatus != null) return meta.supportsStatus
   return STATUS_TYPES.has(type)
-}
-
-export function reportSupportsYearMonth(
-  type: string,
-  meta?: ReportTypeInfo | null,
-): boolean {
-  if (meta?.supportsYearMonth != null) return meta.supportsYearMonth
-  return YEAR_MONTH_TYPES.has(type)
 }
 
 export function reportSupportsTransactionType(
@@ -154,8 +139,6 @@ export type ReportTimelineIssue =
   | 'futureTo'
   | 'rangeTooLong'
   | 'beforeRegistration'
-  | 'incompleteYearMonth'
-  | 'futureYearMonth'
 
 const MAX_RANGE_YEARS = 5
 
@@ -193,18 +176,5 @@ export function validateReportTimeline(
     const registered = dayjs(registrationDate)
     if (registered.isValid() && from.isBefore(registered, 'day')) return 'beforeRegistration'
   }
-  return null
-}
-
-export function validateReportYearMonth(
-  year: string,
-  month: string,
-  today = dayjs(),
-): ReportTimelineIssue | null {
-  if (!year && !month) return null
-  if (!year || !month) return 'incompleteYearMonth'
-  const selected = dayjs(`${year}-${String(month).padStart(2, '0')}-01`)
-  if (!selected.isValid()) return 'incompleteYearMonth'
-  if (selected.isAfter(today, 'month')) return 'futureYearMonth'
   return null
 }

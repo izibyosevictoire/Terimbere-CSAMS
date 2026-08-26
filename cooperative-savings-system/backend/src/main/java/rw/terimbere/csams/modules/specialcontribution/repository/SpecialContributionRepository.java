@@ -5,13 +5,16 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import rw.terimbere.csams.modules.specialcontribution.entity.SpecialContribution;
 import rw.terimbere.csams.modules.specialcontribution.entity.SpecialContributionStatus;
 
-public interface SpecialContributionRepository extends JpaRepository<SpecialContribution, UUID> {
+public interface SpecialContributionRepository
+        extends JpaRepository<SpecialContribution, UUID>, JpaSpecificationExecutor<SpecialContribution> {
 
     List<SpecialContribution> findByCampaignIdOrderByCreatedAtDesc(UUID campaignId);
 
@@ -58,20 +61,14 @@ public interface SpecialContributionRepository extends JpaRepository<SpecialCont
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate);
 
-    @Query(
-            """
-            SELECT s FROM SpecialContribution s
-            WHERE s.cooperativeId = :cooperativeId
-              AND (:memberUserId IS NULL OR s.memberUserId = :memberUserId)
-              AND (:status IS NULL OR s.status = :status)
-              AND (:fromDate IS NULL OR s.contributionDate >= :fromDate)
-              AND (:toDate IS NULL OR s.contributionDate <= :toDate)
-            ORDER BY s.contributionDate DESC, s.createdAt DESC
-            """)
-    List<SpecialContribution> findFiltered(
-            @Param("cooperativeId") UUID cooperativeId,
-            @Param("memberUserId") UUID memberUserId,
-            @Param("status") SpecialContributionStatus status,
-            @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate);
+    default List<SpecialContribution> findFiltered(
+            UUID cooperativeId,
+            UUID memberUserId,
+            SpecialContributionStatus status,
+            LocalDate fromDate,
+            LocalDate toDate) {
+        return findAll(
+                SpecialContributionSpecs.filtered(cooperativeId, memberUserId, status, fromDate, toDate),
+                Sort.by(Sort.Direction.DESC, "contributionDate").and(Sort.by(Sort.Direction.DESC, "createdAt")));
+    }
 }

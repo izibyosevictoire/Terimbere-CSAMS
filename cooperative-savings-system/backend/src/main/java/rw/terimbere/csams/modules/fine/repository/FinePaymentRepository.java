@@ -7,13 +7,16 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import rw.terimbere.csams.modules.fine.entity.FinePayment;
 import rw.terimbere.csams.modules.fine.entity.FinePaymentStatus;
 
-public interface FinePaymentRepository extends JpaRepository<FinePayment, UUID> {
+public interface FinePaymentRepository
+        extends JpaRepository<FinePayment, UUID>, JpaSpecificationExecutor<FinePayment> {
 
     Optional<FinePayment> findByIdAndCooperativeIdAndFineId(UUID id, UUID cooperativeId, UUID fineId);
 
@@ -21,22 +24,16 @@ public interface FinePaymentRepository extends JpaRepository<FinePayment, UUID> 
 
     long countByCooperativeIdAndStatus(UUID cooperativeId, FinePaymentStatus status);
 
-    @Query(
-            """
-            SELECT p FROM FinePayment p
-            WHERE p.cooperativeId = :cooperativeId
-              AND (:memberUserId IS NULL OR p.memberUserId = :memberUserId)
-              AND (:status IS NULL OR p.status = :status)
-              AND (:fromDate IS NULL OR p.paymentDate >= :fromDate)
-              AND (:toDate IS NULL OR p.paymentDate <= :toDate)
-            ORDER BY p.paymentDate DESC, p.createdAt DESC
-            """)
-    List<FinePayment> findFiltered(
-            @Param("cooperativeId") UUID cooperativeId,
-            @Param("memberUserId") UUID memberUserId,
-            @Param("status") FinePaymentStatus status,
-            @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate);
+    default List<FinePayment> findFiltered(
+            UUID cooperativeId,
+            UUID memberUserId,
+            FinePaymentStatus status,
+            LocalDate fromDate,
+            LocalDate toDate) {
+        return findAll(
+                FinePaymentSpecs.filtered(cooperativeId, memberUserId, status, fromDate, toDate),
+                Sort.by(Sort.Direction.DESC, "paymentDate").and(Sort.by(Sort.Direction.DESC, "createdAt")));
+    }
 
     @Query(
             """

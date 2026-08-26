@@ -21,8 +21,6 @@ function toExportBody(payload: ReportExportRequest): Record<string, unknown> {
   if (payload.memberUserId) body.memberUserId = payload.memberUserId
   if (payload.status) body.status = payload.status
   if (payload.transactionType) body.transactionType = payload.transactionType
-  if (payload.year != null) body.year = payload.year
-  if (payload.month != null) body.month = payload.month
   return body
 }
 

@@ -22,6 +22,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,6 +38,12 @@ import rw.terimbere.csams.modules.contribution.entity.Contribution;
 import rw.terimbere.csams.modules.contribution.entity.ContributionStatus;
 import rw.terimbere.csams.modules.contribution.repository.ContributionImportRepository;
 import rw.terimbere.csams.modules.contribution.repository.ContributionRepository;
+import rw.terimbere.csams.modules.fine.repository.FinePaymentRepository;
+import rw.terimbere.csams.modules.incomeexpense.repository.IncomeExpenseTransactionRepository;
+import rw.terimbere.csams.modules.ledger.repository.LedgerEntryRepository;
+import rw.terimbere.csams.modules.loanrepayment.repository.LoanRepaymentRepository;
+import rw.terimbere.csams.modules.report.dto.ReportType;
+import rw.terimbere.csams.modules.specialcontribution.repository.SpecialContributionRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -53,6 +61,21 @@ class ReportAndContributionImportIntegrationTest {
 
     @Autowired
     private ContributionImportRepository contributionImportRepository;
+
+    @Autowired
+    private SpecialContributionRepository specialContributionRepository;
+
+    @Autowired
+    private LoanRepaymentRepository loanRepaymentRepository;
+
+    @Autowired
+    private FinePaymentRepository finePaymentRepository;
+
+    @Autowired
+    private IncomeExpenseTransactionRepository incomeExpenseRepository;
+
+    @Autowired
+    private LedgerEntryRepository ledgerEntryRepository;
 
     private String superAdminToken;
     private UUID cooperativeId;
@@ -351,6 +374,56 @@ class ReportAndContributionImportIntegrationTest {
                 PageRequest.of(0, 1));
         assertThat(paged.getTotalElements()).isEqualTo(2);
         assertThat(paged.getContent()).hasSize(1);
+    }
+
+    @ParameterizedTest
+    @EnumSource(ReportType.class)
+    void export_eachReportType_withFromAndTo_returnsPdf(ReportType type) throws Exception {
+        MvcResult export = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/export")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .header("Accept", "application/json")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reportType":"%s",
+                                  "fromDate":"2026-01-01",
+                                  "toDate":"2026-08-20"
+                                }
+                                """.formatted(type.name())))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"))
+                .andReturn();
+        byte[] body = export.getResponse().getContentAsByteArray();
+        assertThat(body.length).isGreaterThan(200);
+        assertThat(new String(body, 0, 4)).isEqualTo("%PDF");
+    }
+
+    @Test
+    void filteredReportQueries_acceptAllNullableDateCombinations() {
+        LocalDate from = LocalDate.of(2026, 1, 1);
+        LocalDate to = LocalDate.of(2026, 8, 26);
+        LocalDate[][] pairs = {
+            {null, null},
+            {from, null},
+            {null, to},
+            {from, to}
+        };
+        for (LocalDate[] pair : pairs) {
+            contributionRepository.search(
+                    cooperativeId, null, null, null, null, pair[0], pair[1], Pageable.unpaged());
+            contributionRepository.search(
+                    cooperativeId, memberUserId, null, null, null, pair[0], pair[1], Pageable.unpaged());
+            specialContributionRepository.findFiltered(cooperativeId, null, null, pair[0], pair[1]);
+            specialContributionRepository.findFiltered(cooperativeId, memberUserId, null, pair[0], pair[1]);
+            loanRepaymentRepository.findFiltered(cooperativeId, null, pair[0], pair[1]);
+            loanRepaymentRepository.findFiltered(cooperativeId, memberUserId, pair[0], pair[1]);
+            finePaymentRepository.findFiltered(cooperativeId, null, null, pair[0], pair[1]);
+            incomeExpenseRepository.findFiltered(cooperativeId, null, null, pair[0], pair[1], Pageable.unpaged());
+            ledgerEntryRepository.findFiltered(
+                    cooperativeId, null, pair[0], pair[1], null, null, Pageable.unpaged());
+            ledgerEntryRepository.findFiltered(
+                    cooperativeId, null, pair[0], pair[1], memberUserId, null, Pageable.unpaged());
+        }
     }
 
     @Test

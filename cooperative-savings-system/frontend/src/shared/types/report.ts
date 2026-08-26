@@ -36,7 +36,6 @@ export interface ReportTypeInfo {
   supportsToDate?: boolean
   supportsMember?: boolean
   supportsStatus?: boolean
-  supportsYearMonth?: boolean
   supportsTransactionType?: boolean
   selfScoped?: boolean
 }
@@ -48,8 +47,6 @@ export interface ReportExportRequest {
   memberUserId?: string | null
   status?: string | null
   transactionType?: string | null
-  year?: number | null
-  month?: number | null
 }
 
 export function mapReportTypeInfo(raw: ReportTypeInfo | string): ReportTypeInfo {

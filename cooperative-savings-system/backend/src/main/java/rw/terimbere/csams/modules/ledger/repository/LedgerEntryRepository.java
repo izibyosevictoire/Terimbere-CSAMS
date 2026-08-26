@@ -9,13 +9,15 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import rw.terimbere.csams.modules.ledger.entity.LedgerEntry;
 import rw.terimbere.csams.modules.ledger.entity.LedgerEntryStatus;
 import rw.terimbere.csams.shared.financial.LedgerTransactionType;
 
-public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, UUID> {
+public interface LedgerEntryRepository
+        extends JpaRepository<LedgerEntry, UUID>, JpaSpecificationExecutor<LedgerEntry> {
 
     boolean existsByIdempotencyKey(String idempotencyKey);
 
@@ -32,24 +34,20 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, UUID> 
     List<LedgerEntry> findBySourceEntityTypeAndSourceEntityIdAndStatus(
             String sourceEntityType, UUID sourceEntityId, LedgerEntryStatus status);
 
-    @Query(
-            """
-            SELECT e FROM LedgerEntry e
-            WHERE e.cooperativeId = :cooperativeId
-              AND (:transactionType IS NULL OR e.transactionType = :transactionType)
-              AND (:fromDate IS NULL OR e.transactionDate >= :fromDate)
-              AND (:toDate IS NULL OR e.transactionDate <= :toDate)
-              AND (:memberUserId IS NULL OR e.memberUserId = :memberUserId)
-              AND (:sourceEntityType IS NULL OR e.sourceEntityType = :sourceEntityType)
-            """)
-    Page<LedgerEntry> findFiltered(
-            @Param("cooperativeId") UUID cooperativeId,
-            @Param("transactionType") LedgerTransactionType transactionType,
-            @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate,
-            @Param("memberUserId") UUID memberUserId,
-            @Param("sourceEntityType") String sourceEntityType,
-            Pageable pageable);
+    default Page<LedgerEntry> findFiltered(
+            UUID cooperativeId,
+            LedgerTransactionType transactionType,
+            LocalDate fromDate,
+            LocalDate toDate,
+            UUID memberUserId,
+            String sourceEntityType,
+            Pageable pageable) {
+        Pageable page = pageable == null ? Pageable.unpaged() : pageable;
+        return findAll(
+                LedgerEntrySpecs.filtered(
+                        cooperativeId, transactionType, fromDate, toDate, memberUserId, sourceEntityType),
+                page);
+    }
 
     @Query(
             """
