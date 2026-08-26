@@ -2,7 +2,6 @@ import AddIcon from '@mui/icons-material/Add'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import GavelIcon from '@mui/icons-material/Gavel'
 import GroupsIcon from '@mui/icons-material/Groups'
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet'
 import PaymentsIcon from '@mui/icons-material/Payments'
 import SavingsIcon from '@mui/icons-material/Savings'
@@ -121,15 +120,6 @@ export const QUICK_ACTIONS: QuickActionItem[] = [
     path: ROUTES.members,
     group: 'quick',
     roles: SECRETARY_ACCESS_ROLES,
-  },
-  {
-    id: 'change-password',
-    labelKey: 'actions.changePassword',
-    badgeKey: 'actions.badges.password',
-    badgeColor: 'default',
-    icon: LockOutlinedIcon,
-    path: ROUTES.changePassword,
-    group: 'quick',
   },
   {
     id: 'share-out',

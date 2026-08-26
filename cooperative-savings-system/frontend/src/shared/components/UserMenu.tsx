@@ -1,5 +1,4 @@
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import LogoutIcon from '@mui/icons-material/Logout'
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlineOutlined'
 import {
@@ -100,17 +99,6 @@ export function UserMenu() {
             <PersonOutlineIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>{t('nav.profile')}</ListItemText>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            setAnchor(null)
-            navigate(ROUTES.changePassword)
-          }}
-        >
-          <ListItemIcon>
-            <LockOutlinedIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>{t('profile.changePassword')}</ListItemText>
         </MenuItem>
         <Divider />
         <MenuItem onClick={() => void handleLogout()} disabled={loggingOut}>

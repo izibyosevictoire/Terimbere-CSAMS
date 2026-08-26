@@ -23,7 +23,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { setCredentials, selectIsCooperativeAdmin, selectIsSuperAdmin } from '@/app/store/authSlice'
+import { setCredentials, selectIsSuperAdmin } from '@/app/store/authSlice'
 import { useAppDispatch, useAppSelector } from '@/app/store/hooks'
 import { updateMe } from '@/shared/api/auth'
 import { getErrorMessage } from '@/shared/api/client'
@@ -81,7 +81,6 @@ export function ProfilePage() {
   const { enqueueSnackbar } = useSnackbar()
   const user = useAppSelector((s) => s.auth.user)
   const accessToken = useAppSelector((s) => s.auth.accessToken)
-  const isCoopAdmin = useAppSelector(selectIsCooperativeAdmin)
   const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
   const [editOpen, setEditOpen] = useState(false)
 
@@ -155,24 +154,6 @@ export function ProfilePage() {
                   <RoleDutiesNote roles={user.roles} compact />
                 </Box>
               </Box>
-              {isCoopAdmin || isSuperAdmin ? (
-                <Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                    {t('profile.permissions')}
-                  </Typography>
-                  <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
-                    {user.permissions.length ? (
-                      user.permissions.map((permission) => (
-                        <Chip key={permission} label={permission} size="small" variant="outlined" />
-                      ))
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        {t('profile.noPermissions')}
-                      </Typography>
-                    )}
-                  </Stack>
-                </Box>
-              ) : null}
               <Box>
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
                   {t('profile.cooperatives')}

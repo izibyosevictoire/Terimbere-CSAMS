@@ -12,7 +12,6 @@ import {
 
 const addMember = QUICK_ACTIONS.find((a) => a.id === 'add-member')!
 const memberView = QUICK_ACTIONS.find((a) => a.id === 'member-view')!
-const changePassword = QUICK_ACTIONS.find((a) => a.id === 'change-password')!
 
 describe('canShowQuickAction', () => {
   it('hides add member and member view from accountant and loan officer', () => {
@@ -22,7 +21,10 @@ describe('canShowQuickAction', () => {
     expect(canShowQuickAction(memberView, accountant)).toBe(false)
     expect(canShowQuickAction(addMember, loanOfficer)).toBe(false)
     expect(canShowQuickAction(memberView, loanOfficer)).toBe(false)
-    expect(canShowQuickAction(changePassword, accountant)).toBe(true)
+  })
+
+  it('does not include change password in the actions menu', () => {
+    expect(QUICK_ACTIONS.some((a) => a.id === 'change-password')).toBe(false)
   })
 
   it('hides member actions from ordinary members', () => {
