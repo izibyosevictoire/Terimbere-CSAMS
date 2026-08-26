@@ -81,7 +81,12 @@ export function ContributionsPage() {
         title={t('pages.contributions.title')}
         description={t('pages.contributions.description')}
         actions={
-          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{ flexWrap: 'wrap' }}
+          >
             <Button
               variant="contained"
               size="small"
