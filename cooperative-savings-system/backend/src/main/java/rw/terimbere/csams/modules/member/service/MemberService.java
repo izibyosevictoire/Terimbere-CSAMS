@@ -359,6 +359,13 @@ public class MemberService {
         if (userRepository.existsByEmailIgnoreCaseAndDeletedFalseAndIdNot(email, user.getId())) {
             throw new ConflictException("Email already exists");
         }
+        if (StringUtils.hasText(request.getUsername())) {
+            String username = request.getUsername().trim();
+            if (userRepository.existsByUsernameIgnoreCaseAndDeletedFalseAndIdNot(username, user.getId())) {
+                throw new ConflictException("Username already exists");
+            }
+            user.setUsername(username);
+        }
 
         String nationalId = trimToNull(request.getNationalId());
         if (nationalId != null

@@ -93,6 +93,7 @@ export interface MemberCreateRequest {
 export interface MemberUpdateRequest {
   firstName: string
   lastName: string
+  username?: string
   email: string
   phone?: string
   nationalId?: string
@@ -138,10 +139,14 @@ export function memberDisplayName(member: Pick<Member, 'firstName' | 'lastName' 
 }
 
 export function mapMember(raw: Member): Member {
-  const userId = String(raw.userId)
+  const wrapper = raw as Member & { member?: Member }
+  const nested = wrapper.member
+  // GET /members/{id} returns { member, contributions, loans, ... }; flatten so edit forms prefill.
+  const base = nested ? { ...wrapper, ...nested } : wrapper
+  const userId = String(base.userId ?? '')
   return {
-    ...raw,
+    ...base,
     userId,
-    fullName: memberDisplayName(raw),
+    fullName: memberDisplayName(base),
   }
 }

@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +27,7 @@ import rw.terimbere.csams.modules.auth.dto.PasswordResetConfirmRequest;
 import rw.terimbere.csams.modules.auth.dto.PasswordResetRequest;
 import rw.terimbere.csams.modules.auth.dto.RefreshTokenRequest;
 import rw.terimbere.csams.modules.auth.dto.SignupRequest;
+import rw.terimbere.csams.modules.auth.dto.UpdateProfileRequest;
 import rw.terimbere.csams.modules.auth.service.AuthService;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.common.dto.ApiResponse;
@@ -90,11 +92,14 @@ public class AuthController {
     @PostMapping("/change-password")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Change password for the authenticated user")
-    public ResponseEntity<ApiResponse<Void>> changePassword(
+    public ResponseEntity<ApiResponse<LoginResponse>> changePassword(
             @AuthenticationPrincipal UserPrincipal principal,
-            @Valid @RequestBody ChangePasswordRequest request) {
-        authService.changePassword(principal.getId(), request);
-        return ResponseEntity.ok(ApiResponse.ok("Password changed", null));
+            @Valid @RequestBody ChangePasswordRequest request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
+        AuthResult result = authService.changePassword(principal.getId(), request, httpRequest);
+        authService.writeRefreshCookie(httpResponse, result.getRefreshToken());
+        return ResponseEntity.ok(ApiResponse.ok("Password changed", result.getResponse()));
     }
 
     @PostMapping("/password-reset/request")
@@ -121,5 +126,15 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthUserResponse>> me(
             @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(ApiResponse.ok(authService.currentUser(principal.getId())));
+    }
+
+    @PatchMapping("/me")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Update current authenticated user profile")
+    public ResponseEntity<ApiResponse<AuthUserResponse>> updateMe(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody UpdateProfileRequest request) {
+        return ResponseEntity.ok(
+                ApiResponse.ok("Profile updated", authService.updateProfile(principal.getId(), request)));
     }
 }

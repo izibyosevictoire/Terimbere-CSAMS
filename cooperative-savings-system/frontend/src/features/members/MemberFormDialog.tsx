@@ -118,6 +118,7 @@ export function MemberFormDialog({
     const updateValues: MemberUpdateFormValues = {
       firstName: values.firstName,
       lastName: values.lastName,
+      username: values.username,
       email: values.email,
       phone: values.phone,
       nationalId: values.nationalId,
@@ -155,23 +156,14 @@ export function MemberFormDialog({
                 {...register('lastName')}
               />
             </Stack>
-            {isCreate ? (
-              <TextField
-                label={t('members.fields.username')}
-                required
-                fullWidth
-                error={Boolean(errors.username)}
-                helperText={errors.username?.message}
-                {...register('username')}
-              />
-            ) : (
-              <TextField
-                label={t('members.fields.username')}
-                fullWidth
-                value={initial?.username ?? ''}
-                disabled
-              />
-            )}
+            <TextField
+              label={t('members.fields.username')}
+              required
+              fullWidth
+              error={Boolean(errors.username)}
+              helperText={errors.username?.message}
+              {...register('username')}
+            />
             <TextField
               label={t('members.fields.email')}
               required

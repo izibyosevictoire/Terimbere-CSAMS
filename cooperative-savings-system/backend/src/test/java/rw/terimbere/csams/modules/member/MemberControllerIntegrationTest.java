@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -148,6 +149,44 @@ class MemberControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.roleInCooperative").value("PRESIDENT"))
                 .andExpect(jsonPath("$.data.temporaryPassword").isNotEmpty());
+    }
+
+    @Test
+    void updateMember_canChangeUsername() throws Exception {
+        String username = "upd_" + UUID.randomUUID().toString().substring(0, 8);
+        MvcResult register = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/members")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName":"Jane",
+                                  "lastName":"Doe",
+                                  "username":"%s",
+                                  "email":"%s@test.local"
+                                }
+                                """.formatted(username, username)))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID memberUserId = UUID.fromString(objectMapper
+                .readTree(register.getResponse().getContentAsString())
+                .path("data")
+                .path("userId")
+                .asText());
+        String newUsername = username + "2";
+
+        mockMvc.perform(put("/api/v1/cooperatives/" + cooperativeId + "/members/" + memberUserId)
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName":"Jane",
+                                  "lastName":"Doe",
+                                  "username":"%s",
+                                  "email":"%s@test.local"
+                                }
+                                """.formatted(newUsername, username)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.username").value(newUsername));
     }
 
     private String loginAccessToken(String username, String password) throws Exception {

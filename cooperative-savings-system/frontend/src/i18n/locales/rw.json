@@ -89,7 +89,7 @@
     "newPassword": "Ijambo ry'ibanga rishya",
     "confirmPassword": "Emeza ijambo ry'ibanga rishya",
     "submit": "Bika ijambo ry'ibanga",
-    "success": "Ijambo ry'ibanga ryahinduwe neza."
+    "success": "Ijambo ry'ibanga ryahinduwe neza. Uracyinjira."
   },
   "profile": {
     "fullName": "Amazina yuzuye",
@@ -101,7 +101,11 @@
     "permissions": "Uburenganzira",
     "cooperatives": "Amakoperative",
     "noPermissions": "Nta burenganzira bwagaragaye",
-    "changePassword": "Hindura ijambo ry'ibanga"
+    "changePassword": "Hindura ijambo ry'ibanga",
+    "editTitle": "Hindura umwirondoro",
+    "updateSuccess": "Umwirondoro wavuguruwe",
+    "usernameHint": "Koresha inyuguti, imibare, n'utudomo . _ -",
+    "notAMember": "Ntiwigeze uba umunyamuryango w'ikoperative"
   },
   "actions": {
     "quickActions": "Ibikorwa byihuse",

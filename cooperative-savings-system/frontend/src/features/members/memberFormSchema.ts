@@ -96,6 +96,13 @@ export const memberCreateSchema: yup.ObjectSchema<MemberFormValues> = yup.object
 export const memberUpdateSchema = yup.object({
   firstName: yup.string().trim().required('First name is required').max(128),
   lastName: yup.string().trim().required('Last name is required').max(128),
+  username: yup
+    .string()
+    .trim()
+    .required('Username is required')
+    .min(3)
+    .max(64)
+    .matches(/^[a-zA-Z0-9._-]+$/, 'Use letters, numbers, . _ - only'),
   email: yup.string().trim().required('Email is required').email('Enter a valid email'),
   phone: yup.string().trim().max(32).default(''),
   nationalId: nationalIdSchema,
@@ -108,10 +115,7 @@ export const memberUpdateSchema = yup.object({
   shareCount: shareCountSchema,
 })
 
-export type MemberUpdateFormValues = Omit<
-  MemberFormValues,
-  'username' | 'temporaryPassword'
->
+export type MemberUpdateFormValues = Omit<MemberFormValues, 'temporaryPassword'>
 
 export function toMemberCreatePayload(values: MemberFormValues): MemberCreateRequest {
   return {
@@ -133,6 +137,7 @@ export function toMemberUpdatePayload(values: MemberUpdateFormValues): MemberUpd
   return {
     firstName: values.firstName.trim(),
     lastName: values.lastName.trim(),
+    username: values.username.trim(),
     email: values.email.trim(),
     phone: values.phone.trim() || undefined,
     nationalId: values.nationalId.trim() || undefined,

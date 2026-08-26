@@ -1,20 +1,66 @@
+import EditIcon from '@mui/icons-material/Edit'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { useSnackbar } from 'notistack'
+import { useEffect, useMemo, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
+import { Link as RouterLink } from 'react-router-dom'
+import * as yup from 'yup'
 import {
   Box,
   Button,
   Card,
   CardContent,
   Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material'
-import { useTranslation } from 'react-i18next'
-import { Link as RouterLink } from 'react-router-dom'
-import { useAppSelector } from '@/app/store/hooks'
-import { selectIsCooperativeAdmin, selectIsSuperAdmin } from '@/app/store/authSlice'
+import { setCredentials, selectIsCooperativeAdmin, selectIsSuperAdmin } from '@/app/store/authSlice'
+import { useAppDispatch, useAppSelector } from '@/app/store/hooks'
+import { updateMe } from '@/shared/api/auth'
+import { getErrorMessage } from '@/shared/api/client'
+import { fetchMyCooperatives } from '@/shared/api/cooperatives'
 import { PageHeader } from '@/shared/components/PageHeader'
 import { RoleDutiesNote } from '@/shared/components/RoleDutiesNote'
 import { ROUTES } from '@/shared/constants/routes'
+import type { AuthUser } from '@/shared/types/auth'
+
+interface ProfileFormValues {
+  firstName: string
+  lastName: string
+  username: string
+  email: string
+}
+
+const profileSchema = yup.object({
+  firstName: yup.string().trim().required('First name is required').max(128),
+  lastName: yup.string().trim().required('Last name is required').max(128),
+  username: yup
+    .string()
+    .trim()
+    .required('Username is required')
+    .min(3, 'At least 3 characters')
+    .max(64)
+    .matches(/^[a-zA-Z0-9._-]+$/, 'Use letters, numbers, . _ - only'),
+  email: yup.string().trim().required('Email is required').email('Enter a valid email'),
+})
+
+function fromUser(user: AuthUser): ProfileFormValues {
+  return {
+    firstName: user.firstName ?? '',
+    lastName: user.lastName ?? '',
+    username: user.username ?? '',
+    email: user.email ?? '',
+  }
+}
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -31,9 +77,25 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 export function ProfilePage() {
   const { t } = useTranslation()
+  const dispatch = useAppDispatch()
+  const { enqueueSnackbar } = useSnackbar()
   const user = useAppSelector((s) => s.auth.user)
+  const accessToken = useAppSelector((s) => s.auth.accessToken)
   const isCoopAdmin = useAppSelector(selectIsCooperativeAdmin)
   const isSuperAdmin = useAppSelector(selectIsSuperAdmin)
+  const [editOpen, setEditOpen] = useState(false)
+
+  const cooperativesQuery = useQuery({
+    queryKey: ['cooperatives', 'mine'],
+    queryFn: fetchMyCooperatives,
+    enabled: Boolean(user),
+  })
+
+  const cooperativeChips = useMemo(() => {
+    const ids = user?.cooperativeIds ?? []
+    const byId = new Map((cooperativesQuery.data ?? []).map((coop) => [coop.id, coop.name]))
+    return ids.map((id) => ({ id, name: byId.get(id) || '' })).filter((item) => item.name)
+  }, [user?.cooperativeIds, cooperativesQuery.data])
 
   return (
     <Box>
@@ -41,9 +103,19 @@ export function ProfilePage() {
         title={t('pages.profile.title')}
         description={t('pages.profile.description')}
         actions={
-          <Button component={RouterLink} to={ROUTES.changePassword} variant="contained">
-            {t('profile.changePassword')}
-          </Button>
+          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+            <Button
+              variant="outlined"
+              startIcon={<EditIcon />}
+              onClick={() => setEditOpen(true)}
+              disabled={!user}
+            >
+              {t('common.edit')}
+            </Button>
+            <Button component={RouterLink} to={ROUTES.changePassword} variant="contained">
+              {t('profile.changePassword')}
+            </Button>
+          </Stack>
         }
       />
 
@@ -106,12 +178,16 @@ export function ProfilePage() {
                   {t('profile.cooperatives')}
                 </Typography>
                 <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
-                  {user.cooperativeIds.length ? (
-                    user.cooperativeIds.map((id) => (
-                      <Chip key={id} label={id} size="small" variant="outlined" />
+                  {cooperativesQuery.isLoading && (user.cooperativeIds?.length ?? 0) > 0 ? (
+                    <CircularProgress size={18} />
+                  ) : cooperativeChips.length ? (
+                    cooperativeChips.map((coop) => (
+                      <Chip key={coop.id} label={coop.name} size="small" variant="outlined" />
                     ))
                   ) : (
-                    <Typography variant="body2">—</Typography>
+                    <Typography variant="body2">
+                      {isSuperAdmin ? t('profile.notAMember') : '—'}
+                    </Typography>
                   )}
                 </Stack>
               </Box>
@@ -119,6 +195,127 @@ export function ProfilePage() {
           )}
         </CardContent>
       </Card>
+
+      {user ? (
+        <ProfileEditDialog
+          open={editOpen}
+          user={user}
+          onClose={() => setEditOpen(false)}
+          onSaved={(updated) => {
+            if (accessToken) {
+              dispatch(setCredentials({ user: updated, accessToken }))
+            }
+            setEditOpen(false)
+            enqueueSnackbar(t('profile.updateSuccess'), { variant: 'success' })
+          }}
+        />
+      ) : null}
     </Box>
+  )
+}
+
+function ProfileEditDialog({
+  open,
+  user,
+  onClose,
+  onSaved,
+}: {
+  open: boolean
+  user: AuthUser
+  onClose: () => void
+  onSaved: (user: AuthUser) => void
+}) {
+  const { t } = useTranslation()
+  const { enqueueSnackbar } = useSnackbar()
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ProfileFormValues>({
+    resolver: yupResolver(profileSchema),
+    defaultValues: fromUser(user),
+  })
+
+  useEffect(() => {
+    if (!open) return
+    reset(fromUser(user))
+  }, [open, user, reset])
+
+  const mutation = useMutation({
+    mutationFn: (values: ProfileFormValues) =>
+      updateMe({
+        firstName: values.firstName.trim(),
+        lastName: values.lastName.trim(),
+        username: values.username.trim(),
+        email: values.email.trim(),
+      }),
+    onSuccess: onSaved,
+    onError: (error) => {
+      enqueueSnackbar(getErrorMessage(error, t('errors.generic')), { variant: 'error' })
+    },
+  })
+
+  return (
+    <Dialog open={open} onClose={mutation.isPending ? undefined : onClose} fullWidth maxWidth="sm">
+      <DialogTitle>{t('profile.editTitle')}</DialogTitle>
+      <form
+        onSubmit={handleSubmit((values) => mutation.mutate(values))}
+        noValidate
+      >
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 0.5 }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                label={t('profile.firstName')}
+                required
+                fullWidth
+                error={Boolean(errors.firstName)}
+                helperText={errors.firstName?.message}
+                {...register('firstName')}
+              />
+              <TextField
+                label={t('profile.lastName')}
+                required
+                fullWidth
+                error={Boolean(errors.lastName)}
+                helperText={errors.lastName?.message}
+                {...register('lastName')}
+              />
+            </Stack>
+            <TextField
+              label={t('profile.username')}
+              required
+              fullWidth
+              error={Boolean(errors.username)}
+              helperText={errors.username?.message || t('profile.usernameHint')}
+              {...register('username')}
+            />
+            <TextField
+              label={t('profile.email')}
+              required
+              fullWidth
+              type="email"
+              error={Boolean(errors.email)}
+              helperText={errors.email?.message}
+              {...register('email')}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={onClose} disabled={mutation.isPending}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={mutation.isPending}
+            startIcon={mutation.isPending ? <CircularProgress size={18} color="inherit" /> : null}
+          >
+            {t('common.save')}
+          </Button>
+        </DialogActions>
+      </form>
+    </Dialog>
   )
 }

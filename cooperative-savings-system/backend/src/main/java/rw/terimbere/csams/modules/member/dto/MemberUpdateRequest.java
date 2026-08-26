@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -27,6 +28,10 @@ public class MemberUpdateRequest {
     @NotBlank
     @Size(max = 128)
     private String lastName;
+
+    @Size(min = 3, max = 64)
+    @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Username may contain letters, numbers, dots, underscores, and hyphens")
+    private String username;
 
     @NotBlank
     @Email

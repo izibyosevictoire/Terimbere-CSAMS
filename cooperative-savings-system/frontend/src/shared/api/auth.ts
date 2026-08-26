@@ -8,6 +8,7 @@ import type {
   PasswordResetConfirmRequest,
   PasswordResetRequest,
   SignupRequest,
+  UpdateProfileRequest,
 } from '@/shared/types/auth'
 
 /** Unwrap the backend `{ success, message, data, timestamp }` envelope. */
@@ -45,8 +46,14 @@ export async function fetchMe(): Promise<AuthUser> {
   return unwrapApiData(response.data)
 }
 
-export async function changePassword(payload: ChangePasswordRequest): Promise<void> {
-  await apiClient.post<ApiResponse<null>>('/auth/change-password', payload)
+export async function updateMe(payload: UpdateProfileRequest): Promise<AuthUser> {
+  const response = await apiClient.patch<ApiResponse<AuthUser>>('/auth/me', payload)
+  return unwrapApiData(response.data)
+}
+
+export async function changePassword(payload: ChangePasswordRequest): Promise<LoginResponse> {
+  const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/change-password', payload)
+  return unwrapApiData(response.data)
 }
 
 export async function requestPasswordReset(payload: PasswordResetRequest): Promise<void> {

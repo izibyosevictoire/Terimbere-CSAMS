@@ -34,6 +34,7 @@ import rw.terimbere.csams.modules.auth.dto.LoginResponse;
 import rw.terimbere.csams.modules.auth.dto.PasswordResetConfirmRequest;
 import rw.terimbere.csams.modules.auth.dto.PasswordResetRequest;
 import rw.terimbere.csams.modules.auth.dto.SignupRequest;
+import rw.terimbere.csams.modules.auth.dto.UpdateProfileRequest;
 import rw.terimbere.csams.modules.auth.entity.PasswordResetToken;
 import rw.terimbere.csams.modules.auth.entity.RefreshToken;
 import rw.terimbere.csams.modules.auth.repository.PasswordResetTokenRepository;
@@ -336,9 +337,9 @@ public class AuthService {
     }
 
     @Transactional
-    public void changePassword(UUID userId, ChangePasswordRequest request) {
+    public AuthResult changePassword(UUID userId, ChangePasswordRequest request, HttpServletRequest httpRequest) {
         User user = userRepository
-                .findById(userId)
+                .findWithRolesById(userId)
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
@@ -360,8 +361,44 @@ public class AuthService {
                 userId,
                 null,
                 null,
+                clientIp(httpRequest),
+                httpRequest.getHeader(HttpHeaders.USER_AGENT));
+        return issueTokens(user, clientIp(httpRequest), httpRequest.getHeader(HttpHeaders.USER_AGENT));
+    }
+
+    @Transactional
+    public AuthUserResponse updateProfile(UUID userId, UpdateProfileRequest request) {
+        User user = userRepository
+                .findWithRolesById(userId)
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
+
+        String username = request.getUsername().trim();
+        String email = request.getEmail().trim().toLowerCase(java.util.Locale.ROOT);
+
+        if (userRepository.existsByUsernameIgnoreCaseAndDeletedFalseAndIdNot(username, userId)) {
+            throw new ConflictException("Username already exists");
+        }
+        if (userRepository.existsByEmailIgnoreCaseAndDeletedFalseAndIdNot(email, userId)) {
+            throw new ConflictException("Email already exists");
+        }
+
+        String previous = "{\"username\":\"" + truncate(user.getUsername(), 64) + "\"}";
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setFirstName(request.getFirstName().trim());
+        user.setLastName(request.getLastName().trim());
+        userRepository.save(user);
+        auditService.record(
+                userId,
+                null,
+                AuditableAction.UPDATE,
+                "User",
+                userId,
+                previous,
+                "{\"username\":\"" + truncate(username, 64) + "\"}",
                 null,
                 null);
+        return toAuthUser(user);
     }
 
     @Transactional

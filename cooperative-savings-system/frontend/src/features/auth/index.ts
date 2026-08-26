@@ -10,6 +10,7 @@ export {
   requestPasswordReset,
   signup,
   unwrapApiData,
+  updateMe,
 } from '@/shared/api/auth'
 export {
   clearAuth,

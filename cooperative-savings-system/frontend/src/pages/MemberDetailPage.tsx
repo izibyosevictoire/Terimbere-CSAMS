@@ -861,6 +861,7 @@ export function MemberDetailPage() {
       ) : null}
 
       <MemberFormDialog
+        key={member?.userId ?? 'member-edit'}
         open={editOpen}
         mode="edit"
         initial={member}

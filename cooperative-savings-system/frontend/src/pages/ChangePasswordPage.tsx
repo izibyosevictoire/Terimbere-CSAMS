@@ -15,6 +15,8 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
+import { setCredentials } from '@/app/store/authSlice'
+import { useAppDispatch } from '@/app/store/hooks'
 import { changePassword } from '@/shared/api/auth'
 import { getErrorMessage } from '@/shared/api/client'
 import { PageHeader } from '@/shared/components/PageHeader'
@@ -38,6 +40,7 @@ const schema = yup.object({
 export function ChangePasswordPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
@@ -57,7 +60,8 @@ export function ChangePasswordPage() {
 
   const mutation = useMutation({
     mutationFn: changePassword,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      dispatch(setCredentials({ user: data.user, accessToken: data.accessToken }))
       setErrorMessage(null)
       setSuccessMessage(t('changePassword.success'))
       reset()

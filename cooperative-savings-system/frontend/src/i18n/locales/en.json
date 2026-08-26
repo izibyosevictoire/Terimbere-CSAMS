@@ -89,7 +89,7 @@
     "newPassword": "New password",
     "confirmPassword": "Confirm new password",
     "submit": "Save password",
-    "success": "Your password was changed successfully."
+    "success": "Your password was changed successfully. You are still signed in."
   },
   "profile": {
     "fullName": "Full name",
@@ -101,7 +101,11 @@
     "permissions": "Permissions",
     "cooperatives": "Cooperatives",
     "noPermissions": "No permissions listed",
-    "changePassword": "Change password"
+    "changePassword": "Change password",
+    "editTitle": "Edit profile",
+    "updateSuccess": "Profile updated",
+    "usernameHint": "Letters, numbers, and . _ - only",
+    "notAMember": "Not a member of any cooperative"
   },
   "actions": {
     "quickActions": "Quick actions",

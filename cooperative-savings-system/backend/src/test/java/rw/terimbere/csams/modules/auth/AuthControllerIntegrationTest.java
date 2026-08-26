@@ -2,7 +2,9 @@ package rw.terimbere.csams.modules.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -238,7 +240,8 @@ class AuthControllerIntegrationTest {
                         .content("""
                                 {"currentPassword":"OldPass@123!","newPassword":"NewPass@123!"}
                                 """))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -253,6 +256,66 @@ class AuthControllerIntegrationTest {
                                 {"username":"changepassuser","password":"NewPass@123!"}
                                 """))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void updateMe_updatesUsernameAndEmail() throws Exception {
+        Role memberRole = roleRepository.findByCode("MEMBER").orElseThrow();
+        String username = "profuser" + UUID.randomUUID().toString().substring(0, 8);
+        userRepository.save(User.builder()
+                .username(username)
+                .email(username + "@test.local")
+                .passwordHash(passwordEncoder.encode("ProfilePass1!"))
+                .firstName("Old")
+                .lastName("Name")
+                .accountStatus(AccountStatus.ACTIVE)
+                .roles(new HashSet<>(Set.of(memberRole)))
+                .build());
+
+        String access = loginAccessToken(username, "ProfilePass1!");
+        String newUsername = username + "x";
+
+        mockMvc.perform(patch("/api/v1/auth/me")
+                        .header("Authorization", "Bearer " + access)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username":"%s",
+                                  "email":"%s@new.local",
+                                  "firstName":"New",
+                                  "lastName":"Person"
+                                }
+                                """.formatted(newUsername, newUsername)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.username").value(newUsername))
+                .andExpect(jsonPath("$.data.firstName").value("New"))
+                .andExpect(jsonPath("$.data.lastName").value("Person"))
+                .andExpect(jsonPath("$.data.email").value(newUsername + "@new.local"));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username":"%s","password":"ProfilePass1!"}
+                                """.formatted(newUsername)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void updateMe_duplicateUsername_returnsConflict() throws Exception {
+        String access = loginAccessToken("superadmin", DefaultAdminInitializer.DEFAULT_PASSWORD);
+        mockMvc.perform(patch("/api/v1/auth/me")
+                        .header("Authorization", "Bearer " + access)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username":"lockoutuser",
+                                  "email":"superadmin@terimbere.local",
+                                  "firstName":"Super",
+                                  "lastName":"Admin"
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Username already exists"));
     }
 
     @Test
