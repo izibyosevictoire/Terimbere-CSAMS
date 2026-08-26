@@ -9,13 +9,15 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import rw.terimbere.csams.modules.contribution.entity.Contribution;
 import rw.terimbere.csams.modules.contribution.entity.ContributionReviewStatus;
 import rw.terimbere.csams.modules.contribution.entity.ContributionStatus;
 
-public interface ContributionRepository extends JpaRepository<Contribution, UUID> {
+public interface ContributionRepository
+        extends JpaRepository<Contribution, UUID>, JpaSpecificationExecutor<Contribution> {
 
     List<Contribution> findByCooperativeIdAndYearAndMonth(UUID cooperativeId, int year, int month);
 
@@ -42,26 +44,21 @@ public interface ContributionRepository extends JpaRepository<Contribution, UUID
     Page<Contribution> findByCooperativeIdAndReviewStatus(
             UUID cooperativeId, ContributionReviewStatus reviewStatus, Pageable pageable);
 
-    @Query(
-            """
-            SELECT c FROM Contribution c
-            WHERE c.cooperativeId = :cooperativeId
-              AND (:memberUserId IS NULL OR c.memberUserId = :memberUserId)
-              AND (:year IS NULL OR c.year = :year)
-              AND (:month IS NULL OR c.month = :month)
-              AND (:status IS NULL OR c.status = :status)
-              AND (:fromDate IS NULL OR c.paymentDate >= :fromDate)
-              AND (:toDate IS NULL OR c.paymentDate <= :toDate)
-            """)
-    Page<Contribution> search(
-            @Param("cooperativeId") UUID cooperativeId,
-            @Param("memberUserId") UUID memberUserId,
-            @Param("year") Integer year,
-            @Param("month") Integer month,
-            @Param("status") ContributionStatus status,
-            @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate,
-            Pageable pageable);
+    default Page<Contribution> search(
+            UUID cooperativeId,
+            UUID memberUserId,
+            Integer year,
+            Integer month,
+            ContributionStatus status,
+            LocalDate fromDate,
+            LocalDate toDate,
+            Pageable pageable) {
+        Pageable page = pageable == null ? Pageable.unpaged() : pageable;
+        return findAll(
+                ContributionSpecs.filtered(
+                        cooperativeId, memberUserId, year, month, status, fromDate, toDate),
+                page);
+    }
 
     @Query(
             """

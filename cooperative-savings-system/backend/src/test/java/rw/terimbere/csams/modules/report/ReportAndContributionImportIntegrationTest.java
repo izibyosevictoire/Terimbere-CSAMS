@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
 import java.util.UUID;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -24,11 +25,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import rw.terimbere.csams.modules.contribution.entity.Contribution;
+import rw.terimbere.csams.modules.contribution.entity.ContributionStatus;
 import rw.terimbere.csams.modules.contribution.repository.ContributionImportRepository;
 import rw.terimbere.csams.modules.contribution.repository.ContributionRepository;
 
@@ -242,6 +247,113 @@ class ReportAndContributionImportIntegrationTest {
     }
 
     @Test
+    void exportContributions_withDateRangeAndNullYearMonthStatus_returnsPdf() throws Exception {
+        seedContributionPeriod(6, "2026-06-02", "750.0000");
+
+        MvcResult export = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/export")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .header("Accept", "application/json")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reportType":"CONTRIBUTIONS",
+                                  "fromDate":"2026-01-01",
+                                  "toDate":"2026-08-26"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"))
+                .andReturn();
+
+        byte[] body = export.getResponse().getContentAsByteArray();
+        assertThat(body.length).isGreaterThan(200);
+        assertThat(new String(body, 0, 4)).isEqualTo("%PDF");
+    }
+
+    @Test
+    void contributionsSearch_nullableFilters_keepDateMemberYearMonthAndStatus() throws Exception {
+        seedContributionPeriod(6, "2026-06-02", "750.0000");
+        seedContributionPeriod(7, "2026-07-15", "1000.0000");
+
+        assertThat(contributionRepository
+                        .search(cooperativeId, null, null, null, null, null, null, Pageable.unpaged())
+                        .getContent())
+                .hasSize(2);
+
+        assertThat(contributionRepository
+                        .search(
+                                cooperativeId,
+                                null,
+                                null,
+                                null,
+                                null,
+                                LocalDate.of(2026, 1, 1),
+                                LocalDate.of(2026, 6, 30),
+                                Pageable.unpaged())
+                        .getContent())
+                .extracting(Contribution::getMonth)
+                .containsExactly(6);
+
+        assertThat(contributionRepository
+                        .search(
+                                cooperativeId,
+                                memberUserId,
+                                null,
+                                null,
+                                null,
+                                LocalDate.of(2026, 1, 1),
+                                LocalDate.of(2026, 12, 31),
+                                Pageable.unpaged())
+                        .getContent())
+                .hasSize(2);
+
+        assertThat(contributionRepository
+                        .search(
+                                cooperativeId,
+                                UUID.randomUUID(),
+                                null,
+                                null,
+                                null,
+                                LocalDate.of(2026, 1, 1),
+                                LocalDate.of(2026, 12, 31),
+                                Pageable.unpaged())
+                        .getContent())
+                .isEmpty();
+
+        assertThat(contributionRepository
+                        .search(cooperativeId, null, 2026, 7, null, null, null, Pageable.unpaged())
+                        .getContent())
+                .extracting(Contribution::getMonth)
+                .containsExactly(7);
+
+        assertThat(contributionRepository
+                        .search(
+                                cooperativeId,
+                                null,
+                                null,
+                                null,
+                                ContributionStatus.PARTIALLY_PAID,
+                                null,
+                                null,
+                                Pageable.unpaged())
+                        .getContent())
+                .extracting(Contribution::getMonth)
+                .containsExactly(6);
+
+        var paged = contributionRepository.search(
+                cooperativeId,
+                null,
+                null,
+                null,
+                null,
+                LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 12, 31),
+                PageRequest.of(0, 1));
+        assertThat(paged.getTotalElements()).isEqualTo(2);
+        assertThat(paged.getContent()).hasSize(1);
+    }
+
+    @Test
     void export_clampsFromDateBeforeRegistration() throws Exception {
         MvcResult export = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/export")
                         .header("Authorization", "Bearer " + superAdminToken)
@@ -400,6 +512,28 @@ class ReportAndContributionImportIntegrationTest {
                 .andExpect(jsonPath("$.data.length()").value(15))
                 .andExpect(jsonPath("$.data[0].code").isNotEmpty())
                 .andExpect(jsonPath("$.data[0].label").isNotEmpty());
+    }
+
+    private void seedContributionPeriod(int month, String paymentDate, String paidAmount) throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put(
+                                "/api/v1/cooperatives/" + cooperativeId + "/contributions/period")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .param("year", "2026")
+                        .param("month", String.valueOf(month))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "lines": [
+                                    {
+                                      "memberUserId": "%s",
+                                      "paidAmount": %s,
+                                      "paymentDate": "%s",
+                                      "paymentReference": "SEED-%s"
+                                    }
+                                  ]
+                                }
+                                """.formatted(memberUserId, paidAmount, paymentDate, month)))
+                .andExpect(status().isOk());
     }
 
     private UUID createCooperative(String name) throws Exception {
