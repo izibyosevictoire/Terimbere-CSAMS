@@ -2,9 +2,14 @@ import {
   Alert,
   Box,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   MenuItem,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -15,7 +20,12 @@ import { useTranslation } from 'react-i18next'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchCooperative } from '@/shared/api/cooperatives'
 import { fetchMembers } from '@/shared/api/members'
-import { exportReport, fetchReportTypes } from '@/shared/api/reports'
+import {
+  exportReport,
+  fetchReportTypes,
+  fetchWhatsAppStatus,
+  shareReportViaWhatsApp,
+} from '@/shared/api/reports'
 import { LoadingState } from '@/shared/components/LoadingState'
 import { CONTRIBUTION_STATUSES } from '@/shared/types/contribution'
 import { LEDGER_TRANSACTION_TYPES } from '@/shared/types/ledger'
@@ -25,6 +35,7 @@ import {
   defaultExportFilename,
   defaultReportFromDate,
   defaultReportToDate,
+  isValidReportWhatsAppRecipient,
   reportSupportsFromTo,
   reportSupportsMember,
   reportSupportsStatus,
@@ -53,6 +64,10 @@ export function ReportsExportPanel({
   const [memberUserId, setMemberUserId] = useState('')
   const [status, setStatus] = useState('')
   const [transactionType, setTransactionType] = useState('')
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shareType, setShareType] = useState('')
+  const [shareIncludeFilters, setShareIncludeFilters] = useState(false)
+  const [recipientPhone, setRecipientPhone] = useState('')
 
   const cooperativeQuery = useQuery({
     queryKey: ['cooperatives', cooperativeId],
@@ -82,6 +97,14 @@ export function ReportsExportPanel({
     enabled: Boolean(cooperativeId),
   })
 
+  const whatsappStatusQuery = useQuery({
+    queryKey: ['reports', 'whatsapp-status', cooperativeId],
+    queryFn: () => fetchWhatsAppStatus(cooperativeId),
+    enabled: Boolean(cooperativeId),
+    staleTime: 60_000,
+  })
+  const whatsappConfigured = whatsappStatusQuery.data?.configured === true
+
   const selectedMeta = useMemo(
     () => typesQuery.data?.find((item) => item.type === reportType) ?? null,
     [typesQuery.data, reportType],
@@ -108,6 +131,15 @@ export function ReportsExportPanel({
   const timelineIssue = validateReportTimeline(fromDate, toDate, today, registrationDate)
   const timelineValid = timelineIssue == null
 
+  const buildExportPayload = (type: string, includeFilters: boolean) => ({
+    reportType: type,
+    fromDate,
+    toDate,
+    memberUserId: includeFilters && showMember && memberUserId ? memberUserId : null,
+    status: includeFilters && showStatus && status ? status : null,
+    transactionType: includeFilters && showTxnType && transactionType ? transactionType : null,
+  })
+
   const exportMutation = useMutation({
     mutationFn: ({ type, includeFilters }: { type: string; includeFilters: boolean }) => {
       const issue = validateReportTimeline(fromDate, toDate, today, registrationDate)
@@ -116,14 +148,7 @@ export function ReportsExportPanel({
       }
       return exportReport(
         cooperativeId,
-        {
-          reportType: type,
-          fromDate,
-          toDate,
-          memberUserId: includeFilters && showMember && memberUserId ? memberUserId : null,
-          status: includeFilters && showStatus && status ? status : null,
-          transactionType: includeFilters && showTxnType && transactionType ? transactionType : null,
-        },
+        buildExportPayload(type, includeFilters),
         defaultExportFilename(type),
       )
     },
@@ -135,8 +160,55 @@ export function ReportsExportPanel({
     },
   })
 
+  const shareMutation = useMutation({
+    mutationFn: ({
+      type,
+      includeFilters,
+      phone,
+    }: {
+      type: string
+      includeFilters: boolean
+      phone: string
+    }) => {
+      const issue = validateReportTimeline(fromDate, toDate, today, registrationDate)
+      if (issue) {
+        throw new Error(t(`reports.export.validation.${issue}`))
+      }
+      if (!isValidReportWhatsAppRecipient(phone)) {
+        throw new Error(t('reports.whatsapp.phoneInvalid'))
+      }
+      return shareReportViaWhatsApp(cooperativeId, {
+        ...buildExportPayload(type, includeFilters),
+        recipientPhone: phone.trim(),
+      })
+    },
+    onSuccess: ({ filename }) => {
+      enqueueSnackbar(t('reports.whatsapp.success', { filename }), { variant: 'success' })
+      setShareOpen(false)
+      setRecipientPhone('')
+    },
+    onError: (error) => {
+      enqueueSnackbar(getErrorMessage(error, t('reports.whatsapp.failed')), { variant: 'error' })
+    },
+  })
+
   const types = typesQuery.data ?? []
   const allowed = new Set(types.map((item) => String(item.type)))
+  const actionsBusy = exportMutation.isPending || shareMutation.isPending
+
+  const openShare = (type: string, includeFilters: boolean) => {
+    if (!timelineValid) {
+      enqueueSnackbar(t(`reports.export.validation.${timelineIssue}`), { variant: 'warning' })
+      return
+    }
+    if (!whatsappConfigured) {
+      enqueueSnackbar(t('reports.whatsapp.notConfigured'), { variant: 'warning' })
+      return
+    }
+    setShareType(type)
+    setShareIncludeFilters(includeFilters)
+    setShareOpen(true)
+  }
 
   if (typesQuery.isLoading) {
     return <LoadingState />
@@ -164,6 +236,33 @@ export function ReportsExportPanel({
     exportMutation.mutate({ type, includeFilters: false })
   }
 
+  const shareButton = (
+    type: string,
+    includeFilters: boolean,
+    disabled: boolean,
+    size: 'small' | 'medium' = 'small',
+  ) => {
+    const button = (
+      <Button
+        type="button"
+        variant="outlined"
+        size={size}
+        onClick={() => openShare(type, includeFilters)}
+        disabled={disabled || actionsBusy || !whatsappConfigured}
+      >
+        {shareMutation.isPending
+          ? t('reports.whatsapp.sending')
+          : t('reports.whatsapp.share')}
+      </Button>
+    )
+    if (whatsappConfigured) return button
+    return (
+      <Tooltip title={t('reports.whatsapp.notConfigured')}>
+        <span>{button}</span>
+      </Tooltip>
+    )
+  }
+
   return (
     <Box>
       {typesQuery.isError ? (
@@ -182,6 +281,11 @@ export function ReportsExportPanel({
       {selfScoped ? (
         <Alert severity="info" sx={{ mb: 2, maxWidth: 720 }}>
           {t('reports.memberOnly')}
+        </Alert>
+      ) : null}
+      {!whatsappConfigured ? (
+        <Alert severity="info" sx={{ mb: 2, maxWidth: 720 }}>
+          {t('reports.whatsapp.notConfigured')}
         </Alert>
       ) : null}
       <Typography variant="h6" gutterBottom>
@@ -274,14 +378,19 @@ export function ReportsExportPanel({
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
                   {t(card.descriptionKey)}
                 </Typography>
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={() => runPrimary(card.type)}
-                  disabled={!timelineValid || exportMutation.isPending}
-                >
-                  {t('reports.export.submit')}
-                </Button>
+                <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => runPrimary(card.type)}
+                    disabled={!timelineValid || actionsBusy}
+                  >
+                    {exportMutation.isPending
+                      ? t('reports.export.exporting')
+                      : t('reports.export.submit')}
+                  </Button>
+                  {shareButton(card.type, false, !timelineValid)}
+                </Stack>
               </Box>
             ))}
           </Stack>
@@ -389,18 +498,80 @@ export function ReportsExportPanel({
           </TextField>
         ) : null}
 
-        <Box>
+        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
           <Button
             type="submit"
             variant="contained"
-            disabled={!reportType || !timelineValid || exportMutation.isPending}
+            disabled={!reportType || !timelineValid || actionsBusy}
           >
             {exportMutation.isPending
               ? t('reports.export.exporting')
               : t('reports.export.submit')}
           </Button>
-        </Box>
+          {shareButton(reportType, true, !reportType || !timelineValid, 'medium')}
+        </Stack>
       </Stack>
+
+      <Dialog
+        open={shareOpen}
+        onClose={() => {
+          if (shareMutation.isPending) return
+          setShareOpen(false)
+        }}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle>{t('reports.whatsapp.dialogTitle')}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('reports.whatsapp.dialogDescription')}
+          </Typography>
+          {shareMutation.isPending ? (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              {t('reports.whatsapp.sending')}
+            </Alert>
+          ) : null}
+          <TextField
+            autoFocus
+            fullWidth
+            label={t('reports.whatsapp.phone')}
+            value={recipientPhone}
+            onChange={(e) => setRecipientPhone(e.target.value)}
+            helperText={t('reports.whatsapp.phoneHint')}
+            error={
+              Boolean(recipientPhone.trim()) &&
+              !isValidReportWhatsAppRecipient(recipientPhone)
+            }
+            disabled={shareMutation.isPending}
+            placeholder="07XXXXXXXX"
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setShareOpen(false)}
+            disabled={shareMutation.isPending}
+          >
+            {t('common.cancel')}
+          </Button>
+          <Button
+            variant="contained"
+            disabled={
+              shareMutation.isPending || !isValidReportWhatsAppRecipient(recipientPhone)
+            }
+            onClick={() =>
+              shareMutation.mutate({
+                type: shareType,
+                includeFilters: shareIncludeFilters,
+                phone: recipientPhone,
+              })
+            }
+          >
+            {shareMutation.isPending
+              ? t('reports.whatsapp.sending')
+              : t('reports.whatsapp.send')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

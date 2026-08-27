@@ -23,8 +23,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import rw.terimbere.csams.modules.report.dto.ReportExportRequest;
 import rw.terimbere.csams.modules.report.dto.ReportTypeResponse;
+import rw.terimbere.csams.modules.report.dto.ReportWhatsAppShareRequest;
+import rw.terimbere.csams.modules.report.dto.ReportWhatsAppShareResponse;
+import rw.terimbere.csams.modules.report.dto.ReportWhatsAppStatusResponse;
 import rw.terimbere.csams.modules.report.service.ReportService;
 import rw.terimbere.csams.modules.report.service.ReportService.ReportBinaryExport;
+import rw.terimbere.csams.modules.report.service.ReportWhatsAppShareService;
 import rw.terimbere.csams.shared.common.dto.ApiResponse;
 
 @RestController
@@ -35,6 +39,7 @@ import rw.terimbere.csams.shared.common.dto.ApiResponse;
 public class ReportController {
 
     private final ReportService reportService;
+    private final ReportWhatsAppShareService reportWhatsAppShareService;
 
     @GetMapping("/types")
     @PreAuthorize("hasAuthority('REPORT_READ')")
@@ -66,5 +71,23 @@ public class ReportController {
         httpResponse.setContentLength(export.content().length);
         httpResponse.getOutputStream().write(export.content());
         httpResponse.flushBuffer();
+    }
+
+    @GetMapping("/whatsapp-status")
+    @PreAuthorize("hasAuthority('REPORT_READ')")
+    @Operation(summary = "Whether official WhatsApp report sharing is configured (no secrets)")
+    public ResponseEntity<ApiResponse<ReportWhatsAppStatusResponse>> whatsappStatus(
+            @PathVariable UUID cooperativeId) {
+        return ResponseEntity.ok(ApiResponse.ok(reportWhatsAppShareService.status(cooperativeId)));
+    }
+
+    @PostMapping("/share-whatsapp")
+    @PreAuthorize("hasAuthority('REPORT_READ')")
+    @Operation(summary = "Generate the existing PDF report and send it via WhatsApp Cloud API")
+    public ResponseEntity<ApiResponse<ReportWhatsAppShareResponse>> shareWhatsApp(
+            @PathVariable UUID cooperativeId,
+            @Valid @RequestBody ReportWhatsAppShareRequest request,
+            HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(ApiResponse.ok(reportWhatsAppShareService.share(cooperativeId, request, httpRequest)));
     }
 }

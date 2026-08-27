@@ -49,6 +49,21 @@ export interface ReportExportRequest {
   transactionType?: string | null
 }
 
+/** Public status only — never includes tokens or phone-number IDs. */
+export interface ReportWhatsAppStatus {
+  configured: boolean
+}
+
+export interface ReportWhatsAppShareRequest extends ReportExportRequest {
+  recipientPhone: string
+}
+
+export interface ReportWhatsAppShareResult {
+  sent: boolean
+  recipient: string
+  filename: string
+}
+
 export function mapReportTypeInfo(raw: ReportTypeInfo | string): ReportTypeInfo {
   if (typeof raw === 'string') {
     return { type: raw, label: raw }

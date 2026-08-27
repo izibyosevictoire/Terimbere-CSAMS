@@ -1,6 +1,7 @@
 import dayjs from 'dayjs'
 import type { ContributionImportStatus } from '@/shared/types/contributionImport'
 import type { ReportTypeInfo } from '@/shared/types/report'
+import { isValidRwandanPhone } from '@/shared/utils/rwandaCooperative'
 
 export type ChipColor =
   | 'default'
@@ -120,6 +121,10 @@ export function canCancelImport(
 ): boolean {
   if (!isAdmin) return false
   return status === 'UPLOADED' || status === 'VALIDATED' || status == null
+}
+
+export function isValidReportWhatsAppRecipient(raw: string): boolean {
+  return isValidRwandanPhone(raw)
 }
 
 export function defaultExportFilename(reportType: string): string {

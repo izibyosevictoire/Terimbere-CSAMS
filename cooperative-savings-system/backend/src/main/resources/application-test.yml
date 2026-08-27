@@ -28,6 +28,10 @@ app:
     auth-rate-limit-enabled: false
   fines:
     auto-generate-enabled: false
+  whatsapp:
+    enabled: false
+    access-token: ""
+    phone-number-id: ""
 
 
 logging:

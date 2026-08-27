@@ -1215,6 +1215,19 @@
         "beforeRegistration": "Italiki yo gutangiriraho ntishobora kuba mbere y'italiki yanditsweho ikoperative."
       }
     },
+    "whatsapp": {
+      "share": "Sangira kuri WhatsApp",
+      "notConfigured": "Guhereza raporo kuri WhatsApp ntabwo byahiswe. Ushobora gukomeza gumanura PDF.",
+      "dialogTitle": "Sangira raporo kuri WhatsApp",
+      "dialogDescription": "Andika nimero ya telefoni y'uwo wohereza. PDF isa n'iyo umanura (Manura PDF) izoherezwa binyuze ku WhatsApp Business API niba yahiswe.",
+      "phone": "Nimero ya telefoni y'uwo wohereza",
+      "phoneHint": "Koresha 07XXXXXXXX cyangwa +2507XXXXXXX",
+      "phoneInvalid": "Andika nimero ya telefoni y'u Rwanda ikwiye",
+      "send": "Ohereza",
+      "sending": "Raporo irimo gutegurwa no koherezwa…",
+      "success": "Raporo yoherejwe kuri WhatsApp ({{filename}})",
+      "failed": "WhatsApp ntiyashoboye kohereza raporo"
+    },
     "import": {
       "title": "Kwinjiza amafaranga muri Excel",
       "description": "Manura template, shyiramo imirongo yuzuye, suzuma, hanyuma wemeze kugira ngo ubike amafaranga.",

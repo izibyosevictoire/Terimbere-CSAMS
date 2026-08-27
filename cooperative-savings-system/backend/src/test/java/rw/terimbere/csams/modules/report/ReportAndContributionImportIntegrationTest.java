@@ -587,6 +587,100 @@ class ReportAndContributionImportIntegrationTest {
                 .andExpect(jsonPath("$.data[0].label").isNotEmpty());
     }
 
+    @Test
+    void whatsappShare_disabledByDefault_andDoesNotLeakCredentials() throws Exception {
+        MvcResult status = mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/reports/whatsapp-status")
+                        .header("Authorization", "Bearer " + superAdminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.configured").value(false))
+                .andExpect(jsonPath("$.data.accessToken").doesNotExist())
+                .andExpect(jsonPath("$.data.phoneNumberId").doesNotExist())
+                .andReturn();
+        assertThat(status.getResponse().getContentAsString()).doesNotContain("WHATSAPP_ACCESS_TOKEN");
+        assertThat(status.getResponse().getContentAsString().toLowerCase()).doesNotContain("bearer ");
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/share-whatsapp")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reportType":"CONTRIBUTIONS",
+                                  "fromDate":"2026-01-01",
+                                  "toDate":"2026-06-30",
+                                  "recipientPhone":"0788123456"
+                                }
+                                """))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.message").value("WhatsApp sharing is not configured"))
+                .andExpect(jsonPath("$.accessToken").doesNotExist());
+    }
+
+    @Test
+    void whatsappShare_unauthorizedAndOtherCooperativeAndInvalidPhone() throws Exception {
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/share-whatsapp")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reportType":"CONTRIBUTIONS",
+                                  "fromDate":"2026-01-01",
+                                  "toDate":"2026-06-30",
+                                  "recipientPhone":"0788123456"
+                                }
+                                """))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/reports/whatsapp-status"))
+                .andExpect(status().isUnauthorized());
+
+        String memberToken = loginAccessToken(memberUsername, memberPassword);
+        mockMvc.perform(post("/api/v1/cooperatives/" + otherCooperativeId + "/reports/share-whatsapp")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reportType":"CONTRIBUTIONS",
+                                  "fromDate":"2026-01-01",
+                                  "toDate":"2026-06-30",
+                                  "recipientPhone":"0788123456"
+                                }
+                                """))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/share-whatsapp")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reportType":"CONTRIBUTIONS",
+                                  "fromDate":"2026-01-01",
+                                  "toDate":"2026-06-30",
+                                  "recipientPhone":"not-a-phone"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Enter a valid Rwandan mobile number"));
+
+        MvcResult stillPdf = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/export")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .header("Accept", "application/json")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reportType":"CONTRIBUTIONS",
+                                  "fromDate":"2026-01-01",
+                                  "toDate":"2026-06-30"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"))
+                .andExpect(header().exists("Content-Disposition"))
+                .andReturn();
+        byte[] pdf = stillPdf.getResponse().getContentAsByteArray();
+        assertThat(pdf.length).isGreaterThan(200);
+        assertThat(new String(pdf, 0, 4)).isEqualTo("%PDF");
+        assertThat(stillPdf.getResponse().getHeader("Content-Disposition")).contains(".pdf");
+    }
+
     private void seedContributionPeriod(int month, String paymentDate, String paidAmount) throws Exception {
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put(
                                 "/api/v1/cooperatives/" + cooperativeId + "/contributions/period")

@@ -77,5 +77,6 @@ public enum AuditableAction {
     PAYOUT_CANCEL,
     BACKUP,
     RESTORE_BACKUP,
+    WHATSAPP_SHARE,
     OTHER
 }

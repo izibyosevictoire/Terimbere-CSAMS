@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import dayjs from 'dayjs'
+import en from '@/i18n/locales/en.json'
 import { parseContentDispositionFilename } from '@/shared/utils/download'
 import {
   canCancelImport,
@@ -7,6 +8,7 @@ import {
   defaultExportFilename,
   defaultReportFromDate,
   defaultReportToDate,
+  isValidReportWhatsAppRecipient,
   importRowValidityColor,
   importRowValidityLabelKey,
   importStatusColor,
@@ -103,6 +105,22 @@ describe('reportTypeLabelKey', () => {
 describe('defaultExportFilename', () => {
   it('slugifies report type as pdf', () => {
     expect(defaultExportFilename('SPECIAL_CONTRIBUTIONS')).toBe('special-contributions.pdf')
+  })
+})
+
+describe('report export labels', () => {
+  it('keeps Download PDF and adds Share via WhatsApp separately', () => {
+    expect(en.reports.export.submit).toBe('Download PDF')
+    expect(en.reports.whatsapp.share).toBe('Share via WhatsApp')
+  })
+})
+
+describe('isValidReportWhatsAppRecipient', () => {
+  it('accepts Rwandan mobiles and rejects others', () => {
+    expect(isValidReportWhatsAppRecipient('0788123456')).toBe(true)
+    expect(isValidReportWhatsAppRecipient('+250788123456')).toBe(true)
+    expect(isValidReportWhatsAppRecipient('not-a-phone')).toBe(false)
+    expect(isValidReportWhatsAppRecipient('')).toBe(false)
   })
 })
 

@@ -5,6 +5,9 @@ import {
   mapReportTypeInfo,
   type ReportExportRequest,
   type ReportTypeInfo,
+  type ReportWhatsAppShareRequest,
+  type ReportWhatsAppShareResult,
+  type ReportWhatsAppStatus,
 } from '@/shared/types/report'
 import {
   parseContentDispositionFilename,
@@ -61,4 +64,27 @@ export async function exportReport(
     blob.type === 'application/pdf' ? blob : new Blob([blob], { type: 'application/pdf' })
   triggerBlobDownload(pdfBlob, filename.endsWith('.pdf') ? filename : `${filename}.pdf`)
   return { filename }
+}
+
+export async function fetchWhatsAppStatus(cooperativeId: string): Promise<ReportWhatsAppStatus> {
+  const response = await apiClient.get<ApiResponse<ReportWhatsAppStatus>>(
+    `/cooperatives/${cooperativeId}/reports/whatsapp-status`,
+  )
+  const data = unwrapApiData(response.data)
+  return { configured: Boolean(data?.configured) }
+}
+
+export async function shareReportViaWhatsApp(
+  cooperativeId: string,
+  payload: ReportWhatsAppShareRequest,
+): Promise<ReportWhatsAppShareResult> {
+  const response = await apiClient.post<ApiResponse<ReportWhatsAppShareResult>>(
+    `/cooperatives/${cooperativeId}/reports/share-whatsapp`,
+    {
+      ...toExportBody(payload),
+      recipientPhone: payload.recipientPhone,
+    },
+    { timeout: 120000 },
+  )
+  return unwrapApiData(response.data)
 }

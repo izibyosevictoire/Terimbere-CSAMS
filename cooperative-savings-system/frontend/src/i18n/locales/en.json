@@ -1230,6 +1230,19 @@
         "beforeRegistration": "From date cannot be before the cooperative registration date."
       }
     },
+    "whatsapp": {
+      "share": "Share via WhatsApp",
+      "notConfigured": "WhatsApp sharing is not configured. You can still download the PDF.",
+      "dialogTitle": "Share report via WhatsApp",
+      "dialogDescription": "Enter the recipient's Rwandan mobile number. The same PDF as Download PDF will be sent through the official WhatsApp Business API if it is configured.",
+      "phone": "Recipient phone number",
+      "phoneHint": "Use 07XXXXXXXX or +2507XXXXXXX",
+      "phoneInvalid": "Enter a valid Rwandan mobile number",
+      "send": "Send",
+      "sending": "Preparing and sending report…",
+      "success": "Report sent via WhatsApp ({{filename}})",
+      "failed": "WhatsApp could not send the report"
+    },
     "import": {
       "title": "Contribution Excel import",
       "description": "Download a template, upload filled rows for a period, review validation, then confirm to save contributions.",
