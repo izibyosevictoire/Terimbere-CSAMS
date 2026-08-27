@@ -123,6 +123,7 @@ class ReportWhatsAppShareServiceTest {
         verify(whatsAppCloudClient)
                 .sendDocument(eq("250788123456"), pdf.capture(), eq("coop_contributions.pdf"), any());
         assertThat(new String(pdf.getValue())).startsWith("%PDF");
+        verify(whatsAppCloudClient, never()).sendText(any(), any());
     }
 
     private void enableWhatsApp() {

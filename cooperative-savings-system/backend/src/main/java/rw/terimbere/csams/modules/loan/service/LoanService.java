@@ -26,6 +26,8 @@ import rw.terimbere.csams.modules.contribution.ShareAmountCalculator;
 import rw.terimbere.csams.modules.cooperative.entity.Cooperative;
 import rw.terimbere.csams.modules.notification.entity.NotificationType;
 import rw.terimbere.csams.modules.notification.service.NotificationFacade;
+import rw.terimbere.csams.modules.notification.service.NotificationWhatsAppService;
+import rw.terimbere.csams.modules.notification.whatsapp.NotificationWhatsAppCopy;
 import rw.terimbere.csams.modules.cooperative.repository.CooperativeRepository;
 import rw.terimbere.csams.modules.ledger.service.LedgerService;
 import rw.terimbere.csams.modules.loan.dto.LoanApplicationFormResponse;
@@ -91,6 +93,7 @@ public class LoanService {
     private final AuditService auditService;
     private final ApprovalTrailService approvalTrailService;
     private final NotificationFacade notificationFacade;
+    private final NotificationWhatsAppService notificationWhatsAppService;
     private final LoanGuarantorService loanGuarantorService;
     private final ObjectMapper objectMapper;
 
@@ -199,6 +202,11 @@ public class LoanService {
                         + "\"}",
                 clientIp(httpRequest),
                 userAgent(httpRequest));
+        notificationWhatsAppService.notifyOfficers(
+                cooperativeId,
+                CooperativeOfficerRoles.LOAN_APPROVE,
+                NotificationWhatsAppCopy.loanPending(),
+                principal.getId());
         if (guaranteeMode == LoanGuaranteeMode.GUARANTOR) {
             if (request.getGuarantorUserId() == null || request.getGuaranteedAmount() == null) {
                 throw new ValidationException("A guarantor and guaranteed amount are required for a guaranteed loan");

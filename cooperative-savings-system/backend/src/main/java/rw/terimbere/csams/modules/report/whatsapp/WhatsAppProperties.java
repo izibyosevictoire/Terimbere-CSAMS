@@ -11,7 +11,8 @@ import org.springframework.util.StringUtils;
 public class WhatsAppProperties {
 
     /**
-     * Master switch. Sharing stays off unless this is true and credentials are present.
+     * Master switch. Report sharing and notification delivery stay off unless this is true
+     * and credentials are present.
      */
     private boolean enabled = false;
 

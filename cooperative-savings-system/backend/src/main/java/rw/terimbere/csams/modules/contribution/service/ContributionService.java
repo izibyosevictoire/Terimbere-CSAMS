@@ -42,6 +42,8 @@ import rw.terimbere.csams.modules.membership.entity.CooperativeMembership;
 import rw.terimbere.csams.modules.membership.repository.CooperativeMembershipRepository;
 import rw.terimbere.csams.modules.notification.entity.NotificationType;
 import rw.terimbere.csams.modules.notification.service.NotificationFacade;
+import rw.terimbere.csams.modules.notification.service.NotificationWhatsAppService;
+import rw.terimbere.csams.modules.notification.whatsapp.NotificationWhatsAppCopy;
 import rw.terimbere.csams.modules.user.entity.User;
 import rw.terimbere.csams.modules.user.repository.UserRepository;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
@@ -71,6 +73,7 @@ public class ContributionService {
     private final AuditService auditService;
     private final ApprovalTrailService approvalTrailService;
     private final NotificationFacade notificationFacade;
+    private final NotificationWhatsAppService notificationWhatsAppService;
 
     @Transactional(readOnly = true)
     public List<ContributionResponse> getOrBuildPeriodGrid(UUID cooperativeId, int year, int month) {
@@ -399,6 +402,13 @@ public class ContributionService {
                         + " was submitted for Accountant review.",
                 "Contribution",
                 contribution.getId());
+        long pendingCount = contributionRepository.countByCooperativeIdInAndReviewStatus(
+                List.of(cooperativeId), ContributionReviewStatus.PENDING);
+        notificationWhatsAppService.notifyOfficers(
+                cooperativeId,
+                "CONTRIBUTION_WRITE",
+                NotificationWhatsAppCopy.contributionPending(pendingCount),
+                principal.getId());
         return toResponse(contribution, principalName(principal.getId()), true);
     }
 

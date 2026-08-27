@@ -6,4 +6,7 @@ package rw.terimbere.csams.modules.report.whatsapp;
 public interface WhatsAppCloudClient {
 
     void sendDocument(String recipient, byte[] pdf, String filename, String caption);
+
+    /** Session text message. Must not use the report document template. */
+    void sendText(String recipient, String body);
 }
