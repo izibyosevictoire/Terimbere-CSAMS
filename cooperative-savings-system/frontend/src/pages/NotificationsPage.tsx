@@ -15,7 +15,8 @@ import dayjs from 'dayjs'
 import { useSnackbar } from 'notistack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { isUnread, unreadHighlightSx } from '@/features/notifications'
+import { useNavigate } from 'react-router-dom'
+import { isUnread, notificationTargetPath, unreadHighlightSx } from '@/features/notifications'
 import { getErrorMessage } from '@/shared/api/client'
 import {
   fetchNotifications,
@@ -31,6 +32,7 @@ import type { AppNotification } from '@/shared/types/notification'
 
 export function NotificationsPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { enqueueSnackbar } = useSnackbar()
   const [unreadOnly, setUnreadOnly] = useState(false)
@@ -206,7 +208,16 @@ export function NotificationsPage() {
               emptyDescription={t('notifications.emptyDescription')}
               getRowSx={(row) => unreadHighlightSx(isUnread(row))}
               onRowClick={(row) => {
-                if (isUnread(row)) markOne.mutate(row.id)
+                const path = notificationTargetPath(row)
+                if (isUnread(row)) {
+                  markOne.mutate(row.id, {
+                    onSettled: () => {
+                      if (path) navigate(path)
+                    },
+                  })
+                  return
+                }
+                if (path) navigate(path)
               }}
             />
             <TablePagination

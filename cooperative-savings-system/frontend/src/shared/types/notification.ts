@@ -36,3 +36,9 @@ export interface NotificationQuery {
 export interface UnreadCountResponse {
   count: number
 }
+
+export interface PendingApprovals {
+  contributionPendingCount: number
+  loanPendingCount: number
+  loanSecondApprovalCount: number
+}

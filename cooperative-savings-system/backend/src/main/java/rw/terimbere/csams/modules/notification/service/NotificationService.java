@@ -1,6 +1,7 @@
 package rw.terimbere.csams.modules.notification.service;
 
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -8,11 +9,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import rw.terimbere.csams.modules.contribution.entity.ContributionReviewStatus;
+import rw.terimbere.csams.modules.contribution.repository.ContributionRepository;
+import rw.terimbere.csams.modules.loan.entity.LoanStatus;
+import rw.terimbere.csams.modules.loan.repository.LoanRepository;
 import rw.terimbere.csams.modules.notification.dto.NotificationResponse;
+import rw.terimbere.csams.modules.notification.dto.PendingApprovalsResponse;
 import rw.terimbere.csams.modules.notification.entity.Notification;
 import rw.terimbere.csams.modules.notification.entity.NotificationType;
 import rw.terimbere.csams.modules.notification.repository.NotificationRepository;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
+import rw.terimbere.csams.security.CooperativeOfficerRoles;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.common.dto.PageResponse;
 import rw.terimbere.csams.shared.exceptions.ResourceNotFoundException;
@@ -24,6 +31,8 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final CooperativeAuthorizationService authorizationService;
+    private final ContributionRepository contributionRepository;
+    private final LoanRepository loanRepository;
 
     @Transactional
     public Notification create(
@@ -61,6 +70,51 @@ public class NotificationService {
     public long unreadCount() {
         UserPrincipal principal = authorizationService.currentPrincipal();
         return notificationRepository.countByUserIdAndReadFalse(principal.getId());
+    }
+
+    /**
+     * Live approval queues for the current user, using existing permission checks.
+     * These are not persisted as notification rows.
+     */
+    @Transactional(readOnly = true)
+    public PendingApprovalsResponse pendingApprovals() {
+        UserPrincipal principal = authorizationService.currentPrincipal();
+        boolean superAdmin = principal.hasRole(CooperativeAuthorizationService.SUPER_ADMIN);
+        Set<UUID> cooperativeIds = principal.getCooperativeIds();
+        boolean scoped = !superAdmin;
+        if (scoped && (cooperativeIds == null || cooperativeIds.isEmpty())) {
+            return PendingApprovalsResponse.builder().build();
+        }
+
+        long contributionPendingCount = 0;
+        if (principal.hasAuthority("CONTRIBUTION_WRITE")) {
+            contributionPendingCount = scoped
+                    ? contributionRepository.countByCooperativeIdInAndReviewStatus(
+                            cooperativeIds, ContributionReviewStatus.PENDING)
+                    : contributionRepository.countByReviewStatus(ContributionReviewStatus.PENDING);
+        }
+
+        long loanPendingCount = 0;
+        if (superAdmin || principal.hasAuthority(CooperativeOfficerRoles.LOAN_APPROVE)) {
+            loanPendingCount = scoped
+                    ? loanRepository.countByCooperativeIdInAndStatus(cooperativeIds, LoanStatus.PENDING)
+                    : loanRepository.countByStatus(LoanStatus.PENDING);
+        }
+
+        long loanSecondApprovalCount = 0;
+        if (superAdmin || principal.hasAuthority(CooperativeOfficerRoles.FUND_AUTHORIZE)) {
+            loanSecondApprovalCount = scoped
+                    ? loanRepository.countByCooperativeIdInAndStatusAndFirstApprovedByNot(
+                            cooperativeIds, LoanStatus.AWAITING_SECOND_APPROVAL, principal.getId())
+                    : loanRepository.countByStatusAndFirstApprovedByNot(
+                            LoanStatus.AWAITING_SECOND_APPROVAL, principal.getId());
+        }
+
+        return PendingApprovalsResponse.builder()
+                .contributionPendingCount(contributionPendingCount)
+                .loanPendingCount(loanPendingCount)
+                .loanSecondApprovalCount(loanSecondApprovalCount)
+                .build();
     }
 
     @Transactional

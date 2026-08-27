@@ -1386,6 +1386,17 @@
     "markAllReadSuccess": "Ubutumwa bwose bwasomwe",
     "emptyTitle": "Nta butumwa",
     "emptyDescription": "Hano hagaragara ubutumwa bw'inguzanyo, amahane, kwishyura n'umutekano.",
+    "open": "Ubutumwa",
+    "menuTitle": "Ubutumwa",
+    "viewAll": "Reba byose",
+    "recent": "Bishya",
+    "pending": {
+      "title": "Ibyemezo bitegereje",
+      "contributions": "Ubusabe {{count}} bw'amafaranga butegereje kwemezwa",
+      "contributions_plural": "Ubusabe {{count}} bw'amafaranga butegereje kwemezwa",
+      "loans": "Ubusabe {{count}} bw'inguzanyo butegereje kwemezwa",
+      "loans_plural": "Ubusabe {{count}} bw'inguzanyo butegereje kwemezwa"
+    },
     "fields": {
       "title": "Umutwe",
       "type": "Ubwoko",

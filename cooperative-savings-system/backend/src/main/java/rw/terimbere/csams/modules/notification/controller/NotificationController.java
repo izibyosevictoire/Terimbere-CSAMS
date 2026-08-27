@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import rw.terimbere.csams.modules.notification.dto.NotificationResponse;
+import rw.terimbere.csams.modules.notification.dto.PendingApprovalsResponse;
 import rw.terimbere.csams.modules.notification.service.NotificationService;
 import rw.terimbere.csams.shared.common.dto.ApiResponse;
 import rw.terimbere.csams.shared.common.dto.PageResponse;
@@ -42,6 +43,12 @@ public class NotificationController {
     @Operation(summary = "Unread notification count for current user")
     public ResponseEntity<ApiResponse<Map<String, Long>>> unreadCount() {
         return ResponseEntity.ok(ApiResponse.ok(Map.of("count", notificationService.unreadCount())));
+    }
+
+    @GetMapping("/pending-approvals")
+    @Operation(summary = "Pending approval counts the current user can act on")
+    public ResponseEntity<ApiResponse<PendingApprovalsResponse>> pendingApprovals() {
+        return ResponseEntity.ok(ApiResponse.ok(notificationService.pendingApprovals()));
     }
 
     @PatchMapping("/{id}/read")

@@ -116,6 +116,15 @@ public interface LoanRepository extends JpaRepository<Loan, UUID> {
 
     long countByCooperativeIdAndStatus(UUID cooperativeId, LoanStatus status);
 
+    long countByStatus(LoanStatus status);
+
+    long countByCooperativeIdInAndStatus(Collection<UUID> cooperativeIds, LoanStatus status);
+
+    long countByStatusAndFirstApprovedByNot(LoanStatus status, UUID firstApprovedBy);
+
+    long countByCooperativeIdInAndStatusAndFirstApprovedByNot(
+            Collection<UUID> cooperativeIds, LoanStatus status, UUID firstApprovedBy);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
             """

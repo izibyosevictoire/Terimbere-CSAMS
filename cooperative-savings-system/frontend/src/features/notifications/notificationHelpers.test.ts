@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import type { AppNotification } from '@/shared/types/notification'
+import type { AppNotification, PendingApprovals } from '@/shared/types/notification'
+import { ROUTES } from '@/shared/constants/routes'
 import {
   isUnread,
+  notificationBadgeCount,
+  notificationTargetPath,
+  pendingApprovalItems,
+  pendingApprovalLabelKey,
+  pendingApprovalTotal,
   sortNotificationsNewestFirst,
   unreadHighlightSx,
 } from './notificationHelpers'
@@ -38,5 +44,62 @@ describe('notificationHelpers', () => {
       n({ id: 'c', createdAt: '2026-01-15T00:00:00Z' }),
     ])
     expect(sorted.map((x) => x.id)).toEqual(['b', 'c', 'a'])
+  })
+
+  it('routes Contribution notifications to contribution history', () => {
+    expect(
+      notificationTargetPath({
+        entityType: 'Contribution',
+        entityId: 'c1',
+      }),
+    ).toBe(`${ROUTES.contributions}?tab=history`)
+  })
+
+  it('routes Loan notifications to the loan detail page', () => {
+    expect(
+      notificationTargetPath({
+        entityType: 'Loan',
+        entityId: 'loan-9',
+      }),
+    ).toBe(ROUTES.loanDetail('loan-9'))
+  })
+
+  it('returns no path when entity type is missing or unknown', () => {
+    expect(notificationTargetPath({ entityType: null, entityId: 'x' })).toBeNull()
+    expect(notificationTargetPath({ entityType: 'Fine', entityId: 'f1' })).toBeNull()
+    expect(notificationTargetPath({ entityType: 'Loan', entityId: null })).toBeNull()
+  })
+
+  it('builds pending approval copy items only for counts greater than zero', () => {
+    const none: PendingApprovals = {
+      contributionPendingCount: 0,
+      loanPendingCount: 0,
+      loanSecondApprovalCount: 0,
+    }
+    expect(pendingApprovalItems(none)).toEqual([])
+    expect(pendingApprovalTotal(none)).toBe(0)
+
+    const pending: PendingApprovals = {
+      contributionPendingCount: 3,
+      loanPendingCount: 1,
+      loanSecondApprovalCount: 1,
+    }
+    expect(pendingApprovalItems(pending)).toEqual([
+      {
+        kind: 'contributions',
+        count: 3,
+        path: `${ROUTES.contributions}?tab=approvals`,
+      },
+      {
+        kind: 'loans',
+        count: 2,
+        path: `${ROUTES.loans}?tab=approvals`,
+      },
+    ])
+    expect(pendingApprovalLabelKey('contributions', 3)).toBe(
+      'notifications.pending.contributions_plural',
+    )
+    expect(pendingApprovalLabelKey('loans', 1)).toBe('notifications.pending.loans')
+    expect(notificationBadgeCount(4, pending)).toBe(9)
   })
 })

@@ -484,6 +484,85 @@ class ContributionControllerIntegrationTest {
     }
 
     @Test
+    void rejectSubmission_notifiesMemberWithRejectorRole() throws Exception {
+        String accountantUsername = "acc_" + UUID.randomUUID().toString().substring(0, 8);
+        MvcResult accountant = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/members")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName":"Ann",
+                                  "lastName":"Counter",
+                                  "username":"%s",
+                                  "email":"%s@test.local",
+                                  "roleInCooperative":"ACCOUNTANT"
+                                }
+                                """.formatted(accountantUsername, accountantUsername)))
+                .andExpect(status().isOk())
+                .andReturn();
+        String accountantToken = loginAccessToken(
+                accountantUsername,
+                objectMapper
+                        .readTree(accountant.getResponse().getContentAsString())
+                        .path("data")
+                        .path("temporaryPassword")
+                        .asText());
+        String memberToken = loginAccessToken(memberUsername, memberPassword);
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/contributions/submissions")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "amount": 1000.0000,
+                                  "paymentDate": "2026-05-05",
+                                  "paymentReference": "MOMO-REJECT"
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        MvcResult pending = mockMvc.perform(get("/api/v1/cooperatives/" + cooperativeId + "/contributions/pending-review")
+                        .header("Authorization", "Bearer " + accountantToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID contributionId = UUID.fromString(objectMapper
+                .readTree(pending.getResponse().getContentAsString())
+                .path("data")
+                .path("content")
+                .get(0)
+                .path("id")
+                .asText());
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/contributions/" + contributionId + "/reject")
+                        .header("Authorization", "Bearer " + accountantToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"rejectionReason\":\"Unclear proof\"}"))
+                .andExpect(status().isOk());
+
+        MvcResult list = mockMvc.perform(get("/api/v1/notifications")
+                        .param("unreadOnly", "true")
+                        .header("Authorization", "Bearer " + memberToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode content = objectMapper
+                .readTree(list.getResponse().getContentAsString())
+                .path("data")
+                .path("content");
+        boolean found = false;
+        for (JsonNode notification : content) {
+            if ("Contribution rejected".equals(notification.path("title").asText())) {
+                assertThat(notification.path("type").asText()).isEqualTo("CONTRIBUTION");
+                assertThat(notification.path("entityType").asText()).isEqualTo("Contribution");
+                assertThat(notification.path("entityId").asText()).isEqualTo(contributionId.toString());
+                assertThat(notification.path("body").asText()).contains("2026-05");
+                assertThat(notification.path("body").asText()).contains("ACCOUNTANT");
+                found = true;
+            }
+        }
+        assertThat(found).isTrue();
+    }
+
+    @Test
     void shareCountScalesExpectedAmount_andPartialPaymentRemaining() throws Exception {
         String twoShareUser = "shares_" + UUID.randomUUID().toString().substring(0, 8);
         MvcResult register = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/members")

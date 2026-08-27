@@ -45,6 +45,7 @@ import rw.terimbere.csams.modules.notification.service.NotificationFacade;
 import rw.terimbere.csams.modules.user.entity.User;
 import rw.terimbere.csams.modules.user.repository.UserRepository;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
+import rw.terimbere.csams.security.CooperativeOfficerRoles;
 import rw.terimbere.csams.security.UserPrincipal;
 import rw.terimbere.csams.shared.auditing.AuditableAction;
 import rw.terimbere.csams.shared.common.dto.PageResponse;
@@ -540,7 +541,10 @@ public class ContributionService {
                 NotificationType.CONTRIBUTION,
                 "Contribution approved",
                 "Your contribution for " + contribution.getYear() + "-"
-                        + String.format("%02d", contribution.getMonth()) + " was approved.",
+                        + String.format("%02d", contribution.getMonth())
+                        + " was approved by "
+                        + actorLabel(principal)
+                        + ".",
                 "Contribution",
                 contribution.getId());
         return toResponse(contribution, principalName(contribution.getMemberUserId()), true);
@@ -607,7 +611,9 @@ public class ContributionService {
                 "Contribution rejected",
                 "Your contribution for " + contribution.getYear() + "-"
                         + String.format("%02d", contribution.getMonth())
-                        + " was rejected: "
+                        + " was rejected by "
+                        + actorLabel(principal)
+                        + ": "
                         + request.getRejectionReason().trim(),
                 "Contribution",
                 contribution.getId());
@@ -935,6 +941,15 @@ public class ContributionService {
             return null;
         }
         return userRepository.findByIdAndDeletedFalse(userId).map(User::getFullName).orElse(null);
+    }
+
+    private String actorLabel(UserPrincipal principal) {
+        String role = CooperativeOfficerRoles.displayRole(principal);
+        String name = principalName(principal.getId());
+        if (StringUtils.hasText(name)) {
+            return name + " (" + role + ")";
+        }
+        return role;
     }
 
     private static String toAuditJson(Contribution c) {

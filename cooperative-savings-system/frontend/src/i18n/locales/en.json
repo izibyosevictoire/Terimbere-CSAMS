@@ -1401,6 +1401,17 @@
     "markAllReadSuccess": "All notifications marked as read",
     "emptyTitle": "No notifications",
     "emptyDescription": "You will see alerts about loans, fines, payouts, and security here.",
+    "open": "Notifications",
+    "menuTitle": "Notifications",
+    "viewAll": "View all",
+    "recent": "Recent",
+    "pending": {
+      "title": "Pending approvals",
+      "contributions": "{{count}} contribution request pending approval",
+      "contributions_plural": "{{count}} contribution requests pending approval",
+      "loans": "{{count}} loan request pending approval",
+      "loans_plural": "{{count}} loan requests pending approval"
+    },
     "fields": {
       "title": "Title",
       "type": "Type",

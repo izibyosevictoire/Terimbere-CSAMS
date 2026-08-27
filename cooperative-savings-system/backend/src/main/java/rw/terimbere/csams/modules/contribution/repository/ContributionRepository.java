@@ -44,6 +44,11 @@ public interface ContributionRepository
     Page<Contribution> findByCooperativeIdAndReviewStatus(
             UUID cooperativeId, ContributionReviewStatus reviewStatus, Pageable pageable);
 
+    long countByReviewStatus(ContributionReviewStatus reviewStatus);
+
+    long countByCooperativeIdInAndReviewStatus(
+            Collection<UUID> cooperativeIds, ContributionReviewStatus reviewStatus);
+
     default Page<Contribution> search(
             UUID cooperativeId,
             UUID memberUserId,

@@ -351,6 +351,16 @@ public class LoanService {
                         + "\"}",
                 clientIp(httpRequest),
                 userAgent(httpRequest));
+        if (loan.getStatus() == LoanStatus.APPROVED) {
+            notificationFacade.notifyUser(
+                    loan.getMemberUserId(),
+                    cooperativeId,
+                    NotificationType.LOAN,
+                    "Loan approved",
+                    "Your loan request was approved by " + actorLabel(principal) + ".",
+                    "Loan",
+                    loan.getId());
+        }
         return toResponse(loan, null, true);
     }
 
@@ -401,6 +411,15 @@ public class LoanService {
                 "{\"status\":\"REJECTED\"}",
                 clientIp(httpRequest),
                 userAgent(httpRequest));
+        notificationFacade.notifyUser(
+                loan.getMemberUserId(),
+                cooperativeId,
+                NotificationType.LOAN,
+                "Loan rejected",
+                "Your loan request was rejected by " + actorLabel(principal) + ": "
+                        + request.getRejectionReason().trim(),
+                "Loan",
+                loan.getId());
         return toResponse(loan, null, true);
     }
 
@@ -1054,6 +1073,16 @@ public class LoanService {
 
     private String formatName(User user) {
         return (user.getFirstName() + " " + user.getLastName()).trim();
+    }
+
+    private String actorLabel(UserPrincipal principal) {
+        String role = CooperativeOfficerRoles.displayRole(principal);
+        return userRepository
+                .findByIdAndDeletedFalse(principal.getId())
+                .map(this::formatName)
+                .filter(StringUtils::hasText)
+                .map(name -> name + " (" + role + ")")
+                .orElse(role);
     }
 
     private static BigDecimal scaleOrNull(BigDecimal value) {

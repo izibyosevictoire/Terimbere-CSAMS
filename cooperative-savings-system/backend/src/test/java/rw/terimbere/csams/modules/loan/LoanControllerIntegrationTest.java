@@ -638,6 +638,135 @@ class LoanControllerIntegrationTest {
     }
 
     @Test
+    void loanOfficerReject_notifiesRequesterWithRole() throws Exception {
+        String memberToken = loginAccessToken(memberUsername, memberPassword);
+        MvcResult requestResult = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "amount": 400.0000,
+                                  "termMonths": 3,
+                                  "purpose": "Reject notify",
+                                  "guaranteeMode": "SELF"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID loanId = UUID.fromString(objectMapper
+                .readTree(requestResult.getResponse().getContentAsString())
+                .path("data")
+                .path("id")
+                .asText());
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans/" + loanId + "/reject")
+                        .header("Authorization", "Bearer " + loanOfficerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"rejectionReason\":\"Insufficient savings\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("REJECTED"));
+
+        MvcResult list = mockMvc.perform(get("/api/v1/notifications")
+                        .param("unreadOnly", "true")
+                        .header("Authorization", "Bearer " + memberToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode content = objectMapper
+                .readTree(list.getResponse().getContentAsString())
+                .path("data")
+                .path("content");
+        boolean found = false;
+        for (JsonNode notification : content) {
+            if ("Loan rejected".equals(notification.path("title").asText())) {
+                assertThat(notification.path("type").asText()).isEqualTo("LOAN");
+                assertThat(notification.path("entityType").asText()).isEqualTo("Loan");
+                assertThat(notification.path("entityId").asText()).isEqualTo(loanId.toString());
+                assertThat(notification.path("body").asText()).contains("LOAN_OFFICER");
+                found = true;
+            }
+        }
+        assertThat(found).isTrue();
+    }
+
+    @Test
+    void firstApprovalDoesNotNotifyFinalApproval_secondApprovalDoes() throws Exception {
+        String memberToken = loginAccessToken(memberUsername, memberPassword);
+        MvcResult requestResult = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "amount": 400.0000,
+                                  "termMonths": 3,
+                                  "purpose": "Two step notify",
+                                  "guaranteeMode": "SELF"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andReturn();
+        UUID loanId = UUID.fromString(objectMapper
+                .readTree(requestResult.getResponse().getContentAsString())
+                .path("data")
+                .path("id")
+                .asText());
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans/" + loanId + "/approve")
+                        .header("Authorization", "Bearer " + loanOfficerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("AWAITING_SECOND_APPROVAL"));
+
+        MvcResult afterFirst = mockMvc.perform(get("/api/v1/notifications")
+                        .header("Authorization", "Bearer " + memberToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode firstContent = objectMapper
+                .readTree(afterFirst.getResponse().getContentAsString())
+                .path("data")
+                .path("content");
+        for (JsonNode notification : firstContent) {
+            assertThat(notification.path("title").asText()).isNotEqualTo("Loan approved");
+        }
+
+        mockMvc.perform(get("/api/v1/notifications/pending-approvals")
+                        .header("Authorization", "Bearer " + loanOfficerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.loanSecondApprovalCount").value(0));
+
+        mockMvc.perform(get("/api/v1/notifications/pending-approvals")
+                        .header("Authorization", "Bearer " + superAdminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.loanSecondApprovalCount")
+                        .value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)));
+
+        mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/loans/" + loanId + "/approve")
+                        .header("Authorization", "Bearer " + superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("APPROVED"));
+
+        MvcResult afterSecond = mockMvc.perform(get("/api/v1/notifications")
+                        .header("Authorization", "Bearer " + memberToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode secondContent = objectMapper
+                .readTree(afterSecond.getResponse().getContentAsString())
+                .path("data")
+                .path("content");
+        boolean foundApproved = false;
+        for (JsonNode notification : secondContent) {
+            if ("Loan approved".equals(notification.path("title").asText())) {
+                assertThat(notification.path("type").asText()).isEqualTo("LOAN");
+                assertThat(notification.path("entityId").asText()).isEqualTo(loanId.toString());
+                foundApproved = true;
+            }
+        }
+        assertThat(foundApproved).isTrue();
+    }
+
+    @Test
     void accountantCannotChangeShareTiers() throws Exception {
         String accountantUsername = "acc_" + UUID.randomUUID().toString().substring(0, 8);
         MvcResult accountant = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/members")

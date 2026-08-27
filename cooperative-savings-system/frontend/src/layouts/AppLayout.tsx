@@ -33,11 +33,11 @@ import { LanguageSwitcher } from '@/shared/components/LanguageSwitcher'
 import { OfflineBanner } from '@/shared/components/OfflineBanner'
 import { ThemeSwitcher } from '@/shared/components/ThemeSwitcher'
 import { UserMenu } from '@/shared/components/UserMenu'
+import { NotificationBell, NOTIFICATION_POLL_MS } from '@/features/notifications'
 import { ROUTES } from '@/shared/constants/routes'
 import { getMobileNavItems } from './navItems'
 
 const DRAWER_WIDTH = 280
-const UNREAD_POLL_MS = 60_000
 
 export function AppLayout() {
   const { t } = useTranslation()
@@ -57,7 +57,7 @@ export function AppLayout() {
     queryKey: ['notifications-unread-count'],
     queryFn: fetchUnreadCount,
     enabled: Boolean(accessToken),
-    refetchInterval: UNREAD_POLL_MS,
+    refetchInterval: NOTIFICATION_POLL_MS,
     refetchOnWindowFocus: true,
     retry: 1,
   })
@@ -223,6 +223,7 @@ export function AppLayout() {
             <PwaInstallButton />
           )}
 
+          <NotificationBell />
           <UserMenu />
         </Toolbar>
       </AppBar>
