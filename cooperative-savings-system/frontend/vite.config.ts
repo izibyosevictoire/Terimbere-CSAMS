@@ -25,7 +25,8 @@ export default defineConfig(({ mode }) => {
         includeAssets: [
           'favicon.svg',
           'offline.html',
-          'branding/ouwealth-community-logo.svg',
+          'branding/ouwealth-community-logo.png',
+          'branding/ouwealth-community-logo-on-dark.png',
           'icons/icon.svg',
           'icons/icon-192.png',
           'icons/icon-512.png',

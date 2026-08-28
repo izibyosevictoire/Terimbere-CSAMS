@@ -20,5 +20,6 @@ describe('App', () => {
     expect(await screen.findByRole('img', { name: 'OuWealth Community' })).toBeInTheDocument()
     expect(screen.queryByText('OuWealth Community')).not.toBeInTheDocument()
     expect(await screen.findByText('Accumulate your wealth in an instant')).toBeInTheDocument()
+    expect(screen.queryByText('Foundation status')).not.toBeInTheDocument()
   })
 })

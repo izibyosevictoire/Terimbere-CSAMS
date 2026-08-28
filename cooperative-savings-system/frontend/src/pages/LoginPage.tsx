@@ -1,4 +1,3 @@
-import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety'
 import {
   Alert,
   Box,
@@ -11,7 +10,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -22,7 +21,6 @@ import { useAppDispatch } from '@/app/store/hooks'
 import { setCredentials, setSelectedCooperativeId } from '@/app/store/authSlice'
 import { login } from '@/shared/api/auth'
 import { getErrorMessage } from '@/shared/api/client'
-import { fetchHealth } from '@/shared/api/health'
 import { AuthBrand } from '@/shared/components/AuthBrand'
 import { ROUTES } from '@/shared/constants/routes'
 import { ROLE_PRESIDENT, ROLE_SUPER_ADMIN } from '@/shared/types/auth'
@@ -39,11 +37,10 @@ const schema = yup.object({
 })
 
 export function LoginPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [healthEnabled, setHealthEnabled] = useState(false)
 
   const {
     register,
@@ -52,13 +49,6 @@ export function LoginPage() {
   } = useForm<LoginFormValues>({
     resolver: yupResolver(schema),
     defaultValues: { username: '', password: '' },
-  })
-
-  const healthQuery = useQuery({
-    queryKey: ['public-health'],
-    queryFn: fetchHealth,
-    enabled: healthEnabled,
-    retry: 1,
   })
 
   const mutation = useMutation({
@@ -174,61 +164,6 @@ export function LoginPage() {
                 </Stack>
               ) : null}
             </Stack>
-          </Box>
-        </CardContent>
-      </Card>
-
-      <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
-        <CardContent>
-          <Stack direction="row" spacing={1.5} sx={{ mb: 1, alignItems: 'center' }}>
-            <HealthAndSafetyIcon color="primary" />
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              {t('login.foundation')}
-            </Typography>
-          </Stack>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            {t('login.foundationHint')}
-          </Typography>
-          <Button
-            variant="text"
-            onClick={() => setHealthEnabled(true)}
-            disabled={healthQuery.isFetching}
-            sx={{ fontWeight: 700, px: 0 }}
-          >
-            {t('login.checkHealth')} →
-          </Button>
-          {healthQuery.isFetching ? (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              {t('common.loading')}
-            </Typography>
-          ) : null}
-          {healthQuery.isError ? (
-            <Alert severity="warning" sx={{ mt: 1.5 }}>
-              {getErrorMessage(healthQuery.error)}
-            </Alert>
-          ) : null}
-          {healthQuery.data ? (
-            <Alert severity="success" sx={{ mt: 1.5 }}>
-              Status: {healthQuery.data.status}
-              {healthQuery.data.service ? ` · ${healthQuery.data.service}` : ''}
-              {healthQuery.data.version ? ` · v${healthQuery.data.version}` : ''}
-            </Alert>
-          ) : null}
-          <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-            <Button
-              size="small"
-              variant={i18n.language === 'en' ? 'contained' : 'outlined'}
-              onClick={() => void i18n.changeLanguage('en')}
-            >
-              EN
-            </Button>
-            <Button
-              size="small"
-              variant={i18n.language === 'rw' ? 'contained' : 'outlined'}
-              onClick={() => void i18n.changeLanguage('rw')}
-            >
-              RW
-            </Button>
           </Box>
         </CardContent>
       </Card>
