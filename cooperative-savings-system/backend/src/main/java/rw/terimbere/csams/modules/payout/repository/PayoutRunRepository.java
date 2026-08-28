@@ -23,6 +23,8 @@ public interface PayoutRunRepository extends JpaRepository<PayoutRun, UUID> {
 
     long countByCooperativeIdAndStatus(UUID cooperativeId, PayoutRunStatus status);
 
+    long countByStatus(PayoutRunStatus status);
+
     @Query(
             """
             SELECT COALESCE(SUM(r.payoutPoolAmount), 0)

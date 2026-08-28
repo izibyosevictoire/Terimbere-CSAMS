@@ -7,20 +7,32 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rw.terimbere.csams.modules.contribution.dto.MonthlyContributionChartPoint;
+import rw.terimbere.csams.modules.contribution.entity.ContributionReviewStatus;
 import rw.terimbere.csams.modules.contribution.repository.ContributionRepository;
 import rw.terimbere.csams.modules.contribution.service.ContributionService;
 import rw.terimbere.csams.modules.cooperative.entity.Cooperative;
+import rw.terimbere.csams.modules.cooperative.entity.CooperativeStatus;
 import rw.terimbere.csams.modules.cooperative.repository.CooperativeRepository;
 import rw.terimbere.csams.modules.dashboard.dto.DashboardSummaryResponse;
+import rw.terimbere.csams.modules.dashboard.dto.PlatformOverviewResponse;
+import rw.terimbere.csams.modules.fine.entity.FinePaymentStatus;
+import rw.terimbere.csams.modules.fine.repository.FinePaymentRepository;
 import rw.terimbere.csams.modules.fine.service.FineService;
 import rw.terimbere.csams.modules.investment.service.InvestmentService;
+import rw.terimbere.csams.modules.loan.entity.LoanStatus;
+import rw.terimbere.csams.modules.loan.repository.LoanRepository;
 import rw.terimbere.csams.modules.loan.service.LoanService;
 import rw.terimbere.csams.modules.membership.repository.CooperativeMembershipRepository;
+import rw.terimbere.csams.modules.payout.entity.PayoutRunStatus;
+import rw.terimbere.csams.modules.payout.repository.PayoutRunRepository;
 import rw.terimbere.csams.modules.payout.service.PayoutService;
+import rw.terimbere.csams.modules.socialfund.entity.SocialContributionStatus;
+import rw.terimbere.csams.modules.socialfund.repository.SocialContributionRepository;
 import rw.terimbere.csams.modules.socialfund.service.SocialFundBalanceService;
 import rw.terimbere.csams.modules.socialfund.service.SocialFundService;
 import rw.terimbere.csams.modules.specialcontribution.entity.SpecialContributionStatus;
 import rw.terimbere.csams.modules.specialcontribution.repository.SpecialContributionRepository;
+import rw.terimbere.csams.modules.user.repository.UserRepository;
 import rw.terimbere.csams.security.CooperativeAuthorizationService;
 import rw.terimbere.csams.shared.exceptions.ResourceNotFoundException;
 import rw.terimbere.csams.shared.financial.LedgerFinancialCalculationService;
@@ -44,6 +56,11 @@ public class DashboardService {
     private final PayoutService payoutService;
     private final LedgerFinancialCalculationService financialCalculationService;
     private final CooperativeAuthorizationService authorizationService;
+    private final UserRepository userRepository;
+    private final LoanRepository loanRepository;
+    private final FinePaymentRepository finePaymentRepository;
+    private final SocialContributionRepository socialContributionRepository;
+    private final PayoutRunRepository payoutRunRepository;
 
     @Transactional
     public DashboardSummaryResponse summary(UUID cooperativeId) {
@@ -147,5 +164,33 @@ public class DashboardService {
     @Transactional(readOnly = true)
     public List<MonthlyContributionChartPoint> monthlyContributionsChart(UUID cooperativeId, int year) {
         return contributionService.monthlyChart(cooperativeId, year);
+    }
+
+    @Transactional(readOnly = true)
+    public PlatformOverviewResponse platformOverview() {
+        authorizationService.requireSuperAdmin();
+        return PlatformOverviewResponse.builder()
+                .totalCooperatives(cooperativeRepository.countByDeletedFalse())
+                .activeCooperatives(cooperativeRepository.countByDeletedFalseAndStatus(CooperativeStatus.ACTIVE))
+                .inactiveCooperatives(cooperativeRepository.countByDeletedFalseAndStatus(CooperativeStatus.INACTIVE))
+                .suspendedCooperatives(cooperativeRepository.countByDeletedFalseAndStatus(CooperativeStatus.SUSPENDED))
+                .archivedCooperatives(cooperativeRepository.countByDeletedFalseAndStatus(CooperativeStatus.ARCHIVED))
+                .totalMembers(membershipRepository.count())
+                .activeMembers(membershipRepository.countByMembershipStatus("ACTIVE"))
+                .totalUsers(userRepository.countByDeletedFalse())
+                .pendingContributionReviews(contributionRepository.countByReviewStatus(ContributionReviewStatus.PENDING))
+                .pendingSpecialContributions(
+                        specialContributionRepository.countByStatus(SpecialContributionStatus.PENDING))
+                .pendingLoans(
+                        loanRepository.countByStatus(LoanStatus.PENDING)
+                                + loanRepository.countByStatus(LoanStatus.AWAITING_SECOND_APPROVAL))
+                .overdueLoans(loanRepository.countByStatus(LoanStatus.OVERDUE))
+                .pendingFinePayments(finePaymentRepository.countByStatus(FinePaymentStatus.PENDING))
+                .pendingSocialContributions(
+                        socialContributionRepository.countByStatus(SocialContributionStatus.PENDING))
+                .pendingPayouts(
+                        payoutRunRepository.countByStatus(PayoutRunStatus.DRAFT)
+                                + payoutRunRepository.countByStatus(PayoutRunStatus.PREVIEWED))
+                .build();
     }
 }

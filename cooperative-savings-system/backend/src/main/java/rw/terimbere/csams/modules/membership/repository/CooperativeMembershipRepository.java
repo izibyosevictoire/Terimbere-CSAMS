@@ -23,6 +23,8 @@ public interface CooperativeMembershipRepository extends JpaRepository<Cooperati
 
     long countByCooperativeId(UUID cooperativeId);
 
+    long countByMembershipStatus(String membershipStatus);
+
     List<CooperativeMembership> findByCooperativeIdAndMembershipStatus(UUID cooperativeId, String membershipStatus);
 
     @Query(

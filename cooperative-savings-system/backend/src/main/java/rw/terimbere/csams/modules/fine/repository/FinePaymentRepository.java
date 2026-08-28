@@ -24,6 +24,8 @@ public interface FinePaymentRepository
 
     long countByCooperativeIdAndStatus(UUID cooperativeId, FinePaymentStatus status);
 
+    long countByStatus(FinePaymentStatus status);
+
     default List<FinePayment> findFiltered(
             UUID cooperativeId,
             UUID memberUserId,

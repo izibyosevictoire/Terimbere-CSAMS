@@ -36,6 +36,8 @@ public interface SocialContributionRepository extends JpaRepository<SocialContri
 
     long countByCooperativeIdAndStatus(UUID cooperativeId, SocialContributionStatus status);
 
+    long countByStatus(SocialContributionStatus status);
+
     @Query(
             """
             SELECT COALESCE(SUM(c.amount), 0)

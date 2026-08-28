@@ -33,6 +33,12 @@ public class CooperativeAuthorizationService {
         }
     }
 
+    public void requireSuperAdmin() {
+        if (!currentPrincipal().hasRole(SUPER_ADMIN)) {
+            throw new ForbiddenException("Super admin access is required");
+        }
+    }
+
     public boolean hasRole(String... roleCodes) {
         UserPrincipal principal = currentPrincipal();
         return Arrays.stream(roleCodes).anyMatch(principal::hasRole);

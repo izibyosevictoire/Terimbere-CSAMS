@@ -44,6 +44,24 @@ export interface MonthlyContributionChartPoint {
   totalPaid: string | number
 }
 
+export interface PlatformOverview {
+  totalCooperatives: number
+  activeCooperatives: number
+  inactiveCooperatives: number
+  suspendedCooperatives: number
+  archivedCooperatives: number
+  totalMembers: number
+  activeMembers: number
+  totalUsers: number
+  pendingContributionReviews: number
+  pendingSpecialContributions: number
+  pendingLoans: number
+  overdueLoans: number
+  pendingFinePayments: number
+  pendingSocialContributions: number
+  pendingPayouts: number
+}
+
 export function mapDashboardSummary(raw: DashboardSummary): DashboardSummary {
   return {
     totalMembers: Number(raw.totalMembers ?? 0),
@@ -109,5 +127,25 @@ export function mapMonthlyContributionChartPoint(
   return {
     month: Number(raw.month),
     totalPaid: raw.totalPaid ?? 0,
+  }
+}
+
+export function mapPlatformOverview(raw: PlatformOverview): PlatformOverview {
+  return {
+    totalCooperatives: Number(raw.totalCooperatives ?? 0),
+    activeCooperatives: Number(raw.activeCooperatives ?? 0),
+    inactiveCooperatives: Number(raw.inactiveCooperatives ?? 0),
+    suspendedCooperatives: Number(raw.suspendedCooperatives ?? 0),
+    archivedCooperatives: Number(raw.archivedCooperatives ?? 0),
+    totalMembers: Number(raw.totalMembers ?? 0),
+    activeMembers: Number(raw.activeMembers ?? 0),
+    totalUsers: Number(raw.totalUsers ?? 0),
+    pendingContributionReviews: Number(raw.pendingContributionReviews ?? 0),
+    pendingSpecialContributions: Number(raw.pendingSpecialContributions ?? 0),
+    pendingLoans: Number(raw.pendingLoans ?? 0),
+    overdueLoans: Number(raw.overdueLoans ?? 0),
+    pendingFinePayments: Number(raw.pendingFinePayments ?? 0),
+    pendingSocialContributions: Number(raw.pendingSocialContributions ?? 0),
+    pendingPayouts: Number(raw.pendingPayouts ?? 0),
   }
 }

@@ -1,7 +1,10 @@
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import AddIcon from '@mui/icons-material/Add'
-import BusinessIcon from '@mui/icons-material/Business'
+import GroupsIcon from '@mui/icons-material/Groups'
 import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety'
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt'
+import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import { Box, Button, Chip, Grid, Paper, Stack, Typography } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
@@ -10,9 +13,11 @@ import { useAppDispatch, useAppSelector } from '@/app/store/hooks'
 import { setSelectedCooperativeId } from '@/app/store/authSlice'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchCooperatives } from '@/shared/api/cooperatives'
+import { fetchPlatformOverview } from '@/shared/api/dashboard'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { MetricCard } from '@/shared/components/MetricCard'
 import { ROUTES } from '@/shared/constants/routes'
+import { SuperAdminOverviewCharts } from './SuperAdminOverviewCharts'
 
 export function SuperAdminDashboard() {
   const { t } = useTranslation()
@@ -30,8 +35,14 @@ export function SuperAdminDashboard() {
     queryFn: () => fetchCooperatives({ page: 0, size: 50 }),
   })
 
+  const overviewQuery = useQuery({
+    queryKey: ['platform', 'dashboard', 'overview'],
+    queryFn: fetchPlatformOverview,
+  })
+
   const rows = query.data?.content ?? []
-  const total = query.data?.totalElements ?? 0
+  const overview = overviewQuery.data
+  const total = overview?.totalCooperatives ?? query.data?.totalElements ?? 0
 
   return (
     <Box>
@@ -83,27 +94,87 @@ export function SuperAdminDashboard() {
         </Box>
       ) : null}
 
+      {overviewQuery.isError ? (
+        <Box sx={{ mb: 2 }}>
+          <ErrorState
+            message={getErrorMessage(overviewQuery.error)}
+            onRetry={() => void overviewQuery.refetch()}
+          />
+        </Box>
+      ) : null}
+
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
           <MetricCard
             label={t('dashboard.super.totalCooperatives')}
-            value={query.isLoading ? undefined : String(total)}
+            value={overviewQuery.isLoading && !overview ? undefined : String(total)}
+            hint={
+              overview
+                ? t('dashboard.super.activeHint', { count: overview.activeCooperatives })
+                : undefined
+            }
             icon={<AccountBalanceIcon fontSize="small" />}
             accent="blue"
-            loading={query.isLoading}
+            loading={overviewQuery.isLoading && query.isLoading}
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
           <MetricCard
-            label={t('dashboard.super.shownOnPage')}
-            value={query.isLoading ? undefined : String(rows.length)}
-            hint={t('dashboard.super.listHint')}
-            icon={<BusinessIcon fontSize="small" />}
+            label={t('dashboard.super.totalMembers')}
+            value={overview ? String(overview.totalMembers) : undefined}
+            hint={
+              overview
+                ? t('dashboard.super.activeMembersHint', { count: overview.activeMembers })
+                : undefined
+            }
+            icon={<GroupsIcon fontSize="small" />}
             accent="green"
-            loading={query.isLoading}
+            loading={overviewQuery.isLoading}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+          <MetricCard
+            label={t('dashboard.super.totalUsers')}
+            value={overview ? String(overview.totalUsers) : undefined}
+            icon={<PeopleAltIcon fontSize="small" />}
+            accent="purple"
+            loading={overviewQuery.isLoading}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+          <MetricCard
+            label={t('dashboard.super.pendingReviews')}
+            value={
+              overview
+                ? String(overview.pendingContributionReviews + overview.pendingSpecialContributions)
+                : undefined
+            }
+            icon={<HourglassEmptyIcon fontSize="small" />}
+            accent="gold"
+            loading={overviewQuery.isLoading}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+          <MetricCard
+            label={t('dashboard.super.pendingLoans')}
+            value={overview ? String(overview.pendingLoans) : undefined}
+            icon={<HourglassEmptyIcon fontSize="small" />}
+            accent="orange"
+            loading={overviewQuery.isLoading}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+          <MetricCard
+            label={t('dashboard.super.overdueLoans')}
+            value={overview ? String(overview.overdueLoans) : undefined}
+            icon={<WarningAmberIcon fontSize="small" />}
+            accent="red"
+            loading={overviewQuery.isLoading}
           />
         </Grid>
       </Grid>
+
+      {overview ? <SuperAdminOverviewCharts overview={overview} /> : null}
 
       <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, border: '1px solid', borderColor: 'divider' }}>
         <Typography variant="h6" gutterBottom>

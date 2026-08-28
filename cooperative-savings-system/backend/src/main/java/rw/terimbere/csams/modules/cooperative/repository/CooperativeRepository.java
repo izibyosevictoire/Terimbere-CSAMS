@@ -18,6 +18,10 @@ public interface CooperativeRepository extends JpaRepository<Cooperative, UUID> 
 
     List<Cooperative> findAllByDeletedFalseAndStatus(CooperativeStatus status);
 
+    long countByDeletedFalse();
+
+    long countByDeletedFalseAndStatus(CooperativeStatus status);
+
     List<Cooperative> findByIdInAndDeletedFalse(Collection<UUID> ids);
 
     @Query(

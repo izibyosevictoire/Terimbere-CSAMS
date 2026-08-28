@@ -4,10 +4,12 @@ import type { ApiResponse } from '@/shared/types/api'
 import type {
   DashboardSummary,
   MonthlyContributionChartPoint,
+  PlatformOverview,
 } from '@/shared/types/dashboard'
 import {
   mapDashboardSummary,
   mapMonthlyContributionChartPoint,
+  mapPlatformOverview,
 } from '@/shared/types/dashboard'
 
 export async function fetchDashboardSummary(
@@ -28,4 +30,11 @@ export async function fetchMonthlyContributionsChart(
     { params: { year } },
   )
   return (unwrapApiData(response.data) ?? []).map(mapMonthlyContributionChartPoint)
+}
+
+export async function fetchPlatformOverview(): Promise<PlatformOverview> {
+  const response = await apiClient.get<ApiResponse<PlatformOverview>>(
+    '/platform/dashboard/overview',
+  )
+  return mapPlatformOverview(unwrapApiData(response.data))
 }

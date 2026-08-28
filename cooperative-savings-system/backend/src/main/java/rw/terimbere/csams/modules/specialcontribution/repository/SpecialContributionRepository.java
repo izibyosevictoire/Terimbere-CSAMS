@@ -24,6 +24,8 @@ public interface SpecialContributionRepository
 
     long countByCooperativeIdAndStatus(UUID cooperativeId, SpecialContributionStatus status);
 
+    long countByStatus(SpecialContributionStatus status);
+
     @Query(
             """
             SELECT COALESCE(SUM(s.amount), 0)
