@@ -25,6 +25,28 @@
   --shadow-soft: 0 8px 28px rgba(21, 101, 192, 0.12);
 }
 
+@keyframes brand-logo-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.brand-logo-enter {
+  transform-origin: center center;
+  animation: brand-logo-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo-enter {
+    animation: none;
+  }
+}
+
 html[data-theme='dark'] {
   --color-primary: #42a5f5;
   --color-primary-dark: #1565c0;

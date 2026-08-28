@@ -15,8 +15,10 @@ describe('App', () => {
     vi.clearAllMocks()
   })
 
-  it('renders the TERIMBERE brand on the login route', async () => {
+  it('renders the OuWealth Community brand on the login route', async () => {
     render(<App />)
-    expect(await screen.findByText('TERIMBERE')).toBeInTheDocument()
+    expect(await screen.findByAltText('OuWealth Community')).toBeInTheDocument()
+    expect(await screen.findByText('OuWealth Community')).toBeInTheDocument()
+    expect(await screen.findByText('Accumulate your wealth in an instant')).toBeInTheDocument()
   })
 })

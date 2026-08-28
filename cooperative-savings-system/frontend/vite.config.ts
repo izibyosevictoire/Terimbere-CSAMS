@@ -25,15 +25,16 @@ export default defineConfig(({ mode }) => {
         includeAssets: [
           'favicon.svg',
           'offline.html',
+          'branding/ouwealth-community-logo.jpg',
           'icons/icon.svg',
           'icons/icon-192.png',
           'icons/icon-512.png',
           'icons/apple-touch-icon.png',
         ],
         manifest: {
-          name: 'TERIMBERE CSAMS',
-          short_name: 'TERIMBERE',
-          description: 'Cooperative Savings Account Management System',
+          name: 'OuWealth Community',
+          short_name: 'OuWealth',
+          description: 'Accumulate your wealth in an instant',
           theme_color: '#1565C0',
           background_color: '#FFFFFF',
           display: 'standalone',
@@ -63,7 +64,7 @@ export default defineConfig(({ mode }) => {
         workbox: {
           // SPA shell: index.html for client routes. Dedicated offline.html is precached in public/.
           navigateFallback: 'index.html',
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webmanifest}'],
+          globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,woff2,webmanifest}'],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

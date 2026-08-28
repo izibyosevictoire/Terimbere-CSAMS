@@ -106,7 +106,6 @@ export function LoginPage() {
       <AuthBrand
         title={t('app.name')}
         tagline={t('app.tagline')}
-        subtitle={t('login.subtitle')}
       />
 
       <Card

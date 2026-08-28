@@ -1,8 +1,8 @@
 {
   "app": {
-    "name": "TERIMBERE",
-    "fullName": "TERIMBERE CSAMS",
-    "tagline": "Sisitemu yo Gucunga Konti z'Ikoperative"
+    "name": "OuWealth Community",
+    "fullName": "OuWealth Community",
+    "tagline": "Accumulate your wealth in an instant"
   },
   "nav": {
     "dashboard": "Imbonerahamwe",
@@ -38,7 +38,7 @@
   },
   "login": {
     "title": "Injira",
-    "subtitle": "Gucunga ubwizigame, inguzanyo, n'ibikoresho by'ikoperative.",
+    "subtitle": "Accumulate your wealth in an instant",
     "username": "Izina ry'ukoresha",
     "email": "Imeri",
     "password": "Ijambo ry'ibanga",
@@ -54,7 +54,7 @@
   },
   "signup": {
     "title": "Fungura konti",
-    "subtitle": "Iyandikishe kugira ngo ukoreshe TERIMBERE CSAMS.",
+    "subtitle": "Iyandikishe kugira ngo ukoreshe OuWealth Community.",
     "firstName": "Izina",
     "lastName": "Izina ry'umuryango",
     "username": "Izina ry'ukoresha",

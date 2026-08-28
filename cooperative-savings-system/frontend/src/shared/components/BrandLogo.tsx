@@ -1,30 +1,48 @@
-import HandshakeIcon from '@mui/icons-material/Handshake'
 import { Box, type BoxProps } from '@mui/material'
 
+export const BRAND_LOGO_SRC = '/branding/ouwealth-community-logo.jpg'
+export const BRAND_LOGO_ALT = 'OuWealth Community'
+
 interface BrandLogoProps {
+  /** Height in pixels. Width follows the image aspect ratio. */
   size?: number
+  /** `full` is for auth/entry; `compact` is for the app bar and drawer. */
+  variant?: 'compact' | 'full'
+  animate?: boolean
   sx?: BoxProps['sx']
 }
 
-/** Handshake mark for cooperative partnership — blue square, white icon. */
-export function BrandLogo({ size = 32, sx }: BrandLogoProps) {
+export function BrandLogo({
+  size = 32,
+  variant = 'compact',
+  animate = false,
+  sx,
+}: BrandLogoProps) {
+  const isFull = variant === 'full'
   return (
     <Box
-      aria-hidden
+      className={animate ? 'brand-logo-enter' : undefined}
       sx={{
-        width: size,
-        height: size,
         flexShrink: 0,
-        borderRadius: size > 40 ? '12px' : '8px',
-        bgcolor: 'primary.main',
-        color: 'primary.contrastText',
-        display: 'grid',
-        placeItems: 'center',
-        overflow: 'hidden',
+        lineHeight: 0,
+        maxWidth: isFull ? { xs: 'min(100%, 280px)', sm: 340 } : { xs: 140, sm: 168 },
         ...sx,
       }}
     >
-      <HandshakeIcon sx={{ fontSize: size * 0.62, color: 'inherit' }} />
+      <Box
+        component="img"
+        src={BRAND_LOGO_SRC}
+        alt={BRAND_LOGO_ALT}
+        sx={{
+          display: 'block',
+          height: isFull ? { xs: 56, sm: 72 } : size,
+          width: 'auto',
+          maxWidth: '100%',
+          maxHeight: isFull ? { xs: 56, sm: 72 } : size,
+          objectFit: 'contain',
+          objectPosition: 'left center',
+        }}
+      />
     </Box>
   )
 }

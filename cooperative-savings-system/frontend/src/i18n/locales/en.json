@@ -1,8 +1,8 @@
 {
   "app": {
-    "name": "TERIMBERE",
-    "fullName": "TERIMBERE CSAMS",
-    "tagline": "Cooperative Savings Account Management System"
+    "name": "OuWealth Community",
+    "fullName": "OuWealth Community",
+    "tagline": "Accumulate your wealth in an instant"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -38,7 +38,7 @@
   },
   "login": {
     "title": "Sign in",
-    "subtitle": "Manage savings, loans, and cooperative funds with confidence.",
+    "subtitle": "Accumulate your wealth in an instant",
     "username": "Username",
     "email": "Email",
     "password": "Password",
@@ -54,7 +54,7 @@
   },
   "signup": {
     "title": "Create account",
-    "subtitle": "Register to access TERIMBERE CSAMS.",
+    "subtitle": "Register to access OuWealth Community.",
     "firstName": "First name",
     "lastName": "Last name",
     "username": "Username",

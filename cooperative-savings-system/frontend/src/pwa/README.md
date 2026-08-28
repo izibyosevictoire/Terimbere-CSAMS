@@ -1,6 +1,6 @@
 # PWA (Phase 12)
 
-Installable Progressive Web App for TERIMBERE CSAMS. The service worker caches the **app shell and static assets only**. Financial API mutations are never queued or applied offline.
+Installable Progressive Web App for OuWealth Community. The service worker caches the **app shell and static assets only**. Financial API mutations are never queued or applied offline.
 
 ## Enable
 
