@@ -14,7 +14,6 @@ import java.nio.file.Path;
  */
 final class PdfReportStyle {
 
-    static final String SYSTEM_NAME = "OuWealth Community";
     static final Color BRAND_BLUE = new Color(0x1B, 0x4D, 0x8C);
     static final Color BRAND_BLUE_DARK = new Color(0x14, 0x3A, 0x6B);
     static final Color BRAND_ORANGE = new Color(0xFF, 0x7A, 0x00);
