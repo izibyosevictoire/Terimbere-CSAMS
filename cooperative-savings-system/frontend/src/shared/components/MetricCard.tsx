@@ -12,7 +12,7 @@ export type MetricAccent =
   | 'neutral'
 
 const ACCENT_COLORS: Record<MetricAccent, string> = {
-  blue: '#1565C0',
+  blue: '#1B4D8C',
   green: '#16A34A',
   purple: '#7C3AED',
   teal: '#0D9488',

@@ -110,7 +110,7 @@ export function MonthlyContributionsChart({
                   t('dashboard.charts.paid'),
                 ]}
               />
-              <Bar dataKey="totalPaid" fill="#1565C0" radius={[4, 4, 0, 0]} maxBarSize={36} />
+              <Bar dataKey="totalPaid" fill="#1B4D8C" radius={[4, 4, 0, 0]} maxBarSize={36} />
             </BarChart>
           </ResponsiveContainer>
         </Box>

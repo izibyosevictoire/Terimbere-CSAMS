@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => {
           name: 'OuWealth Community',
           short_name: 'OuWealth',
           description: 'Accumulate your wealth in an instant',
-          theme_color: '#1565C0',
+          theme_color: '#1B4D8C',
           background_color: '#FFFFFF',
           display: 'standalone',
           start_url: '/',

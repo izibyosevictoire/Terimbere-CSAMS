@@ -5,7 +5,10 @@ const ORANGE = '#FF7A00'
 const TANGERINE = '#FF5C00'
 const BLACK = '#0A0A0A'
 const WHITE = '#FFFFFF'
-const BLUE = '#1565C0'
+/** Sampled from the OuWealth “Wealth” wordmark. */
+const BLUE = '#1B4D8C'
+const BLUE_DARK = '#143A6B'
+const BLUE_LIGHT = '#4A7AB8'
 
 const fontBody = "Candara, Calibri, 'Segoe UI', sans-serif"
 const fontHeading = "Georgia, 'Times New Roman', serif"
@@ -59,6 +62,11 @@ const base: ThemeOptions = {
         },
         sizeSmall: { minHeight: 36 },
         sizeLarge: { minHeight: 48 },
+        containedPrimary: {
+          backgroundColor: BLUE,
+          color: WHITE,
+          '&:hover': { backgroundColor: BLUE_DARK },
+        },
       },
     },
     MuiIconButton: {
@@ -99,8 +107,8 @@ export const lightTheme = createTheme({
     mode: 'light',
     primary: {
       main: BLUE,
-      dark: '#0D47A1',
-      light: '#42A5F5',
+      dark: BLUE_DARK,
+      light: BLUE_LIGHT,
       contrastText: WHITE,
     },
     secondary: {
@@ -130,10 +138,10 @@ export const darkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#42A5F5',
+      main: BLUE_LIGHT,
       dark: BLUE,
-      light: '#90CAF9',
-      contrastText: BLACK,
+      light: '#8FB3DC',
+      contrastText: WHITE,
     },
     secondary: {
       main: '#FF9A3D',
@@ -152,6 +160,6 @@ export const darkTheme = createTheme({
     success: { main: '#66BB6A' },
     warning: { main: TANGERINE },
     error: { main: '#EF5350' },
-    info: { main: '#42A5F5' },
+    info: { main: BLUE_LIGHT },
   },
 })

@@ -195,21 +195,34 @@ export function AppLayout() {
             </Box>
           ) : null}
 
-          <Box sx={{ flex: 1 }} />
+          <Box sx={{ flex: 1, minWidth: 0 }} />
 
-          {isMdUp ? (
-            <>
-              <LanguageSwitcher onDark />
-              <ThemeSwitcher onDark />
-              <PwaInstallButton />
-              {isCoopAdmin || isMember ? <CooperativeSelector onDark /> : null}
-            </>
-          ) : (
-            <PwaInstallButton />
-          )}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: { xs: 0.25, md: 0.5 },
+              flexShrink: 0,
+              minWidth: 0,
+            }}
+          >
+            {isMdUp ? (
+              <>
+                <LanguageSwitcher onDark />
+                <ThemeSwitcher onDark />
+                <PwaInstallButton />
+                {isCoopAdmin || isMember ? <CooperativeSelector onDark /> : null}
+              </>
+            ) : (
+              <>
+                <ThemeSwitcher onDark />
+                <PwaInstallButton />
+              </>
+            )}
 
-          <NotificationBell />
-          <UserMenu />
+            <NotificationBell />
+            <UserMenu />
+          </Box>
         </Toolbar>
       </AppBar>
       <OfflineBanner />

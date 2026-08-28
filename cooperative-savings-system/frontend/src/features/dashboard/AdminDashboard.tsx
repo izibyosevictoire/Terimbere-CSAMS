@@ -488,7 +488,7 @@ export function AdminDashboard({ cooperativeId }: AdminDashboardProps) {
             border: '1px solid',
             borderColor: 'divider',
             borderRadius: 2,
-            bgcolor: 'rgba(21, 101, 192, 0.04)',
+            bgcolor: 'rgba(27, 77, 140, 0.04)',
           }}
         >
           <MyMemberStatusSection cooperativeId={cooperativeId} compact showQuickLinks />

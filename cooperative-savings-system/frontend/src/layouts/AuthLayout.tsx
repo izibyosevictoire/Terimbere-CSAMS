@@ -15,8 +15,8 @@ export function AuthLayout() {
         alignItems: 'center',
         position: 'relative',
         background: dark
-          ? 'radial-gradient(ellipse at 15% 0%, rgba(21,101,192,0.32) 0%, transparent 52%), radial-gradient(ellipse at 95% 85%, rgba(255,122,0,0.1) 0%, transparent 42%), linear-gradient(160deg, #0A0A0A 0%, #121212 100%)'
-          : 'radial-gradient(ellipse at 15% 0%, rgba(21,101,192,0.16) 0%, transparent 52%), radial-gradient(ellipse at 95% 85%, rgba(255,122,0,0.08) 0%, transparent 42%), linear-gradient(160deg, #FFFFFF 0%, #F4F8FD 60%, #E8F1FB 100%)',
+          ? 'radial-gradient(ellipse at 15% 0%, rgba(27,77,140,0.32) 0%, transparent 52%), radial-gradient(ellipse at 95% 85%, rgba(255,122,0,0.1) 0%, transparent 42%), linear-gradient(160deg, #0A0A0A 0%, #121212 100%)'
+          : 'radial-gradient(ellipse at 15% 0%, rgba(27,77,140,0.16) 0%, transparent 52%), radial-gradient(ellipse at 95% 85%, rgba(255,122,0,0.08) 0%, transparent 42%), linear-gradient(160deg, #FFFFFF 0%, #F4F8FD 60%, #E8F1FB 100%)',
       }}
     >
       <Box

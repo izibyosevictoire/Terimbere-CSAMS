@@ -3,13 +3,14 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlineOutlined'
 import {
   Avatar,
+  Box,
   Button,
-  Chip,
   Divider,
   ListItemIcon,
   ListItemText,
   Menu,
   MenuItem,
+  Typography,
 } from '@mui/material'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -55,32 +56,54 @@ export function UserMenu() {
       <Button
         color="inherit"
         onClick={(e) => setAnchor(e.currentTarget)}
-        startIcon={
-          <Avatar sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 14 }}>
-            {(label[0] || 'U').toUpperCase()}
-          </Avatar>
-        }
-        endIcon={
-          <Chip label={badgeLabel} size="small" color="primary" sx={{ height: 22, display: { xs: 'none', sm: 'inline-flex' } }} />
-        }
         aria-haspopup="menu"
         aria-label={t('nav.profile')}
         sx={{
-          minHeight: 40,
+          minHeight: 44,
+          minWidth: 0,
+          maxWidth: { xs: 148, sm: 220 },
+          flexShrink: 0,
+          px: 1,
           textTransform: 'none',
-          maxWidth: { xs: 140, sm: 220 },
-          '& .MuiButton-startIcon': { mr: 1 },
+          color: '#FFFFFF',
+          justifyContent: 'flex-start',
+          gap: 1,
         }}
       >
-        <span
-          style={{
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {label}
-        </span>
+        <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: 14, flexShrink: 0 }}>
+          {(label[0] || 'U').toUpperCase()}
+        </Avatar>
+        <Box sx={{ minWidth: 0, textAlign: 'left' }}>
+          <Typography
+            component="span"
+            sx={{
+              display: 'block',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              fontWeight: 600,
+              fontSize: '0.875rem',
+              lineHeight: 1.25,
+            }}
+          >
+            {label}
+          </Typography>
+          <Typography
+            component="span"
+            sx={{
+              display: { xs: 'none', sm: 'block' },
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              fontSize: '0.7rem',
+              lineHeight: 1.2,
+              opacity: 0.72,
+              fontWeight: 500,
+            }}
+          >
+            {badgeLabel}
+          </Typography>
+        </Box>
       </Button>
       <Menu
         anchorEl={anchor}
@@ -89,6 +112,15 @@ export function UserMenu() {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
+        <Box sx={{ px: 2, py: 1.25, minWidth: 200 }}>
+          <Typography sx={{ fontWeight: 700 }} noWrap>
+            {label}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {badgeLabel}
+          </Typography>
+        </Box>
+        <Divider />
         <MenuItem
           onClick={() => {
             setAnchor(null)
