@@ -146,6 +146,10 @@ apiClient.interceptors.response.use(
   },
 )
 
+export function isNotFoundError(error: unknown): boolean {
+  return axios.isAxiosError(error) && error.response?.status === 404
+}
+
 export function getErrorMessage(error: unknown, fallback = 'Something went wrong'): string {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as ApiErrorBody | undefined

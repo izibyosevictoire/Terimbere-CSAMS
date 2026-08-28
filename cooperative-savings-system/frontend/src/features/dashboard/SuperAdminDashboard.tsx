@@ -13,10 +13,14 @@ import { useAppDispatch, useAppSelector } from '@/app/store/hooks'
 import { setSelectedCooperativeId } from '@/app/store/authSlice'
 import { getErrorMessage } from '@/shared/api/client'
 import { fetchCooperatives } from '@/shared/api/cooperatives'
-import { fetchPlatformOverview } from '@/shared/api/dashboard'
+import { fetchDashboardSummary, fetchPlatformOverviewIfAvailable } from '@/shared/api/dashboard'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { MetricCard } from '@/shared/components/MetricCard'
 import { ROUTES } from '@/shared/constants/routes'
+import {
+  applyCooperativeSummaries,
+  platformOverviewFromCooperatives,
+} from './platformOverviewFallback'
 import { SuperAdminOverviewCharts } from './SuperAdminOverviewCharts'
 
 export function SuperAdminDashboard() {
@@ -37,12 +41,36 @@ export function SuperAdminDashboard() {
 
   const overviewQuery = useQuery({
     queryKey: ['platform', 'dashboard', 'overview'],
-    queryFn: fetchPlatformOverview,
+    queryFn: fetchPlatformOverviewIfAvailable,
   })
 
   const rows = query.data?.content ?? []
-  const overview = overviewQuery.data
+  const liveOverview = overviewQuery.data ?? undefined
+  const usingDerivedOverview = overviewQuery.isSuccess && overviewQuery.data === null
+
+  const summariesQuery = useQuery({
+    queryKey: ['platform', 'dashboard', 'derived-summaries', rows.map((row) => row.id)],
+    enabled: usingDerivedOverview && rows.length > 0,
+    queryFn: async () => {
+      const results = await Promise.allSettled(rows.map((row) => fetchDashboardSummary(row.id)))
+      return results.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []))
+    },
+  })
+
+  const derivedOverview =
+    usingDerivedOverview && query.data
+      ? applyCooperativeSummaries(
+          platformOverviewFromCooperatives(query.data.content, query.data.totalElements),
+          summariesQuery.data ?? [],
+        )
+      : undefined
+  const overview = liveOverview ?? derivedOverview
+  const hasLiveOverview = Boolean(liveOverview)
+  const summariesReady =
+    summariesQuery.isSuccess && (rows.length === 0 || (summariesQuery.data?.length ?? 0) > 0)
+  const countsReady = hasLiveOverview || summariesReady
   const total = overview?.totalCooperatives ?? query.data?.totalElements ?? 0
+  const derivedLoading = usingDerivedOverview && summariesQuery.isFetching
 
   return (
     <Box>
@@ -107,7 +135,7 @@ export function SuperAdminDashboard() {
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
           <MetricCard
             label={t('dashboard.super.totalCooperatives')}
-            value={overviewQuery.isLoading && !overview ? undefined : String(total)}
+            value={overviewQuery.isLoading && !overview && query.isLoading ? undefined : String(total)}
             hint={
               overview
                 ? t('dashboard.super.activeHint', { count: overview.activeCooperatives })
@@ -121,21 +149,21 @@ export function SuperAdminDashboard() {
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
           <MetricCard
             label={t('dashboard.super.totalMembers')}
-            value={overview ? String(overview.totalMembers) : undefined}
+            value={countsReady && overview ? String(overview.totalMembers) : undefined}
             hint={
-              overview
+              countsReady && overview
                 ? t('dashboard.super.activeMembersHint', { count: overview.activeMembers })
                 : undefined
             }
             icon={<GroupsIcon fontSize="small" />}
             accent="green"
-            loading={overviewQuery.isLoading}
+            loading={overviewQuery.isLoading || derivedLoading}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
           <MetricCard
             label={t('dashboard.super.totalUsers')}
-            value={overview ? String(overview.totalUsers) : undefined}
+            value={hasLiveOverview && overview ? String(overview.totalUsers) : undefined}
             icon={<PeopleAltIcon fontSize="small" />}
             accent="purple"
             loading={overviewQuery.isLoading}
@@ -145,19 +173,19 @@ export function SuperAdminDashboard() {
           <MetricCard
             label={t('dashboard.super.pendingReviews')}
             value={
-              overview
+              countsReady && overview
                 ? String(overview.pendingContributionReviews + overview.pendingSpecialContributions)
                 : undefined
             }
             icon={<HourglassEmptyIcon fontSize="small" />}
             accent="gold"
-            loading={overviewQuery.isLoading}
+            loading={overviewQuery.isLoading || derivedLoading}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
           <MetricCard
             label={t('dashboard.super.pendingLoans')}
-            value={overview ? String(overview.pendingLoans) : undefined}
+            value={hasLiveOverview && overview ? String(overview.pendingLoans) : undefined}
             icon={<HourglassEmptyIcon fontSize="small" />}
             accent="orange"
             loading={overviewQuery.isLoading}
@@ -166,10 +194,10 @@ export function SuperAdminDashboard() {
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
           <MetricCard
             label={t('dashboard.super.overdueLoans')}
-            value={overview ? String(overview.overdueLoans) : undefined}
+            value={countsReady && overview ? String(overview.overdueLoans) : undefined}
             icon={<WarningAmberIcon fontSize="small" />}
             accent="red"
-            loading={overviewQuery.isLoading}
+            loading={overviewQuery.isLoading || derivedLoading}
           />
         </Grid>
       </Grid>

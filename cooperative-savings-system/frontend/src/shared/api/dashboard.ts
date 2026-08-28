@@ -1,4 +1,4 @@
-import { apiClient } from './client'
+import { apiClient, isNotFoundError } from './client'
 import { unwrapApiData } from './auth'
 import type { ApiResponse } from '@/shared/types/api'
 import type {
@@ -37,4 +37,14 @@ export async function fetchPlatformOverview(): Promise<PlatformOverview> {
     '/platform/dashboard/overview',
   )
   return mapPlatformOverview(unwrapApiData(response.data))
+}
+
+/** `null` means the running backend does not expose the platform overview route yet. */
+export async function fetchPlatformOverviewIfAvailable(): Promise<PlatformOverview | null> {
+  try {
+    return await fetchPlatformOverview()
+  } catch (error) {
+    if (isNotFoundError(error)) return null
+    throw error
+  }
 }
