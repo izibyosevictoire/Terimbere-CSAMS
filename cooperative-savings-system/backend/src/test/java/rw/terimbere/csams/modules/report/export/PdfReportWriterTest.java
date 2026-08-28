@@ -55,4 +55,30 @@ class PdfReportWriterTest {
         assertThat(pdf.length).isGreaterThan(200);
         assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
     }
+
+    @Test
+    void brandsPdfWithLogoCandaraAndSystemNavy() {
+        assertThat(PdfReportStyle.hasLogo()).isTrue();
+        assertThat(PdfReportStyle.hasCandara()).isTrue();
+        assertThat(PdfReportStyle.BRAND_BLUE.getRGB()).isEqualTo(new java.awt.Color(0x1B, 0x4D, 0x8C).getRGB());
+
+        byte[] pdf = PdfReportWriter.write(
+                ReportHeaderMeta.builder()
+                        .cooperativeName("Demo Coop")
+                        .reportTitle("Contributions")
+                        .selectedPeriod("2026-01-01 to 2026-08-20")
+                        .generatedAt(Instant.parse("2026-08-20T10:00:00Z"))
+                        .generatedBy("admin")
+                        .currency("RWF")
+                        .build(),
+                List.of(ReportSheetData.builder()
+                        .sheetName("Contributions")
+                        .headers(List.of("Member", "Amount"))
+                        .rows(List.of(List.of("Jane", new BigDecimal("100.0000"))))
+                        .build()));
+
+        assertThat(pdf.length).isGreaterThan(200);
+        assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
+        assertThat(new String(pdf, StandardCharsets.ISO_8859_1)).contains("Candara");
+    }
 }

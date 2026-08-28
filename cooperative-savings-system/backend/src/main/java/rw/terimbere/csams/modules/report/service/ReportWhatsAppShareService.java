@@ -51,7 +51,7 @@ public class ReportWhatsAppShareService {
         }
 
         ReportService.ReportBinaryExport export = reportService.export(cooperativeId, request, httpRequest);
-        String caption = "TERIMBERE report: " + request.getReportType();
+        String caption = "OuWealth Community report: " + request.getReportType();
         whatsAppCloudClient.sendDocument(recipient, export.content(), export.filename(), caption);
 
         UserPrincipal principal = authorizationService.currentPrincipal();

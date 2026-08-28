@@ -4,7 +4,7 @@ import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
-import com.lowagie.text.FontFactory;
+import com.lowagie.text.Image;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.Phrase;
@@ -28,22 +28,13 @@ import rw.terimbere.csams.modules.report.dto.ReportHeaderMeta;
 import rw.terimbere.csams.modules.report.dto.ReportSheetData;
 
 /**
- * Landscape PDF with a branded header and a zebra-striped data table.
+ * Landscape PDF with the OuWealth logo, system name, navy accents, and Candara table type.
  */
 public final class PdfReportWriter {
 
     private static final DateTimeFormatter DATE_TIME =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'").withZone(ZoneOffset.UTC);
     private static final DateTimeFormatter DATE = DateTimeFormatter.ISO_LOCAL_DATE;
-    private static final Color BRAND_BLUE = new Color(21, 101, 192);
-    private static final Color BRAND_ORANGE = new Color(255, 122, 0);
-    private static final Color HEADER_BG = new Color(21, 101, 192);
-    private static final Color HEADER_LINE = new Color(13, 71, 161);
-    private static final Color ZEBRA = new Color(241, 246, 252);
-    private static final Color TOTALS_BG = new Color(255, 243, 224);
-    private static final Color GRID = new Color(210, 222, 235);
-    private static final Color META_BG = new Color(245, 248, 252);
-    private static final Color MUTED = new Color(90, 98, 112);
 
     private PdfReportWriter() {}
 
@@ -82,39 +73,56 @@ public final class PdfReportWriter {
     }
 
     private static void writeBanner(Document document, ReportHeaderMeta header) throws DocumentException {
-        PdfPTable banner = new PdfPTable(1);
+        Image logo = PdfReportStyle.logo();
+        PdfPTable banner = new PdfPTable(logo == null ? 1 : 2);
         banner.setWidthPercentage(100);
-        banner.setSpacingAfter(10);
+        banner.setSpacingAfter(0);
+        if (logo != null) {
+            banner.setWidths(new float[] {2.15f, 7.85f});
+            PdfPCell logoCell = new PdfPCell(logo, false);
+            logoCell.setBorder(Rectangle.NO_BORDER);
+            logoCell.setPadding(2);
+            logoCell.setPaddingRight(10);
+            logoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            banner.addCell(logoCell);
+        }
 
-        PdfPCell brand = new PdfPCell(new Phrase(
-                "TERIMBERE CSAMS", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, Color.WHITE)));
-        brand.setBackgroundColor(BRAND_BLUE);
-        brand.setBorder(Rectangle.NO_BORDER);
-        brand.setPadding(8);
-        brand.setPaddingBottom(4);
-        banner.addCell(brand);
-
-        PdfPCell title = new PdfPCell(new Phrase(
+        PdfPTable titles = new PdfPTable(1);
+        titles.setWidthPercentage(100);
+        titles.addCell(textCell(
+                PdfReportStyle.SYSTEM_NAME,
+                PdfReportStyle.heading(13, PdfReportStyle.BRAND_BLUE),
+                Element.ALIGN_LEFT,
+                2,
+                1));
+        titles.addCell(textCell(
                 pdfText(header.getReportTitle(), "Report"),
-                FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, Color.WHITE)));
-        title.setBackgroundColor(BRAND_BLUE);
-        title.setBorder(Rectangle.NO_BORDER);
-        title.setPadding(8);
-        title.setPaddingTop(0);
-        banner.addCell(title);
+                PdfReportStyle.heading(16, Color.BLACK),
+                Element.ALIGN_LEFT,
+                1,
+                4));
 
-        PdfPCell accent = new PdfPCell(new Phrase(" "));
-        accent.setBackgroundColor(BRAND_ORANGE);
-        accent.setBorder(Rectangle.NO_BORDER);
-        accent.setFixedHeight(4f);
-        banner.addCell(accent);
-
+        PdfPCell titlesCell = new PdfPCell(titles);
+        titlesCell.setBorder(Rectangle.NO_BORDER);
+        titlesCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        titlesCell.setPadding(2);
+        banner.addCell(titlesCell);
         document.add(banner);
+
+        PdfPTable accent = new PdfPTable(1);
+        accent.setWidthPercentage(100);
+        accent.setSpacingAfter(10);
+        PdfPCell bar = new PdfPCell(new Phrase(" "));
+        bar.setBackgroundColor(PdfReportStyle.BRAND_ORANGE);
+        bar.setBorder(Rectangle.NO_BORDER);
+        bar.setFixedHeight(4f);
+        accent.addCell(bar);
+        document.add(accent);
     }
 
     private static void writeMeta(Document document, ReportHeaderMeta header) throws DocumentException {
-        Font labelFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, MUTED);
-        Font valueFont = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.BLACK);
+        Font labelFont = PdfReportStyle.tableBold(8, PdfReportStyle.MUTED);
+        Font valueFont = PdfReportStyle.table(9, Color.BLACK);
 
         PdfPTable meta = new PdfPTable(4);
         meta.setWidthPercentage(100);
@@ -137,14 +145,14 @@ public final class PdfReportWriter {
 
     private static void addMeta(PdfPTable table, String label, String value, Font labelFont, Font valueFont) {
         PdfPCell labelCell = new PdfPCell(new Phrase(label.toUpperCase(Locale.ROOT), labelFont));
-        labelCell.setBackgroundColor(META_BG);
-        labelCell.setBorderColor(GRID);
+        labelCell.setBackgroundColor(PdfReportStyle.META_BG);
+        labelCell.setBorderColor(PdfReportStyle.GRID);
         labelCell.setPadding(6);
         table.addCell(labelCell);
 
         PdfPCell valueCell = new PdfPCell(new Phrase(pdfText(value, ""), valueFont));
-        valueCell.setBackgroundColor(META_BG);
-        valueCell.setBorderColor(GRID);
+        valueCell.setBackgroundColor(PdfReportStyle.META_BG);
+        valueCell.setBorderColor(PdfReportStyle.GRID);
         valueCell.setPadding(6);
         table.addCell(valueCell);
     }
@@ -152,15 +160,14 @@ public final class PdfReportWriter {
     private static Paragraph sectionTitle(String name, ReportSheetData data) {
         int rows = data.getRows() == null ? 0 : data.getRows().size();
         String label = pdfText(name, "Data") + "  (" + rows + (rows == 1 ? " row)" : " rows)");
-        Font font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, BRAND_BLUE);
-        Paragraph paragraph = new Paragraph(label, font);
+        Paragraph paragraph = new Paragraph(label, PdfReportStyle.heading(11, PdfReportStyle.BRAND_BLUE));
         paragraph.setSpacingBefore(8);
         paragraph.setSpacingAfter(6);
         return paragraph;
     }
 
     private static Paragraph body(String text) {
-        Paragraph paragraph = new Paragraph(text, FontFactory.getFont(FontFactory.HELVETICA, 10, MUTED));
+        Paragraph paragraph = new Paragraph(text, PdfReportStyle.table(10, PdfReportStyle.MUTED));
         paragraph.setSpacingBefore(8);
         return paragraph;
     }
@@ -174,9 +181,9 @@ public final class PdfReportWriter {
         table.setSpacingAfter(14);
         table.setWidths(columnWidths(columns));
 
-        Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, Color.WHITE);
-        Font cellFont = FontFactory.getFont(FontFactory.HELVETICA, 8, Color.BLACK);
-        Font totalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, Color.BLACK);
+        Font headerFont = PdfReportStyle.tableBold(8, Color.WHITE);
+        Font cellFont = PdfReportStyle.table(8, Color.BLACK);
+        Font totalFont = PdfReportStyle.tableBold(8, Color.BLACK);
 
         if (headers.isEmpty()) {
             table.addCell(headerCell("Value", headerFont));
@@ -208,8 +215,8 @@ public final class PdfReportWriter {
             for (int i = 0; i < columns; i++) {
                 Object value = i < data.getTotalsRow().size() ? data.getTotalsRow().get(i) : null;
                 PdfPCell cell = bodyCell(formatValue(value), totalFont, false, isNumeric(value));
-                cell.setBackgroundColor(TOTALS_BG);
-                cell.setBorderColor(BRAND_ORANGE);
+                cell.setBackgroundColor(PdfReportStyle.TOTALS_BG);
+                cell.setBorderColor(PdfReportStyle.BRAND_ORANGE);
                 table.addCell(cell);
             }
         }
@@ -227,8 +234,8 @@ public final class PdfReportWriter {
 
     private static PdfPCell headerCell(String text, Font font) {
         PdfPCell cell = new PdfPCell(new Phrase(pdfText(text, ""), font));
-        cell.setBackgroundColor(HEADER_BG);
-        cell.setBorderColor(HEADER_LINE);
+        cell.setBackgroundColor(PdfReportStyle.BRAND_BLUE);
+        cell.setBorderColor(PdfReportStyle.BRAND_BLUE_DARK);
         cell.setPadding(7);
         cell.setHorizontalAlignment(Element.ALIGN_LEFT);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
@@ -241,11 +248,22 @@ public final class PdfReportWriter {
         cell.setPaddingLeft(6);
         cell.setPaddingRight(6);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setBorderColor(GRID);
+        cell.setBorderColor(PdfReportStyle.GRID);
         cell.setHorizontalAlignment(numeric ? Element.ALIGN_RIGHT : Element.ALIGN_LEFT);
         if (zebra) {
-            cell.setBackgroundColor(ZEBRA);
+            cell.setBackgroundColor(PdfReportStyle.ZEBRA);
         }
+        return cell;
+    }
+
+    private static PdfPCell textCell(String text, Font font, int alignment, float padTop, float padBottom) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setHorizontalAlignment(alignment);
+        cell.setPaddingTop(padTop);
+        cell.setPaddingBottom(padBottom);
+        cell.setPaddingLeft(0);
+        cell.setPaddingRight(0);
         return cell;
     }
 
@@ -289,7 +307,7 @@ public final class PdfReportWriter {
     }
 
     /**
-     * Helvetica is WinAnsi-only. Unknown characters throw on some JREs (e.g. Alpine on Render).
+     * Built-in Helvetica is WinAnsi-only. Candara is embedded with Identity-H, so letters stay as-is.
      */
     private static String pdfText(String text, String blankFallback) {
         if (text == null || text.isBlank()) {
@@ -303,6 +321,9 @@ public final class PdfReportWriter {
                 .replace('\u2013', '-')
                 .replace('\u2014', '-')
                 .replace('\u00A0', ' ');
+        if (PdfReportStyle.hasCandara()) {
+            return normalized.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ');
+        }
         StringBuilder safe = new StringBuilder(normalized.length());
         for (int i = 0; i < normalized.length(); i++) {
             char ch = normalized.charAt(i);
@@ -318,10 +339,13 @@ public final class PdfReportWriter {
     }
 
     private static final class FooterEvent extends PdfPageEventHelper {
-        private final String coopName;
+        private final String line;
 
         private FooterEvent(ReportHeaderMeta header) {
-            this.coopName = pdfText(header == null ? "" : header.getCooperativeName(), "TERIMBERE");
+            String coop = pdfText(header == null ? "" : header.getCooperativeName(), "");
+            this.line = coop.isBlank()
+                    ? PdfReportStyle.SYSTEM_NAME + "  ·  Confidential"
+                    : PdfReportStyle.SYSTEM_NAME + "  ·  " + coop + "  ·  Confidential";
         }
 
         @Override
@@ -329,17 +353,17 @@ public final class PdfReportWriter {
             PdfPTable footer = new PdfPTable(2);
             footer.setTotalWidth(document.right() - document.left());
             footer.setLockedWidth(true);
-            Font font = FontFactory.getFont(FontFactory.HELVETICA, 7, MUTED);
+            Font font = PdfReportStyle.table(7, PdfReportStyle.MUTED);
 
-            PdfPCell left = new PdfPCell(new Phrase(coopName + "  ·  Confidential", font));
+            PdfPCell left = new PdfPCell(new Phrase(line, font));
             left.setBorder(Rectangle.TOP);
-            left.setBorderColor(GRID);
+            left.setBorderColor(PdfReportStyle.GRID);
             left.setPaddingTop(6);
             footer.addCell(left);
 
             PdfPCell right = new PdfPCell(new Phrase("Page " + writer.getPageNumber(), font));
             right.setBorder(Rectangle.TOP);
-            right.setBorderColor(GRID);
+            right.setBorderColor(PdfReportStyle.GRID);
             right.setHorizontalAlignment(Element.ALIGN_RIGHT);
             right.setPaddingTop(6);
             footer.addCell(right);
