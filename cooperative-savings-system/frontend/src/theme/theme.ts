@@ -62,7 +62,7 @@ const base: ThemeOptions = {
         },
         sizeSmall: { minHeight: 36 },
         sizeLarge: { minHeight: 48 },
-        containedPrimary: {
+        contained: {
           backgroundColor: BLUE,
           color: WHITE,
           '&:hover': { backgroundColor: BLUE_DARK },
