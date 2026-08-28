@@ -10,23 +10,19 @@ interface AuthBrandProps {
 export function AuthBrand({ title, tagline, subtitle }: AuthBrandProps) {
   return (
     <Box sx={{ textAlign: 'center' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5, px: 1 }}>
-        <BrandLogo variant="full" animate />
-      </Box>
-      <Typography
+      <Box
         component="h1"
         sx={{
-          fontFamily: 'var(--font-brand)',
-          fontSize: { xs: '1.35rem', sm: '1.6rem' },
-          fontWeight: 700,
-          letterSpacing: '-0.02em',
-          color: 'text.primary',
-          lineHeight: 1.2,
-          mb: tagline || subtitle ? 1 : 0,
+          m: 0,
+          mb: tagline || subtitle ? 1.75 : 0,
+          display: 'flex',
+          justifyContent: 'center',
+          fontSize: 0,
+          fontWeight: 400,
         }}
       >
-        {title}
-      </Typography>
+        <BrandLogo variant="full" animate label={title} />
+      </Box>
       {tagline ? (
         <Typography
           variant="h6"

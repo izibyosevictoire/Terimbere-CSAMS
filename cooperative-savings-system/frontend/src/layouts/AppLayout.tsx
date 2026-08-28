@@ -13,7 +13,6 @@ import {
   ListItemIcon,
   ListItemText,
   Toolbar,
-  Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material'
@@ -97,16 +96,8 @@ export function AppLayout() {
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar sx={{ px: 2.5, gap: 1.5, minHeight: 64 }}>
-        <BrandLogo size={36} />
-        <Box sx={{ minWidth: 0 }}>
-          <Typography
-            variant="h6"
-            sx={{ lineHeight: 1.2, fontSize: '1rem', overflow: 'hidden', textOverflow: 'ellipsis' }}
-          >
-            {t('app.name')}
-          </Typography>
-        </Box>
+      <Toolbar sx={{ px: 2, minHeight: 72, justifyContent: 'flex-start' }}>
+        <BrandLogo size={44} />
       </Toolbar>
       <Divider />
       <Box sx={{ px: 2, py: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -154,28 +145,19 @@ export function AppLayout() {
             </IconButton>
           ) : null}
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, flex: { xs: 1, md: '0 1 auto' } }}>
-            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-              <BrandLogo size={32} sx={{ bgcolor: '#FFFFFF', borderRadius: 1, px: 0.5, py: 0.25 }} />
-            </Box>
-            <Typography
-              variant="h6"
-              component={NavLink}
-              to={ROUTES.dashboard}
-              sx={{
-                textDecoration: 'none',
-                color: '#FFFFFF',
-                fontFamily: 'var(--font-brand)',
-                fontWeight: 700,
-                fontSize: { xs: '0.95rem', sm: '1.05rem' },
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                minWidth: 0,
-              }}
-            >
-              {t('app.name')}
-            </Typography>
+          <Box
+            component={NavLink}
+            to={ROUTES.dashboard}
+            aria-label={t('app.name')}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              minWidth: 0,
+              textDecoration: 'none',
+              mr: { md: 1 },
+            }}
+          >
+            <BrandLogo size={40} onDark />
           </Box>
 
           {isMdUp ? (

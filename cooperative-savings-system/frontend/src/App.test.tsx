@@ -17,8 +17,8 @@ describe('App', () => {
 
   it('renders the OuWealth Community brand on the login route', async () => {
     render(<App />)
-    expect(await screen.findByAltText('OuWealth Community')).toBeInTheDocument()
-    expect(await screen.findByText('OuWealth Community')).toBeInTheDocument()
+    expect(await screen.findByRole('img', { name: 'OuWealth Community' })).toBeInTheDocument()
+    expect(screen.queryByText('OuWealth Community')).not.toBeInTheDocument()
     expect(await screen.findByText('Accumulate your wealth in an instant')).toBeInTheDocument()
   })
 })
