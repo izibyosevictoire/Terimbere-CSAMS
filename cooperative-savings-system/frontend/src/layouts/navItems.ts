@@ -69,7 +69,7 @@ export const memberNavItems: NavItem[] = [
   { labelKey: 'nav.profile', path: ROUTES.profile, icon: PersonIcon },
 ]
 
-/** Admin modules shown under Admin ▼ (and in mobile drawer for admins). */
+/** Officer modules shown under Manage ▼ (and in the mobile drawer). */
 export const adminModuleNavItems: NavItem[] = [
   { labelKey: 'nav.members', path: ROUTES.members, icon: GroupsIcon, roles: SECRETARY_ACCESS_ROLES, group: 'main' },
   {

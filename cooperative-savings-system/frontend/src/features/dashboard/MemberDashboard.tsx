@@ -1,7 +1,6 @@
 import { Box, Typography } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import { useAppSelector } from '@/app/store/hooks'
-import { RoleDutiesNote } from '@/shared/components/RoleDutiesNote'
 import { MonthlyContributionsChart } from './MonthlyContributionsChart'
 import { MyMemberStatusSection } from './MyMemberStatusSection'
 
@@ -22,10 +21,6 @@ export function MemberDashboard({ cooperativeId }: MemberDashboardProps) {
         <Typography variant="body1" color="text.secondary">
           {t('dashboard.member.description')}
         </Typography>
-      </Box>
-
-      <Box sx={{ mb: 3, maxWidth: 720 }}>
-        <RoleDutiesNote roles={user?.roles} />
       </Box>
 
       <Box sx={{ mb: 3 }}>

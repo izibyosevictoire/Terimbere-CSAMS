@@ -9,7 +9,7 @@ import SavingsIcon from '@mui/icons-material/Savings'
 import TrendingUpIcon from '@mui/icons-material/TrendingUp'
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
-import { Box, Button, Chip, Grid, Paper, Stack, Typography } from '@mui/material'
+import { Box, Button, Grid, Paper, Stack, Typography } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import { Link as RouterLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -27,7 +27,6 @@ import { ErrorState } from '@/shared/components/ErrorState'
 import { MetricCard } from '@/shared/components/MetricCard'
 import { QuickActionsMenu } from '@/shared/components/QuickActionsMenu'
 import { ReportsMenu } from '@/shared/components/ReportsMenu'
-import { RoleDutiesNote } from '@/shared/components/RoleDutiesNote'
 import { ROUTES } from '@/shared/constants/routes'
 import type { DashboardSummary } from '@/shared/types/dashboard'
 import {
@@ -138,25 +137,6 @@ function showMemberTable(role: AppRole, canManageMembers: boolean): boolean {
 
 function showContributionsChart(role: AppRole): boolean {
   return role !== ROLE_LOAN_OFFICER
-}
-
-function dashboardTitleKey(role: AppRole): string {
-  switch (role) {
-    case ROLE_SECRETARY:
-      return 'dashboard.admin.titleSecretary'
-    case ROLE_ACCOUNTANT:
-      return 'dashboard.admin.titleAccountant'
-    case ROLE_LOAN_OFFICER:
-      return 'dashboard.admin.titleLoanOfficer'
-    case ROLE_VICE_PRESIDENT:
-      return 'dashboard.admin.titleVicePresident'
-    case ROLE_PRESIDENT:
-      return 'dashboard.admin.titlePresident'
-    case ROLE_SUPER_ADMIN:
-      return 'dashboard.admin.titleSuperAdmin'
-    default:
-      return 'dashboard.admin.title'
-  }
 }
 
 interface AdminDashboardProps {
@@ -393,21 +373,9 @@ export function AdminDashboard({ cooperativeId }: AdminDashboardProps) {
         }}
       >
         <Box>
-          <Stack direction="row" spacing={1.5} sx={{ flexWrap: 'wrap', alignItems: 'center' }} useFlexGap>
-            <Typography variant="h4" component="h1">
-              {t(dashboardTitleKey(officeRole))}
-            </Typography>
-            <Chip
-              label={
-                isSuperAdmin
-                  ? t('roles.superAdminBadge')
-                  : t(`roles.${officeRole}`, { defaultValue: t('dashboard.admin.adminChip') })
-              }
-              color="primary"
-              size="small"
-              sx={{ fontWeight: 700, letterSpacing: 0.4 }}
-            />
-          </Stack>
+          <Typography variant="h4" component="h1">
+            {t('dashboard.title')}
+          </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
             {cooperativeName || t('dashboard.description')}
           </Typography>
@@ -433,10 +401,6 @@ export function AdminDashboard({ cooperativeId }: AdminDashboardProps) {
           <QuickActionsMenu />
           <ReportsMenu />
         </Stack>
-      </Box>
-
-      <Box sx={{ mb: 3 }}>
-        <RoleDutiesNote roles={userRoles} />
       </Box>
 
       {summaryQuery.isError ? (
