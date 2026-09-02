@@ -29,6 +29,9 @@ public interface FineRepository extends JpaRepository<Fine, UUID> {
     List<Fine> findByCooperativeIdAndMemberUserIdOrderByIssuedDateDescCreatedAtDesc(
             UUID cooperativeId, UUID memberUserId);
 
+    List<Fine> findByCooperativeIdAndMemberUserIdAndIssuedDate(
+            UUID cooperativeId, UUID memberUserId, java.time.LocalDate issuedDate);
+
     List<Fine> findTop20ByCooperativeIdAndMemberUserIdOrderByIssuedDateDescCreatedAtDesc(
             UUID cooperativeId, UUID memberUserId);
 

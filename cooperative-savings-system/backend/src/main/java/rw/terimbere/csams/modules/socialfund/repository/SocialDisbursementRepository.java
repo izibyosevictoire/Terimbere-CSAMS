@@ -31,6 +31,9 @@ public interface SocialDisbursementRepository extends JpaRepository<SocialDisbur
             SocialDisbursementStatus status,
             Pageable pageable);
 
+    List<SocialDisbursement> findByCooperativeIdAndBeneficiaryMemberUserIdAndDisbursementDateAndAmount(
+            UUID cooperativeId, UUID beneficiaryMemberUserId, LocalDate disbursementDate, BigDecimal amount);
+
     long countByCooperativeIdAndStatus(UUID cooperativeId, SocialDisbursementStatus status);
 
     @Query(

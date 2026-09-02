@@ -81,7 +81,8 @@ public final class PdfReportWriter {
             banner.setWidths(new float[] {2.15f, 7.85f});
             PdfPCell logoCell = new PdfPCell(logo, false);
             logoCell.setBorder(Rectangle.NO_BORDER);
-            logoCell.setPadding(2);
+            logoCell.setBackgroundColor(null);
+            logoCell.setPadding(0);
             logoCell.setPaddingRight(10);
             logoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
             banner.addCell(logoCell);

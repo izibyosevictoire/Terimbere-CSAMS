@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   auditEntityLabel,
   auditUserLabel,
+  displayAuditEntityType,
   formatJsonBlock,
   parseJsonSafe,
   toIsoDateEnd,
@@ -57,5 +58,19 @@ describe('auditHelpers', () => {
       }),
     ).toBe('Terimbere Cooperative')
     expect(auditEntityLabel({ entityLabel: null, entityType: 'Fine' })).toBe('—')
+  })
+
+  it('maps Cooperative to Saving Scheme for display only', () => {
+    const t = (key: string) =>
+      key === 'auditLogs.entityTypes.Cooperative' ? 'Saving Scheme' : key
+    expect(displayAuditEntityType('Cooperative', t)).toBe('Saving Scheme')
+    expect(displayAuditEntityType('Fine', t)).toBe('Fine')
+    expect(displayAuditEntityType('Loan', t)).toBe('Loan')
+    expect(displayAuditEntityType('', t)).toBe('—')
+    expect(displayAuditEntityType(null, t)).toBe('—')
+    // Filter/API values stay Cooperative; only the table/detail label is translated.
+    const apiEntityType = 'Cooperative'
+    expect(apiEntityType).toBe('Cooperative')
+    expect(displayAuditEntityType(apiEntityType, t)).toBe('Saving Scheme')
   })
 })

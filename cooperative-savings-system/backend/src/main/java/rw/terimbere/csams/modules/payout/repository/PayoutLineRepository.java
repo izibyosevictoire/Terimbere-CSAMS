@@ -24,6 +24,9 @@ public interface PayoutLineRepository extends JpaRepository<PayoutLine, UUID> {
     List<PayoutLine> findByCooperativeIdAndMemberUserIdOrderByCreatedAtDesc(
             UUID cooperativeId, UUID memberUserId);
 
+    List<PayoutLine> findByCooperativeIdAndPayoutRunIdAndMemberUserIdAndPayoutAmount(
+            UUID cooperativeId, UUID payoutRunId, UUID memberUserId, BigDecimal payoutAmount);
+
     List<PayoutLine> findTop20ByCooperativeIdAndMemberUserIdOrderByCreatedAtDesc(
             UUID cooperativeId, UUID memberUserId);
 

@@ -28,6 +28,9 @@ public interface SocialContributionRepository extends JpaRepository<SocialContri
     Page<SocialContribution> findByCooperativeIdAndMemberUserIdAndStatus(
             UUID cooperativeId, UUID memberUserId, SocialContributionStatus status, Pageable pageable);
 
+    List<SocialContribution> findByCooperativeIdAndMemberUserIdAndContributionDateAndAmount(
+            UUID cooperativeId, UUID memberUserId, LocalDate contributionDate, BigDecimal amount);
+
     List<SocialContribution> findByCooperativeIdAndMemberUserIdOrderByContributionDateDescCreatedAtDesc(
             UUID cooperativeId, UUID memberUserId);
 

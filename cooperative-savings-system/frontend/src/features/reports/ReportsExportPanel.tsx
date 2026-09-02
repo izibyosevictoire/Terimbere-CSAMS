@@ -18,7 +18,6 @@ import { useSnackbar } from 'notistack'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getErrorMessage } from '@/shared/api/client'
-import { fetchCooperative } from '@/shared/api/cooperatives'
 import { fetchMembers } from '@/shared/api/members'
 import {
   exportReport,
@@ -69,22 +68,6 @@ export function ReportsExportPanel({
   const [shareIncludeFilters, setShareIncludeFilters] = useState(false)
   const [recipientPhone, setRecipientPhone] = useState('')
 
-  const cooperativeQuery = useQuery({
-    queryKey: ['cooperatives', cooperativeId],
-    queryFn: () => fetchCooperative(cooperativeId),
-    enabled: Boolean(cooperativeId),
-  })
-  const registrationDate = cooperativeQuery.data?.registrationDate ?? null
-
-  useEffect(() => {
-    if (!registrationDate) return
-    setFromDate((current) =>
-      dayjs(current).isBefore(dayjs(registrationDate), 'day')
-        ? registrationDate
-        : current,
-    )
-  }, [registrationDate])
-
   const typesQuery = useQuery({
     queryKey: ['reports', 'types', cooperativeId],
     queryFn: () => fetchReportTypes(cooperativeId),
@@ -128,7 +111,7 @@ export function ReportsExportPanel({
     ? reportSupportsTransactionType(reportType, selectedMeta)
     : false
 
-  const timelineIssue = validateReportTimeline(fromDate, toDate, today, registrationDate)
+  const timelineIssue = validateReportTimeline(fromDate, toDate, today)
   const timelineValid = timelineIssue == null
 
   const buildExportPayload = (type: string, includeFilters: boolean) => ({
@@ -142,7 +125,7 @@ export function ReportsExportPanel({
 
   const exportMutation = useMutation({
     mutationFn: ({ type, includeFilters }: { type: string; includeFilters: boolean }) => {
-      const issue = validateReportTimeline(fromDate, toDate, today, registrationDate)
+      const issue = validateReportTimeline(fromDate, toDate, today)
       if (issue) {
         throw new Error(t(`reports.export.validation.${issue}`))
       }
@@ -170,7 +153,7 @@ export function ReportsExportPanel({
       includeFilters: boolean
       phone: string
     }) => {
-      const issue = validateReportTimeline(fromDate, toDate, today, registrationDate)
+      const issue = validateReportTimeline(fromDate, toDate, today)
       if (issue) {
         throw new Error(t(`reports.export.validation.${issue}`))
       }
@@ -323,7 +306,6 @@ export function ReportsExportPanel({
             inputLabel: { shrink: true },
             htmlInput: {
               max: todayIso,
-              min: registrationDate || undefined,
             },
           }}
           fullWidth

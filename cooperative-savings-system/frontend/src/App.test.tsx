@@ -1,5 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { setThemePreference } from '@/app/store/uiSlice'
+import { store } from '@/app/store/store'
+import { BRAND_LOGO_ON_DARK_SRC, BRAND_LOGO_SRC } from '@/shared/components/BrandLogo'
 import App from './App'
 
 vi.mock('@/shared/api/auth', async (importOriginal) => {
@@ -16,10 +19,23 @@ describe('App', () => {
   })
 
   it('renders the OuWealth Community brand on the login route', async () => {
+    store.dispatch(setThemePreference('light'))
     render(<App />)
-    expect(await screen.findByRole('img', { name: 'OuWealth Community' })).toBeInTheDocument()
+    const logo = await screen.findByRole('img', { name: 'OuWealth Community' })
+    expect(logo).toBeInTheDocument()
+    expect(logo).toHaveAttribute('src', BRAND_LOGO_SRC)
     expect(screen.queryByText('OuWealth Community')).not.toBeInTheDocument()
     expect(await screen.findByText('Accumulate your wealth in an instant')).toBeInTheDocument()
     expect(screen.queryByText('Foundation status')).not.toBeInTheDocument()
+  })
+
+  it('uses the on-dark wordmark on the Dark Mode login canvas', async () => {
+    store.dispatch(setThemePreference('dark'))
+    render(<App />)
+    expect(await screen.findByRole('img', { name: 'OuWealth Community' })).toHaveAttribute(
+      'src',
+      BRAND_LOGO_ON_DARK_SRC,
+    )
+    store.dispatch(setThemePreference('light'))
   })
 })

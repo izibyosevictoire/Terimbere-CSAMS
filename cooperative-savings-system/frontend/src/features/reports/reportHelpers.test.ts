@@ -143,21 +143,16 @@ describe('report timeline validation', () => {
     expect(validateReportTimeline('2026-08-20', '2026-01-01', today)).toBe('fromAfterTo')
   })
 
-  it('rejects ranges longer than five years', () => {
-    expect(validateReportTimeline('2020-01-01', '2026-01-02', today)).toBe('rangeTooLong')
+  it('accepts ranges longer than five years and dates before registration', () => {
+    expect(validateReportTimeline('2020-01-01', '2026-01-02', today)).toBeNull()
+    expect(validateReportTimeline('2022-01-01', '2026-08-20', today, '2024-01-15')).toBeNull()
   })
 
   it('accepts a valid past range', () => {
     expect(validateReportTimeline('2026-01-01', '2026-08-20', today)).toBeNull()
   })
 
-  it('rejects a start date before cooperative registration', () => {
-    expect(validateReportTimeline('2026-01-01', '2026-08-20', today, '2026-03-01')).toBe(
-      'beforeRegistration',
-    )
-  })
-
-  it('defaults from registration date when that is after Jan 1', () => {
-    expect(defaultReportFromDate(today, '2026-03-15')).toBe('2026-03-15')
+  it('defaults from the start of the year even when registration is later', () => {
+    expect(defaultReportFromDate(today, '2026-03-15')).toBe('2026-01-01')
   })
 })

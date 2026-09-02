@@ -2,6 +2,7 @@ package rw.terimbere.csams.modules.investment.repository;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,8 @@ public interface InvestmentRepository extends JpaRepository<Investment, UUID> {
 
     Page<Investment> findByCooperativeIdAndStatus(
             UUID cooperativeId, InvestmentStatus status, Pageable pageable);
+
+    List<Investment> findByCooperativeIdAndNameIgnoreCase(UUID cooperativeId, String name);
 
     long countByCooperativeIdAndStatusIn(UUID cooperativeId, Collection<InvestmentStatus> statuses);
 

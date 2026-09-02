@@ -79,7 +79,7 @@ export function FinePaymentDialog({
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) => {
-      if (!cooperativeId) throw new Error('No cooperative selected')
+      if (!cooperativeId) throw new Error(t('cooperatives.noneSelected'))
       return uploadCooperativeFile(cooperativeId, file, 'FINE_PAYMENT_EVIDENCE')
     },
     onSuccess: (file) => {

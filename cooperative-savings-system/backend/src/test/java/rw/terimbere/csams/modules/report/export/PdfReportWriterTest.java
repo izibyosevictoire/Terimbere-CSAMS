@@ -81,4 +81,16 @@ class PdfReportWriterTest {
         assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
         assertThat(new String(pdf, StandardCharsets.ISO_8859_1)).contains("Candara");
     }
+
+    @Test
+    void logoPreservesAspectRatioAndDoesNotUpscale() {
+        com.lowagie.text.Image logo = PdfReportStyle.logo();
+        assertThat(logo).isNotNull();
+        assertThat(logo.getScaledWidth()).isLessThanOrEqualTo(168f);
+        assertThat(logo.getScaledHeight()).isLessThanOrEqualTo(46f);
+        assertThat(logo.getScaledWidth()).isLessThanOrEqualTo(logo.getPlainWidth() + 0.01f);
+        assertThat(logo.getScaledHeight()).isLessThanOrEqualTo(logo.getPlainHeight() + 0.01f);
+        assertThat(logo.getScaledWidth() / logo.getScaledHeight())
+                .isCloseTo(logo.getPlainWidth() / logo.getPlainHeight(), org.assertj.core.data.Offset.offset(0.01f));
+    }
 }

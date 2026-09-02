@@ -96,8 +96,15 @@ export function AppLayout() {
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar sx={{ px: 2, minHeight: 72, justifyContent: 'flex-start' }}>
-        <BrandLogo size={44} />
+      <Toolbar
+        sx={{
+          px: 2,
+          minHeight: 72,
+          justifyContent: 'flex-start',
+          bgcolor: 'transparent',
+        }}
+      >
+        <BrandLogo size={44} onDark={theme.palette.mode === 'dark'} />
       </Toolbar>
       <Divider />
       <Box sx={{ px: 2, py: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -154,6 +161,7 @@ export function AppLayout() {
               alignItems: 'center',
               minWidth: 0,
               textDecoration: 'none',
+              backgroundColor: 'transparent',
               mr: { md: 1 },
             }}
           >

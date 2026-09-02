@@ -40,16 +40,14 @@ class ReportTimelineValidatorTest {
     }
 
     @Test
-    void rejectsRangeLongerThanFiveYears() {
-        assertThatThrownBy(() -> ReportTimelineValidator.validate(request("2020-01-01", "2026-01-02"), TODAY, null))
-                .isInstanceOf(ValidationException.class);
+    void acceptsRangeLongerThanFiveYears() {
+        assertDoesNotThrow(() -> ReportTimelineValidator.validate(request("2020-01-01", "2026-01-02"), TODAY, null));
     }
 
     @Test
-    void rejectsFromBeforeRegistrationDate() {
-        assertThatThrownBy(() -> ReportTimelineValidator.validate(
-                        request("2026-01-01", "2026-08-20"), TODAY, LocalDate.of(2026, 3, 1)))
-                .isInstanceOf(ValidationException.class);
+    void acceptsFromBeforeRegistrationDate() {
+        assertDoesNotThrow(() -> ReportTimelineValidator.validate(
+                request("2022-01-01", "2026-08-20"), TODAY, LocalDate.of(2024, 1, 15)));
     }
 
     @Test

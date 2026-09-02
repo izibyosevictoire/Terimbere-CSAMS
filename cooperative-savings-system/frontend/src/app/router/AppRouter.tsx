@@ -23,6 +23,7 @@ import { LedgerPage } from '@/pages/LedgerPage'
 import { PayoutsPage } from '@/pages/PayoutsPage'
 import { PayoutDetailPage } from '@/pages/PayoutDetailPage'
 import { ReportsPage } from '@/pages/ReportsPage'
+import { HistoricalImportPage } from '@/pages/HistoricalImportPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { NotificationsPage } from '@/pages/NotificationsPage'
 import { AuditLogsPage } from '@/pages/AuditLogsPage'
@@ -92,6 +93,11 @@ export function AppRouter() {
               <Route path={ROUTES.payouts} element={<PayoutsPage />} />
               <Route path="/payouts/:runId" element={<PayoutDetailPage />} />
               <Route path={ROUTES.reports} element={<ReportsPage />} />
+              <Route
+                element={<RoleRoute roles={[...LEADERSHIP_ROLES]} />}
+              >
+                <Route path={ROUTES.historicalImport} element={<HistoricalImportPage />} />
+              </Route>
               <Route path={ROUTES.notifications} element={<NotificationsPage />} />
               <Route path={ROUTES.profile} element={<ProfilePage />} />
               <Route path={ROUTES.changePassword} element={<ChangePasswordPage />} />

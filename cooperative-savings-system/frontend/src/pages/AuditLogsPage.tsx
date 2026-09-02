@@ -13,7 +13,12 @@ import dayjs from 'dayjs'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppSelector } from '@/app/store/hooks'
-import { auditEntityLabel, auditUserLabel, formatJsonBlock } from '@/features/auditLogs'
+import {
+  auditEntityLabel,
+  auditUserLabel,
+  displayAuditEntityType,
+  formatJsonBlock,
+} from '@/features/auditLogs'
 import { fetchAuditLog, fetchAuditLogs } from '@/shared/api/auditLogs'
 import { getErrorMessage } from '@/shared/api/client'
 import { DateRangeFields } from '@/shared/components/DateRangeFields'
@@ -76,7 +81,7 @@ export function AuditLogsPage() {
       {
         id: 'entityType',
         label: t('auditLogs.fields.entityType'),
-        render: (row) => row.entityType || '—',
+        render: (row) => displayAuditEntityType(row.entityType, t),
       },
       {
         id: 'entityId',
@@ -254,7 +259,7 @@ export function AuditLogsPage() {
             />
             <DetailRow
               label={t('auditLogs.fields.entityType')}
-              value={detail.entityType || '—'}
+              value={displayAuditEntityType(detail.entityType, t)}
             />
             <DetailRow
               label={t('auditLogs.fields.entityId')}

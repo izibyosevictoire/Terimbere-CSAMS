@@ -7,6 +7,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite'
 import GavelIcon from '@mui/icons-material/Gavel'
 import GroupsIcon from '@mui/icons-material/Groups'
 import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety'
+import HistoryEduIcon from '@mui/icons-material/HistoryEdu'
 import HistoryIcon from '@mui/icons-material/History'
 import MenuBookIcon from '@mui/icons-material/MenuBook'
 import NotificationsIcon from '@mui/icons-material/Notifications'
@@ -149,6 +150,13 @@ export const adminModuleNavItems: NavItem[] = [
     path: ROUTES.notifications,
     icon: NotificationsIcon,
     roles: STAFF_ROLES,
+    group: 'main',
+  },
+  {
+    labelKey: 'nav.historicalImport',
+    path: ROUTES.historicalImport,
+    icon: HistoryEduIcon,
+    roles: LEADERSHIP_NAV_ROLES,
     group: 'main',
   },
   {

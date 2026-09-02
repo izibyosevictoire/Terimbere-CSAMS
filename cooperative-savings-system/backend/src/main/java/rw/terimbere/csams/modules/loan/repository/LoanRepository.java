@@ -43,6 +43,9 @@ public interface LoanRepository extends JpaRepository<Loan, UUID> {
     boolean existsByCooperativeIdAndMemberUserIdAndStatusIn(
             UUID cooperativeId, UUID memberUserId, Collection<LoanStatus> statuses);
 
+    List<Loan> findByCooperativeIdAndMemberUserIdAndDisbursementDate(
+            UUID cooperativeId, UUID memberUserId, LocalDate disbursementDate);
+
     @Query(
             """
             SELECT COALESCE(SUM(l.outstandingPrincipal), 0)

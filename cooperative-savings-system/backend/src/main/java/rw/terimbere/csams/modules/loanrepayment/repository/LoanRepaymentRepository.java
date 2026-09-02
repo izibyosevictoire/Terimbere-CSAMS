@@ -1,5 +1,6 @@
 package rw.terimbere.csams.modules.loanrepayment.repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -13,6 +14,9 @@ public interface LoanRepaymentRepository
 
     List<LoanRepayment> findByLoanIdAndCooperativeIdOrderByPaymentDateDescCreatedAtDesc(
             UUID loanId, UUID cooperativeId);
+
+    List<LoanRepayment> findByCooperativeIdAndLoanIdAndPaymentDateAndAmountTotal(
+            UUID cooperativeId, UUID loanId, LocalDate paymentDate, BigDecimal amountTotal);
 
     default List<LoanRepayment> findFiltered(
             UUID cooperativeId, UUID memberUserId, LocalDate fromDate, LocalDate toDate) {

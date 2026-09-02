@@ -63,6 +63,7 @@ describe('getMobileNavItems', () => {
   it('includes admin modules for cooperative admins', () => {
     const items = getMobileNavItems([ROLE_PRESIDENT])
     expect(items.some((i) => i.path === '/members')).toBe(true)
+    expect(items.some((i) => i.path === '/historical-import')).toBe(true)
     expect(items.some((i) => i.path === '/fine-payments')).toBe(true)
     expect(items.some((i) => i.path === '/cooperatives')).toBe(false)
     expect(isCooperativeAdminUser([ROLE_PRESIDENT])).toBe(true)
@@ -89,6 +90,7 @@ describe('getMobileNavItems', () => {
     const accountant = getMobileNavItems(['ACCOUNTANT'])
     expect(accountant.some((i) => i.path === '/contributions')).toBe(true)
     expect(accountant.some((i) => i.path === '/ledger')).toBe(true)
+    expect(accountant.some((i) => i.path === '/historical-import')).toBe(false)
     expect(accountant.some((i) => i.path === '/members')).toBe(false)
     expect(accountant.some((i) => i.path === '/audit-logs')).toBe(false)
   })

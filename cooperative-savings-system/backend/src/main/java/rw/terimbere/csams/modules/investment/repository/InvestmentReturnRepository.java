@@ -10,5 +10,8 @@ public interface InvestmentReturnRepository extends JpaRepository<InvestmentRetu
     List<InvestmentReturn> findByInvestmentIdAndCooperativeIdOrderByReturnDateDescCreatedAtDesc(
             UUID investmentId, UUID cooperativeId);
 
+    List<InvestmentReturn> findByCooperativeIdAndInvestmentIdAndReturnDateAndAmountTotal(
+            UUID cooperativeId, UUID investmentId, java.time.LocalDate returnDate, java.math.BigDecimal amountTotal);
+
     boolean existsByInvestmentId(UUID investmentId);
 }

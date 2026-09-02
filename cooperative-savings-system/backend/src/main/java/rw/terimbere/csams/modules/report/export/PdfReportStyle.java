@@ -25,7 +25,14 @@ final class PdfReportStyle {
 
     private static final BaseFont CANDARA = loadFace("/fonts/Candara.ttf", "Candara.ttf");
     private static final BaseFont CANDARA_BOLD = loadFace("/fonts/Candara-Bold.ttf", "Candarab.ttf");
+    /**
+     * Temporary raster wordmark (same family as the frontend light-surface asset).
+     * Replace with an official transparent SVG/high-resolution PNG when supplied.
+     * Do not upscale or stretch; scaleToFit preserves aspect ratio.
+     */
     private static final byte[] LOGO_PNG = loadResource("/branding/ouwealth-community-logo.png");
+    private static final float LOGO_MAX_WIDTH = 168f;
+    private static final float LOGO_MAX_HEIGHT = 46f;
 
     private PdfReportStyle() {}
 
@@ -43,7 +50,9 @@ final class PdfReportStyle {
         }
         try {
             Image image = Image.getInstance(LOGO_PNG);
-            image.scaleToFit(168, 46);
+            float nativeWidth = image.getPlainWidth();
+            float nativeHeight = image.getPlainHeight();
+            image.scaleToFit(Math.min(LOGO_MAX_WIDTH, nativeWidth), Math.min(LOGO_MAX_HEIGHT, nativeHeight));
             return image;
         } catch (Exception ex) {
             return null;

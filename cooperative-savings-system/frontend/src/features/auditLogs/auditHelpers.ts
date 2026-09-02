@@ -40,3 +40,12 @@ export function auditEntityLabel(
 ): string {
   return log.entityLabel?.trim() || '—'
 }
+
+export function displayAuditEntityType(
+  entityType: string | null | undefined,
+  t: (key: string) => string,
+): string {
+  if (!entityType?.trim()) return '—'
+  if (entityType === 'Cooperative') return t('auditLogs.entityTypes.Cooperative')
+  return entityType
+}

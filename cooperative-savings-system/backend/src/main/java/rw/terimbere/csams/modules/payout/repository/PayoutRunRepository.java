@@ -21,6 +21,9 @@ public interface PayoutRunRepository extends JpaRepository<PayoutRun, UUID> {
     Page<PayoutRun> findByCooperativeIdAndStatus(
             UUID cooperativeId, PayoutRunStatus status, Pageable pageable);
 
+    java.util.List<PayoutRun> findByCooperativeIdAndPeriodFromAndPeriodTo(
+            UUID cooperativeId, java.time.LocalDate periodFrom, java.time.LocalDate periodTo);
+
     long countByCooperativeIdAndStatus(UUID cooperativeId, PayoutRunStatus status);
 
     long countByStatus(PayoutRunStatus status);

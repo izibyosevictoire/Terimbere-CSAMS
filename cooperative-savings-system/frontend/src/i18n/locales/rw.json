@@ -23,7 +23,7 @@
     "notifications": "Ubutumwa",
     "auditLogs": "Inyandiko z'ibikorwa",
     "profile": "Umwirondoro",
-    "cooperatives": "Amakoperative",
+    "cooperatives": "Ibimina",
     "system": "Sisitemu",
     "adminSection": "Ibikorwa",
     "memberSection": "Konti yanjye",
@@ -34,7 +34,8 @@
     "mySocial": "Amafaranga y'imibereho",
     "loanApprovals": "Kwemeza inguzanyo",
     "contributionApprovals": "Kwemeza amafaranga y'ukwezi",
-    "socialApprovals": "Kwemeza amafaranga y'imibereho"
+    "socialApprovals": "Kwemeza amafaranga y'imibereho",
+    "historicalImport": "Kwinjiza amateka"
   },
   "login": {
     "title": "Injira",
@@ -99,13 +100,13 @@
     "lastName": "Izina ry'umuryango",
     "roles": "Inshingano",
     "permissions": "Uburenganzira",
-    "cooperatives": "Amakoperative",
+    "cooperatives": "Ibimina",
     "noPermissions": "Nta burenganzira bwagaragaye",
     "changePassword": "Hindura ijambo ry'ibanga",
     "editTitle": "Hindura umwirondoro",
     "updateSuccess": "Umwirondoro wavuguruwe",
     "usernameHint": "Koresha inyuguti, imibare, n'utudomo . _ -",
-    "notAMember": "Ntiwigeze uba umunyamuryango w'ikoperative"
+    "notAMember": "Ntiwigeze uba umunyamuryango w'ikimina"
   },
   "actions": {
     "quickActions": "Ibikorwa byihuse",
@@ -137,15 +138,15 @@
   },
   "dashboard": {
     "title": "Imbonerahamwe",
-    "description": "Incamake y'imari n'ibikorwa by'ikoperative.",
+    "description": "Incamake y'imari n'ibikorwa by'ikimina.",
     "liveLater": "Amakuru azaza mu phases zikurikira",
-    "selectCooperativeTitle": "Hitamo ikoperative",
-    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo urebe imbonerahamwe.",
+    "selectCooperativeTitle": "Hitamo ikimina",
+    "selectCooperativeDescription": "Hitamo ikimina hejuru kugira ngo urebe imbonerahamwe.",
     "super": {
       "title": "Imbonerahamwe y'urubuga",
       "welcome": "Murakaza neza, {{name}}",
-      "description": "Ni we nyir'urubuga. Si umunyamuryango w'ikoperative. Fungura itsinda iryo ari ryo ryose urebe ibikorwa byaryo, kandi ufasha Perezida n'abayobozi iyo bibaye ngombwa.",
-      "totalCooperatives": "Amakoperative",
+      "description": "Ni we nyir'urubuga. Si umunyamuryango w'ikimina. Fungura itsinda iryo ari ryo ryose urebe ibikorwa byaryo, kandi ufasha Perezida n'abayobozi iyo bibaye ngombwa.",
+      "totalCooperatives": "Ibimina",
       "activeHint": "{{count}} zikora",
       "totalMembers": "Abanyamuryango",
       "activeMembersHint": "{{count}} bakora",
@@ -153,10 +154,10 @@
       "pendingReviews": "Ibyemezo bitegereje",
       "pendingLoans": "Inguzanyo zitegereje",
       "overdueLoans": "Inguzanyo zatinze",
-      "statusChartTitle": "Amakoperative ku miterere",
+      "statusChartTitle": "Ibimina ku miterere",
       "pendingChartTitle": "Akazi gategereje mu matsinda",
       "pendingChartHint": "Ibyo abayobozi bagifite gukemeza ku rubuga rwose.",
-      "chartsEmpty": "Nta makoperative yo gushyira ku grafu.",
+      "chartsEmpty": "Nta bimina byo gushyira ku grafu.",
       "pending": {
         "contributions": "Ukwezi",
         "special": "Yihariye",
@@ -167,15 +168,15 @@
         "payouts": "Share-out"
       },
       "shownOnPage": "Kuri uru rutonde",
-      "listHint": "Hitamo ikoperative uyicunge ufite ububasha bwose",
-      "recentTitle": "Amakoperative yose",
-      "allCooperatives": "Amakoperative yose",
+      "listHint": "Hitamo ikimina uyicunge ufite ububasha bwose",
+      "recentTitle": "Ibimina byose",
+      "allCooperatives": "Ibimina byose",
       "operatingHint": "Si umunyamuryango w'iki tsinda. Ufite ububasha bwose kugira ngo ufasha Perezida n'abayobozi iyo ibintu byagenda nabi."
     },
     "admin": {
       "title": "Imbonerahamwe y'Umuyobozi",
       "titlePresident": "Imbonerahamwe ya Perezida",
-      "titleSuperAdmin": "Imikorere y'ikoperative",
+      "titleSuperAdmin": "Imikorere y'ikimina",
       "titleVicePresident": "Imbonerahamwe ya Visi Perezida",
       "titleSecretary": "Imbonerahamwe ya Munyamabanga",
       "titleAccountant": "Imbonerahamwe y'Umucungamari",
@@ -271,7 +272,7 @@
     "emptyTitle": "Nta kintu kihari",
     "emptyDescription": "Iki gice kizahuza na backend iyo phase yacyo imaze.",
     "errorTitle": "Ntibishoboye gupakira",
-    "selectCooperative": "Hitamo ikoperative",
+    "selectCooperative": "Hitamo ikimina",
     "logout": "Sohoka",
     "language": "Ururimi",
     "openMenu": "Fungura menu",
@@ -328,30 +329,31 @@
     "LOCKED": "Byafunze"
   },
   "cooperatives": {
-    "create": "Kora ikoperative",
-    "createTitle": "Kora ikoperative",
-    "editTitle": "Hindura ikoperative",
+    "create": "Kora ikimina",
+    "createTitle": "Kora ikimina",
+    "editTitle": "Hindura ikimina",
     "createSuccess": "Murakaza neza! \"{{name}}\" yateguwe.",
-    "createWelcome": "Murakaza neza. Uzuza amakuru y'ikoperative neza — imeri, telefone y'u Rwanda, numero yo kwiyandikisha n'itariki bizagenzurwa mbere yo kubika.",
+    "createWelcome": "Murakaza neza. Uzuza amakuru y'ikimina neza — imeri, telefone y'u Rwanda, numero yo kwiyandikisha n'itariki bizagenzurwa mbere yo kubika.",
     "createWelcomeFooter": "Nyuma yo kubika, ushobora kongeramo abanyamuryango, gushyiraho igihe cy'amafaranga, n'intangiriro yo kubika.",
     "welcomeDialogTitle": "Murakaza neza",
     "welcomeDialogMessage": "\"{{name}}\" yaremwe neza. Ubu ushobora kwandikisha abanyamuryango no gushyiraho amafaranga ashyizweho.",
-    "welcomeDialogContinue": "Fungura ikoperative",
-    "updateSuccess": "Ikoperative yahinduwe",
-    "statusUpdated": "Imiterere y'ikoperative yahinduwe",
+    "welcomeDialogContinue": "Fungura ikimina",
+    "updateSuccess": "Ikimina cyahinduwe",
+    "statusUpdated": "Imiterere y'ikimina yahinduwe",
     "logoUpdated": "Logo yoherejwe",
     "logo": "Logo",
     "noLogo": "Nta logo yashyizweho.",
     "uploadLogo": "Ohereza logo",
-    "backToList": "Subira ku makoperative",
-    "detailDescription": "Reba amakuru n'imiterere y'ikoperative.",
+    "backToList": "Subira ku bimina",
+    "detailDescription": "Reba amakuru n'imiterere y'ikimina.",
     "statusActions": "Hindura imiterere",
     "confirmStatusTitle": "Emeza guhindura imiterere",
     "confirmStatusMessage": "Shyira \"{{name}}\" kuri {{status}}?",
-    "emptyTitle": "Nta makoperative ahari",
-    "emptyDescription": "Tangira ukora ikoperative ya mbere.",
-    "noneAvailable": "Nta koperative",
-    "selectorError": "Ntibishoboye gupakira amakoperative",
+    "emptyTitle": "Nta bimina ahari",
+    "emptyDescription": "Tangira ukora ikimina cya mbere.",
+    "noneAvailable": "Nta kimina",
+    "noneSelected": "Nta kimina cyahiswemo",
+    "selectorError": "Ntibishoboye gupakira ibimina",
     "fields": {
       "name": "Izina",
       "description": "Ibisobanuro",
@@ -407,9 +409,9 @@
     "confirmStatusTitle": "Emeza guhindura imiterere",
     "confirmStatusMessage": "Shyira ubwiyungiro bwa \"{{name}}\" kuri {{status}}?",
     "emptyTitle": "Nta banyamuryango bahari",
-    "emptyDescription": "Andika umunyamuryango wa mbere muri iki koperative.",
-    "selectCooperativeTitle": "Hitamo ikoperative",
-    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo ucunge abanyamuryango.",
+    "emptyDescription": "Andika umunyamuryango wa mbere muri iki kimina.",
+    "selectCooperativeTitle": "Hitamo ikimina",
+    "selectCooperativeDescription": "Hitamo ikimina hejuru kugira ngo ucunge abanyamuryango.",
     "temporaryPasswordHint": "Bitari ngombwa. Siga ubusa niba ushaka ko sisitemu ikora ijambo ry'ibanga.",
     "oneTimePasswordAlert": "Ijambo ry'ibanga rya vuba (rigaragara rimwe): {{password}}",
     "historyPlaceholderTitle": "Ntabwo birahari",
@@ -434,7 +436,7 @@
       "address": "Aderesi",
       "membershipDate": "Itariki yo kwinjira",
       "temporaryPassword": "Ijambo ry'ibanga rya vuba",
-      "roleInCooperative": "Inshingano mu koperative",
+      "roleInCooperative": "Inshingano mu kimina",
       "membershipStatus": "Imiterere y'ubwiyungiro",
       "accountStatus": "Imiterere ya konti",
       "shareCount": "Imigabane",
@@ -446,8 +448,8 @@
     "additionalInfo": "Andi makuru"
   },
   "contributions": {
-    "selectCooperativeTitle": "Hitamo ikoperative",
-    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo ucunge amafaranga ashyizweho.",
+    "selectCooperativeTitle": "Hitamo ikimina",
+    "selectCooperativeDescription": "Hitamo ikimina hejuru kugira ngo ucunge amafaranga ashyizweho.",
     "tabs": {
       "monthly": "Kwandika ukwezi",
       "history": "Amateka",
@@ -581,8 +583,8 @@
     }
   },
   "loans": {
-    "selectCooperativeTitle": "Hitamo ikoperative",
-    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo ucunge inguzanyo.",
+    "selectCooperativeTitle": "Hitamo ikimina",
+    "selectCooperativeDescription": "Hitamo ikimina hejuru kugira ngo ucunge inguzanyo.",
     "tabs": {
       "mine": "Inguzanyo zanjye",
       "all": "Inguzanyo zose",
@@ -647,7 +649,7 @@
       "issue": "Kora inguzanyo",
       "requestSuccess": "Icyifuzo cyoherejwe",
       "issueSuccess": "Inguzanyo yarakozwe",
-      "memberRequestsDisabled": "Gusaba inguzanyo ntibyemewe muri iki koperative.",
+      "memberRequestsDisabled": "Gusaba inguzanyo ntibyemewe muri iki kimina.",
       "settingsHint": "Igenamiterere: {{rate}}% {{type}}, ntarengwa {{maxAmount}}, amezi {{maxTerm}}.",
       "guaranteeMode": "Ubwoko bw'inguzanyo",
       "guaranteeModeSelf": "Inguzanyo kuwawe",
@@ -685,7 +687,7 @@
     "application": {
       "title": "Ifishi yo gusaba inguzanyo",
       "description": "Yuzuwe ukoresheje umwirondoro w'umunyamuryango. Iyi ni inyandiko ya elektroniki.",
-      "cooperative": "Ikoperative",
+      "cooperative": "Ikimina",
       "member": "Usaba"
     },
     "settings": {
@@ -742,8 +744,8 @@
     }
   },
   "fines": {
-    "selectCooperativeTitle": "Hitamo ikoperative",
-    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo ucunge amahane.",
+    "selectCooperativeTitle": "Hitamo ikimina",
+    "selectCooperativeDescription": "Hitamo ikimina hejuru kugira ngo ucunge amahane.",
     "tabs": {
       "mine": "Amahane yanjye",
       "all": "Amahane yose",
@@ -886,8 +888,8 @@
     }
   },
   "socialFund": {
-    "selectCooperativeTitle": "Hitamo ikoperative",
-    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo ucunge ikigega cy'imibereho.",
+    "selectCooperativeTitle": "Hitamo ikimina",
+    "selectCooperativeDescription": "Hitamo ikimina hejuru kugira ngo ucunge ikigega cy'imibereho.",
     "separationTitle": "Kitavangwa n'ubwizigame bw'itsinda",
     "separationDescription": "Ikigega cy'imibereho ni icyegeranyo cyihariye kitari mu mafaranga ahari y'itsinda. Kwemeza amafaranga y'ikigega cyangwa gutanga ntabwo bihindura ubwizigame bukoreshwa ku nguzanyo.",
     "tabs": {
@@ -935,7 +937,7 @@
       "suggestedAmount": "Amafaranga asaba gushyiraho",
       "enabled": "Ikigega cy'imibereho gikora",
       "saveSuccess": "Igenamiterere ryabitswe",
-      "unavailable": "Igenamiterere ntirihari kuri iki koperative."
+      "unavailable": "Igenamiterere ntirihari kuri iki kimina."
     },
     "contributions": {
       "hint": "Amafaranga aguma ategereje kugeza Umubitsi / Treasurer ayemeza mu kigega cy'imibereho.",
@@ -1001,10 +1003,10 @@
     }
   },
   "investments": {
-    "selectCooperativeTitle": "Hitamo ikoperative",
-    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo ucunge ishoramari.",
+    "selectCooperativeTitle": "Hitamo ikimina",
+    "selectCooperativeDescription": "Hitamo ikimina hejuru kugira ngo ucunge ishoramari.",
     "adminOnlyTitle": "Uburenganzira bw'umuyobozi busabwa",
-    "adminOnlyDescription": "Ishoramari ricungwa n'abayobozi b'ikoperative.",
+    "adminOnlyDescription": "Ishoramari ricungwa n'abayobozi b'ikimina.",
     "backToList": "Subira ku ishoramari",
     "detailDescription": "Tangira, andika inyungu, hagarika, cyangwa andika igihombo.",
     "notFoundTitle": "Ishoramari ntiribonetse",
@@ -1082,8 +1084,8 @@
     }
   },
   "payouts": {
-    "selectCooperativeTitle": "Hitamo ikoperative",
-    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo ucunge kwishyura.",
+    "selectCooperativeTitle": "Hitamo ikimina",
+    "selectCooperativeDescription": "Hitamo ikimina hejuru kugira ngo ucunge kwishyura.",
     "backToList": "Subira ku kwishyura",
     "detailDescription": "Reba imirongo, emeza, shyira ku byishyuwe, cyangwa manura raporo.",
     "notFoundTitle": "Kwishyura ntibonetse",
@@ -1159,7 +1161,7 @@
     },
     "statement": {
       "title": "Raporo y'kwishyura",
-      "cooperativeFallback": "Ikoperative",
+      "cooperativeFallback": "Ikimina",
       "generatedAt": "Yakozwe {{date}}",
       "downloadJson": "Manura JSON",
       "print": "Printa",
@@ -1167,12 +1169,12 @@
     }
   },
   "reports": {
-    "selectCooperativeTitle": "Hitamo ikoperative",
-    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo umanure raporo.",
+    "selectCooperativeTitle": "Hitamo ikimina",
+    "selectCooperativeDescription": "Hitamo ikimina hejuru kugira ngo umanure raporo.",
     "primaryTitle": "Raporo z'ingenzi",
     "advancedTitle": "Izindi raporo",
     "openAll": "Fungura ikigo cy'raporo",
-    "memberOnly": "Raporo zawe zerekana gusa ibyawe — si igitabo cyose cy'ikcooperative cyangwa ibikorwa byose.",
+    "memberOnly": "Raporo zawe zerekana gusa ibyawe — si igitabo cyose cy'ikimina cyangwa ibikorwa byose.",
     "primary": {
       "contributions": "Amafaranga ashyizweho",
       "contributionsHint": "Manura PDF y'amafaranga ashyizweho ku gihe wahisemo.",
@@ -1229,10 +1231,8 @@
         "fromAfterTo": "Italiki yo gutangiriraho igomba kuba mbere cyangwa ku ya kurangiriraho.",
         "futureFrom": "Ntushobora gutangiza raporo mu gihe kitageze.",
         "futureTo": "Ntushobora gukora raporo irangira mu gihe kitageze.",
-        "rangeTooLong": "Igihe cya raporo ntigishobora kurenza imyaka 5.",
         "incompleteYearMonth": "Hitamo umwaka n'ukwezi, cyangwa usige byombi nk'uko biri.",
-        "futureYearMonth": "Ntushobora gukora raporo y'ukwezi kutageze.",
-        "beforeRegistration": "Italiki yo gutangiriraho ntishobora kuba mbere y'italiki yanditsweho ikoperative."
+        "futureYearMonth": "Ntushobora gukora raporo y'ukwezi kutageze."
       }
     },
     "whatsapp": {
@@ -1251,7 +1251,7 @@
     "import": {
       "title": "Kwinjiza amafaranga muri Excel",
       "description": "Manura template, shyiramo imirongo yuzuye, suzuma, hanyuma wemeze kugira ngo ubike amafaranga.",
-      "adminOnly": "Kwinjiza amafaranga biboneka gusa ku bayobozi b'ikoperative.",
+      "adminOnly": "Kwinjiza amafaranga biboneka gusa ku bayobozi b'ikimina.",
       "step1": "1. Hitamo igihe umanure template",
       "step2": "2. Shyiramo dosiye ya Excel kugira ngo urebe",
       "downloadTemplate": "Manura template",
@@ -1275,7 +1275,7 @@
       "emptyPreviewTitle": "Nta mirongo",
       "emptyPreviewDescription": "Shyiramo dosiye ya Excel ihuye na template.",
       "historyTitle": "Amateka yo kwinjiza",
-      "historyDescription": "Ibikorwa byo kwinjiza amafaranga by'iki koperative.",
+      "historyDescription": "Ibikorwa byo kwinjiza amafaranga by'iki kimina.",
       "emptyHistoryTitle": "Nta kwinjiza",
       "emptyHistoryDescription": "Ibikorwa byemejwe cyangwa byahagaritswe bizagaragara hano.",
       "countsSummary": "{{valid}} byemewe · {{invalid}} bitemewe · {{total}} byose",
@@ -1304,8 +1304,8 @@
     }
   },
   "transactions": {
-    "selectCooperativeTitle": "Hitamo ikoperative",
-    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo ucunge amajyane n'amafaranga asohoka.",
+    "selectCooperativeTitle": "Hitamo ikimina",
+    "selectCooperativeDescription": "Hitamo ikimina hejuru kugira ngo ucunge amajyane n'amafaranga asohoka.",
     "adminOnlyTitle": "Uburenganzira bw'umuyobozi busabwa",
     "adminOnlyDescription": "Ibikorwa by'amajyane n'amafaranga asohoka bicungwa n'abayobozi.",
     "emptyTitle": "Nta bikorwa",
@@ -1373,10 +1373,10 @@
     }
   },
   "ledger": {
-    "selectCooperativeTitle": "Hitamo ikoperative",
-    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo urebe ibitabo.",
+    "selectCooperativeTitle": "Hitamo ikimina",
+    "selectCooperativeDescription": "Hitamo ikimina hejuru kugira ngo urebe ibitabo.",
     "adminOnlyTitle": "Uburenganzira bw'umuyobozi busabwa",
-    "adminOnlyDescription": "Ibitabo by'imari biboneka ku bayobozi b'ikoperative.",
+    "adminOnlyDescription": "Ibitabo by'imari biboneka ku bayobozi b'ikimina.",
     "emptyTitle": "Nta nyandiko mu bitabo",
     "emptyDescription": "Ibikorwa by'imari byemejwe bizagaragara hano.",
     "fields": {
@@ -1449,8 +1449,8 @@
     }
   },
   "auditLogs": {
-    "selectCooperativeTitle": "Hitamo ikoperative",
-    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo urebe inyandiko z'ibikorwa.",
+    "selectCooperativeTitle": "Hitamo ikimina",
+    "selectCooperativeDescription": "Hitamo ikimina hejuru kugira ngo urebe inyandiko z'ibikorwa.",
     "emptyTitle": "Nta nyandiko",
     "emptyDescription": "Nta bisubizo. Gerageza gukura filter cyangwa kongera igihe.",
     "clearFilters": "Siba filter",
@@ -1466,12 +1466,15 @@
       "ipAddress": "Aderesi ya IP",
       "previousValues": "Agaciro ka mbere",
       "newValues": "Agaciro gashya"
+    },
+    "entityTypes": {
+      "Cooperative": "Ikimina"
     }
   },
   "settings": {
-    "selectCooperativeTitle": "Hitamo ikoperative",
-    "selectCooperativeDescription": "Hitamo ikoperative hejuru kugira ngo ugenzure igenamiterere.",
-    "formTitle": "Ibyifuzo by'ikoperative",
+    "selectCooperativeTitle": "Hitamo ikimina",
+    "selectCooperativeDescription": "Hitamo ikimina hejuru kugira ngo ugenzure igenamiterere.",
+    "formTitle": "Ibyifuzo by'ikimina",
     "formDescription": "Igihe cy'akarere, ururimi, n'ubutumwa bwo muri sisitemu.",
     "notifySection": "Ibyifuzo by'ubutumwa",
     "saveSuccess": "Igenamiterere ryabitswe",
@@ -1528,7 +1531,7 @@
     },
     "finePayments": {
       "title": "Kwishyura Amahane Bitegereje",
-      "description": "Suzuma, wemeze, cyangwa wange kwishyura amahane byatanzwe n'abanyamuryango b'ikoperative."
+      "description": "Suzuma, wemeze, cyangwa wange kwishyura amahane byatanzwe n'abanyamuryango b'ikimina."
     },
     "socialFund": {
       "title": "Ikigega cy'imibereho",
@@ -1544,7 +1547,7 @@
     },
     "ledger": {
       "title": "Ibitabo",
-      "description": "Reba inyandiko zemejwe z'imari y'ikoperative."
+      "description": "Reba inyandiko zemejwe z'imari y'ikimina."
     },
     "payouts": {
       "title": "Kwishyura",
@@ -1552,7 +1555,7 @@
     },
     "reports": {
       "title": "Ikigo cy'raporo",
-      "description": "Manura raporo za PDF z'ikoperative wahisemo."
+      "description": "Manura raporo za PDF z'ikimina wahisemo."
     },
     "settings": {
       "title": "Igenamiterere",
@@ -1564,19 +1567,84 @@
     },
     "auditLogs": {
       "title": "Inyandiko z'ibikorwa",
-      "description": "Reba ibikorwa by'ikoperative n'ibisobanuro."
+      "description": "Reba ibikorwa by'ikimina n'ibisobanuro."
     },
     "profile": {
       "title": "Umwirondoro",
       "description": "Amakuru yawe."
     },
     "cooperatives": {
-      "title": "Amakoperative",
-      "description": "Gucunga amakoperative (super-admin)."
+      "title": "Ibimina",
+      "description": "Gucunga ibimina (super-admin)."
     },
     "system": {
       "title": "Ubuzima bwa sisitemu",
       "description": "Isuzuma ry'urubuga."
+    },
+    "historicalImport": {
+      "title": "Kwinjiza amateka",
+      "description": "Injiza amateka y'ikimina kuvanaho Excel kugira ngo raporo n'imbonerahamwe byerekane amateka yose."
+    }
+  },
+  "historicalImport": {
+    "instructions": "Manura inyandiko, uzuza amateka, hanyuma usuzume. Kwemeza ntibishoboka kugeza umurongo wose wemewe. Amateka asanzwe ntabwo asimburwa.",
+    "downloadTemplate": "Manura inyandiko ya Excel",
+    "chooseFile": "Hitamo dosiye",
+    "noFile": "Nta dosiye yahiswemo",
+    "preview": "Suzuma",
+    "previewTitle": "Incamake y'isuzuma",
+    "previewSuccess": "Isuzuma ryateguwe",
+    "previewFailed": "Isuzuma ryananiwe",
+    "templateSuccess": "Byamanuye {{filename}}",
+    "sheetCounts": "{{total}} byose · {{valid}} byemewe · {{invalid}} bitemewe",
+    "countsSummary": "{{total}} byose · {{valid}} byemewe · {{invalid}} bitemewe",
+    "fixAndReupload": "Kosora amakosa mu nyandiko hanyuma usubire kuyohereza.",
+    "noErrors": "Nta makosa",
+    "confirm": "Emeza kwinjiza",
+    "confirmTitle": "Emeza kwinjiza amateka",
+    "confirmWarning": "Ibi bizongeramo amateka y'imari. Ayasanzwe ntabwo asimburwa.",
+    "confirmSuccess": "Amateka yemejwe",
+    "confirmSummaryTitle": "Byuzuye",
+    "confirmSummaryBody": "Byinjiye abanyamuryango {{members}}, amafaranga {{contributions}}, inguzanyo {{loans}}, kwishyura {{repayments}}, n'inyandiko {{ledger}}.",
+    "cancel": "Hagarika",
+    "cancelTitle": "Hagarika",
+    "cancelMessage": "Urashaka guhagarika iyi nyandiko itaremezwa?",
+    "cancelSuccess": "Byahagaritswe",
+    "historyTitle": "Ibyinjiye mbere",
+    "historyFailed": "Amateka ntiyashoboye kugaragara",
+    "noHistory": "Nta mateka yinjijwe",
+    "selectCooperativeTitle": "Hitamo ikimina",
+    "selectCooperativeDescription": "Hitamo ikimina kugira ngo winjize amateka.",
+    "reconciliationTitle": "Kugera ku mibare",
+    "reconciliationBody": "Amafaranga yinjiye {{credits}} · Asohotse {{debits}} · Inguzanyo {{outstanding}} · Asigaye {{available}} · Imibereho {{social}} · Kwishyura {{payouts}}",
+    "reconciliationCredits": "Amafaranga yinjiye: {{value}}",
+    "reconciliationDebits": "Asohotse: {{value}}",
+    "reconciliationOutstanding": "Inguzanyo zisigaye: {{value}}",
+    "reconciliationPayouts": "Kwishyura: {{value}}",
+    "reconciliationAvailable": "Amafaranga asigaye: {{value}}",
+    "reconciliationSocial": "Ikigega cy'imibano: {{value}}",
+    "emptyWorkbook": "Iyi nyandiko nta mirongo y'ubucuruzi ifite. Emeza iracyafunze kugira ngo ntihagire icyinjizwa.",
+    "fields": {
+      "sheet": "Urupapuro",
+      "row": "Umurongo",
+      "field": "Umwanya",
+      "error": "Ikosa",
+      "filename": "Izina rya dosiye",
+      "uploadedBy": "Uwohereje",
+      "uploadedAt": "Igihe",
+      "status": "Imiterere",
+      "counts": "Imirongo",
+      "confirmedAt": "Byemejwe",
+      "actions": "Ibikorwa"
+    },
+    "status": {
+      "UPLOADED": "Byoherejwe",
+      "VALIDATING": "Birimo gusuzumwa",
+      "READY": "Biteguye",
+      "INVALID": "Bitemewe",
+      "CONFIRMED": "Byemejwe",
+      "CANCELLED": "Byahagaritswe",
+      "FAILED": "Byananiranye"
     }
   },
   "theme": {
@@ -1598,7 +1666,7 @@
     "MEMBER": "UMUNYAMURYANGO",
     "dutiesTitle": "Icyo {{role}} akora",
     "duties": {
-      "SUPER_ADMIN": "Nyir'urubuga: si umunyamuryango w'ikoperative. Ashyiraho amatsinda, ashyira Perezida, areba ikoperative yose, kandi afata ububasha bwose iyo abayobozi bakeneye ubufasha.",
+      "SUPER_ADMIN": "Nyir'urubuga: si umunyamuryango w'ikimina. Ashyiraho amatsinda, ashyira Perezida, areba ikimina yose, kandi afata ububasha bwose iyo abayobozi bakeneye ubufasha.",
       "MEMBER": "Ashyira umusanzu buri kwezi, asaba inguzanyo, kandi areba amande, ikigega cy'imibano, n'isaranganya bye.",
       "PRESIDENT": "Ayobora itsinda, akemura amakimbirane, ahagarika abanyamuryango, yemeza amategeko, kandi asinya amafaranga ava mu kigega.",
       "VICE_PRESIDENT": "Asimbura Perezida iyo adahari, afite ububasha bumwe, kandi ayobora komite y'inguzanyo.",

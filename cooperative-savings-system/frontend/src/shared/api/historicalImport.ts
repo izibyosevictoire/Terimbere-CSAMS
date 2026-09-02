@@ -1,0 +1,91 @@
+import { apiClient } from './client'
+import { unwrapApiData } from './auth'
+import type { ApiResponse } from '@/shared/types/api'
+import type {
+  HistoricalImportConfirm,
+  HistoricalImportPreview,
+  HistoricalImportSummary,
+} from '@/shared/types/historicalImport'
+import {
+  parseContentDispositionFilename,
+  throwIfBlobError,
+  triggerBlobDownload,
+} from '@/shared/utils/download'
+
+const LONG_TIMEOUT_MS = 120_000
+
+export async function downloadHistoricalImportTemplate(
+  cooperativeId: string,
+  fallbackFilename = 'historical-import-template.xlsx',
+): Promise<{ filename: string }> {
+  const response = await apiClient.get(
+    `/cooperatives/${cooperativeId}/historical-imports/template`,
+    { responseType: 'blob', timeout: LONG_TIMEOUT_MS },
+  )
+  const blob = response.data as Blob
+  await throwIfBlobError(blob, 'Template download failed')
+  const filename = parseContentDispositionFilename(
+    response.headers['content-disposition'] as string | undefined,
+    fallbackFilename,
+  )
+  triggerBlobDownload(blob, filename)
+  return { filename }
+}
+
+export async function previewHistoricalImport(
+  cooperativeId: string,
+  file: File,
+): Promise<HistoricalImportPreview> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const response = await apiClient.post<ApiResponse<HistoricalImportPreview>>(
+    `/cooperatives/${cooperativeId}/historical-imports/preview`,
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: LONG_TIMEOUT_MS,
+    },
+  )
+  return unwrapApiData(response.data)
+}
+
+export async function confirmHistoricalImport(
+  cooperativeId: string,
+  importId: string,
+): Promise<HistoricalImportConfirm> {
+  const response = await apiClient.post<ApiResponse<HistoricalImportConfirm>>(
+    `/cooperatives/${cooperativeId}/historical-imports/${importId}/confirm`,
+    undefined,
+    { timeout: LONG_TIMEOUT_MS },
+  )
+  return unwrapApiData(response.data)
+}
+
+export async function cancelHistoricalImport(
+  cooperativeId: string,
+  importId: string,
+): Promise<HistoricalImportSummary> {
+  const response = await apiClient.post<ApiResponse<HistoricalImportSummary>>(
+    `/cooperatives/${cooperativeId}/historical-imports/${importId}/cancel`,
+  )
+  return unwrapApiData(response.data)
+}
+
+export async function fetchHistoricalImport(
+  cooperativeId: string,
+  importId: string,
+): Promise<HistoricalImportPreview> {
+  const response = await apiClient.get<ApiResponse<HistoricalImportPreview>>(
+    `/cooperatives/${cooperativeId}/historical-imports/${importId}`,
+  )
+  return unwrapApiData(response.data)
+}
+
+export async function fetchHistoricalImportHistory(
+  cooperativeId: string,
+): Promise<HistoricalImportSummary[]> {
+  const response = await apiClient.get<ApiResponse<HistoricalImportSummary[]>>(
+    `/cooperatives/${cooperativeId}/historical-imports`,
+  )
+  return unwrapApiData(response.data) ?? []
+}

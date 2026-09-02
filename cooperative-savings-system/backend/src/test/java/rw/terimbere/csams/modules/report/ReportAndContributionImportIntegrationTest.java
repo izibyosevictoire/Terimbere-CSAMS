@@ -427,7 +427,7 @@ class ReportAndContributionImportIntegrationTest {
     }
 
     @Test
-    void export_clampsFromDateBeforeRegistration() throws Exception {
+    void export_allowsFromDateBeforeRegistration() throws Exception {
         MvcResult export = mockMvc.perform(post("/api/v1/cooperatives/" + cooperativeId + "/reports/export")
                         .header("Authorization", "Bearer " + superAdminToken)
                         .header("Accept", "application/json")

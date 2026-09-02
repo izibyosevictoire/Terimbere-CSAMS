@@ -22,6 +22,9 @@ public interface FinePaymentRepository
 
     List<FinePayment> findByFineIdAndCooperativeIdOrderByCreatedAtDesc(UUID fineId, UUID cooperativeId);
 
+    List<FinePayment> findByCooperativeIdAndFineIdAndPaymentDateAndAmount(
+            UUID cooperativeId, UUID fineId, LocalDate paymentDate, BigDecimal amount);
+
     long countByCooperativeIdAndStatus(UUID cooperativeId, FinePaymentStatus status);
 
     long countByStatus(FinePaymentStatus status);

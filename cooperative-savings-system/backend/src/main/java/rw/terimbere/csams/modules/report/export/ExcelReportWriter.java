@@ -63,30 +63,56 @@ public final class ExcelReportWriter {
     }
 
     public static byte[] writeTemplate(String sheetName, List<String> headers, List<List<Object>> sampleRows) {
+        return writeMultiSheetTemplate(List.of(new TemplateSheet(sheetName, headers, sampleRows, null)));
+    }
+
+    /**
+     * Multi-sheet workbook used by historical import templates. Instruction-only sheets
+     * pass {@code instructions} and omit a header row.
+     */
+    public static byte[] writeMultiSheetTemplate(List<TemplateSheet> sheets) {
         try (Workbook workbook = new XSSFWorkbook();
                 ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            Sheet sheet = workbook.createSheet(sanitizeSheetName(sheetName));
             CellStyle headerStyle = boldStyle(workbook);
-            Row headerRow = sheet.createRow(0);
-            for (int i = 0; i < headers.size(); i++) {
-                Cell cell = headerRow.createCell(i);
-                cell.setCellValue(headers.get(i));
-                cell.setCellStyle(headerStyle);
-            }
-            if (sampleRows != null) {
-                int r = 1;
-                for (List<Object> rowValues : sampleRows) {
-                    Row row = sheet.createRow(r++);
-                    writeValues(row, rowValues);
+            CellStyle wrap = workbook.createCellStyle();
+            wrap.setWrapText(true);
+            for (TemplateSheet spec : sheets) {
+                Sheet sheet = workbook.createSheet(sanitizeSheetName(spec.name()));
+                if (spec.instructions() != null && !spec.instructions().isEmpty()) {
+                    int r = 0;
+                    for (String line : spec.instructions()) {
+                        Row row = sheet.createRow(r++);
+                        Cell cell = row.createCell(0);
+                        cell.setCellValue(line == null ? "" : line);
+                        cell.setCellStyle(wrap);
+                    }
+                    sheet.setColumnWidth(0, 80 * 256);
+                    continue;
                 }
+                List<String> headers = spec.headers() == null ? List.of() : spec.headers();
+                Row headerRow = sheet.createRow(0);
+                for (int i = 0; i < headers.size(); i++) {
+                    Cell cell = headerRow.createCell(i);
+                    cell.setCellValue(headers.get(i));
+                    cell.setCellStyle(headerStyle);
+                }
+                if (spec.sampleRows() != null) {
+                    int r = 1;
+                    for (List<Object> rowValues : spec.sampleRows()) {
+                        writeValues(sheet.createRow(r++), rowValues);
+                    }
+                }
+                autosize(sheet, Math.max(1, headers.size()));
             }
-            autosize(sheet, headers.size());
             workbook.write(out);
             return out.toByteArray();
         } catch (IOException ex) {
             throw new IllegalStateException("Failed to build Excel template", ex);
         }
     }
+
+    public record TemplateSheet(
+            String name, List<String> headers, List<List<Object>> sampleRows, List<String> instructions) {}
 
     private static int writeHeaderBlock(Sheet sheet, ReportHeaderMeta header, CellStyle bold) {
         int row = 0;

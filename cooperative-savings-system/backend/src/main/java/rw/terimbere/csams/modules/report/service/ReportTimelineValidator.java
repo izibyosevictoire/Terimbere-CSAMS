@@ -9,12 +9,13 @@ import rw.terimbere.csams.modules.report.dto.ReportExportRequest;
 import rw.terimbere.csams.shared.exceptions.ValidationException;
 
 /**
- * Report export date rules: required from/to timeline, no future dates, bounded range.
+ * Report export date rules: required from/to timeline and no future dates.
+ * Historical imported activity before CSAMS onboarding must remain visible, so
+ * registration date and a fixed multi-year cap are not applied.
  */
 public final class ReportTimelineValidator {
 
     public static final ZoneId ZONE = ZoneId.of("Africa/Kigali");
-    public static final int MAX_RANGE_YEARS = 5;
     public static final int MIN_YEAR = 2000;
 
     private ReportTimelineValidator() {}
@@ -38,12 +39,6 @@ public final class ReportTimelineValidator {
         }
         if (from != null && to != null && to.isBefore(from)) {
             errors.put("toDate", "toDate must be on or after fromDate");
-        }
-        if (from != null && to != null && from.plusYears(MAX_RANGE_YEARS).isBefore(to)) {
-            errors.put("toDate", "Report range cannot exceed " + MAX_RANGE_YEARS + " years");
-        }
-        if (from != null && registrationDate != null && from.isBefore(registrationDate)) {
-            errors.put("fromDate", "fromDate cannot be before the cooperative registration date");
         }
 
         Integer year = request.getYear();

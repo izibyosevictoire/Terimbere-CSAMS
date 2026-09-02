@@ -14,4 +14,6 @@ public interface SpecialContributionCampaignRepository extends JpaRepository<Spe
     List<SpecialContributionCampaign> findByCooperativeIdAndStatus(UUID cooperativeId, SpecialCampaignStatus status);
 
     Optional<SpecialContributionCampaign> findByIdAndCooperativeId(UUID id, UUID cooperativeId);
+
+    List<SpecialContributionCampaign> findByCooperativeIdAndNameIgnoreCase(UUID cooperativeId, String name);
 }

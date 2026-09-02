@@ -17,6 +17,9 @@ public interface IncomeExpenseTransactionRepository
 
     Optional<IncomeExpenseTransaction> findByIdAndCooperativeId(UUID id, UUID cooperativeId);
 
+    java.util.List<IncomeExpenseTransaction> findByCooperativeIdAndTransactionDateAndCategory(
+            UUID cooperativeId, LocalDate transactionDate, IncomeExpenseCategory category);
+
     default Page<IncomeExpenseTransaction> findFiltered(
             UUID cooperativeId,
             IncomeExpenseCategory category,

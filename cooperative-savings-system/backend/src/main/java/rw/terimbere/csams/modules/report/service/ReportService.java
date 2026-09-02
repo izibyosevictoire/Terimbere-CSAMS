@@ -153,7 +153,6 @@ public class ReportService {
             throw new ForbiddenException("AUDIT_READ required for audit log reports");
         }
 
-        clampToRegistrationDate(request, cooperative.getRegistrationDate());
         ReportTimelineValidator.validate(
                 request,
                 LocalDate.now(ReportTimelineValidator.ZONE),
@@ -672,6 +671,12 @@ public class ReportService {
         BigDecimal amountTotal = BigDecimal.ZERO;
         BigDecimal remainingTotal = BigDecimal.ZERO;
         for (Investment inv : investments) {
+            LocalDate filterDate = inv.getActivatedAt() == null
+                    ? null
+                    : inv.getActivatedAt().atZone(ReportTimelineValidator.ZONE).toLocalDate();
+            if (!inRange(filterDate, request.getFromDate(), request.getToDate())) {
+                continue;
+            }
             amountTotal = MoneyUtils.add(amountTotal, nvl(inv.getAmount()));
             remainingTotal = MoneyUtils.add(remainingTotal, nvl(inv.getRemainingCapital()));
             rows.add(cells(
@@ -1025,22 +1030,6 @@ public class ReportService {
             names.put(user.getId(), user.getFullName());
         }
         return names;
-    }
-
-    /**
-     * If the requested start is before the cooperative existed, slide the range forward so
-     * a default Jan-1 timeline still downloads instead of failing validation.
-     */
-    private static void clampToRegistrationDate(ReportExportRequest request, LocalDate registrationDate) {
-        if (registrationDate == null) {
-            return;
-        }
-        if (request.getFromDate() != null && request.getFromDate().isBefore(registrationDate)) {
-            request.setFromDate(registrationDate);
-        }
-        if (request.getToDate() != null && request.getToDate().isBefore(registrationDate)) {
-            request.setToDate(registrationDate);
-        }
     }
 
     private static String formatPeriod(ReportExportRequest request) {

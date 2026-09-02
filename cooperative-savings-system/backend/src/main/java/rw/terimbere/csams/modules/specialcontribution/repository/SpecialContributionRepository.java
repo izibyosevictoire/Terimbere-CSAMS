@@ -46,6 +46,13 @@ public interface SpecialContributionRepository
     BigDecimal sumApprovedAmountByMember(
             @Param("cooperativeId") UUID cooperativeId, @Param("memberUserId") UUID memberUserId);
 
+    List<SpecialContribution> findByCooperativeIdAndMemberUserIdAndCampaignIdAndContributionDateAndAmount(
+            UUID cooperativeId,
+            UUID memberUserId,
+            UUID campaignId,
+            LocalDate contributionDate,
+            BigDecimal amount);
+
     List<SpecialContribution> findByCooperativeIdAndStatus(UUID cooperativeId, SpecialContributionStatus status);
 
     @Query(

@@ -147,10 +147,7 @@ export function LoanSettingsPanel({ cooperativeId }: LoanSettingsPanelProps) {
           error={Boolean(errors.interestType)}
           helperText={
             errors.interestType?.message ||
-            t('loans.settings.reducingUnavailable', {
-              defaultValue:
-                'Reducing-balance interest is not currently available. Please use Flat Interest or contact the cooperative administrator.',
-            })
+            t('loans.settings.reducingUnavailable')
           }
           {...register('interestType')}
           fullWidth

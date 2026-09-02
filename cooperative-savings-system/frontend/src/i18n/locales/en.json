@@ -23,7 +23,7 @@
     "notifications": "Notifications",
     "auditLogs": "Audit logs",
     "profile": "Profile",
-    "cooperatives": "Cooperatives",
+    "cooperatives": "Saving Schemes",
     "system": "System",
     "adminSection": "Menu",
     "memberSection": "My account",
@@ -34,7 +34,8 @@
     "mySocial": "My Social Contributions",
     "loanApprovals": "Loan Approvals",
     "contributionApprovals": "Regular Contribution Approvals",
-    "socialApprovals": "Social Contribution Approvals"
+    "socialApprovals": "Social Contribution Approvals",
+    "historicalImport": "Historical Data Import"
   },
   "login": {
     "title": "Sign in",
@@ -99,13 +100,13 @@
     "lastName": "Last name",
     "roles": "Roles",
     "permissions": "Permissions",
-    "cooperatives": "Cooperatives",
+    "cooperatives": "Saving Schemes",
     "noPermissions": "No permissions listed",
     "changePassword": "Change password",
     "editTitle": "Edit profile",
     "updateSuccess": "Profile updated",
     "usernameHint": "Letters, numbers, and . _ - only",
-    "notAMember": "Not a member of any cooperative"
+    "notAMember": "not a member of any Saving Scheme"
   },
   "actions": {
     "quickActions": "Quick actions",
@@ -137,15 +138,15 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "description": "Overview of cooperative balances, activity, and alerts.",
+    "description": "Overview of Saving Scheme balances, activity, and alerts.",
     "liveLater": "Live data in later phases",
-    "selectCooperativeTitle": "Select a cooperative",
-    "selectCooperativeDescription": "Choose a cooperative in the top bar to view its dashboard.",
+    "selectCooperativeTitle": "Select a Saving Scheme",
+    "selectCooperativeDescription": "Choose a Saving Scheme in the top bar to view its dashboard.",
     "super": {
       "title": "Platform dashboard",
       "welcome": "Welcome, {{name}}",
-      "description": "You own the platform. You are not a member of any cooperative. Open any group to see its activity and step in when the President or officers need help.",
-      "totalCooperatives": "Cooperatives",
+      "description": "You own the platform. You are not a member of any Saving Scheme. Open any group to see its activity and step in when the President or officers need help.",
+      "totalCooperatives": "Saving Schemes",
       "activeHint": "{{count}} active",
       "totalMembers": "Members",
       "activeMembersHint": "{{count}} active",
@@ -153,10 +154,10 @@
       "pendingReviews": "Pending reviews",
       "pendingLoans": "Pending loans",
       "overdueLoans": "Overdue loans",
-      "statusChartTitle": "Cooperatives by status",
+      "statusChartTitle": "Saving Schemes by status",
       "pendingChartTitle": "Work waiting across groups",
       "pendingChartHint": "Items still needing an officer decision anywhere on the platform.",
-      "chartsEmpty": "No cooperatives to chart yet.",
+      "chartsEmpty": "No Saving Schemes to chart yet.",
       "pending": {
         "contributions": "Contrib.",
         "special": "Special",
@@ -167,15 +168,15 @@
         "payouts": "Share-out"
       },
       "shownOnPage": "On this list",
-      "listHint": "Select a cooperative to operate it with full control",
-      "recentTitle": "All cooperatives",
-      "allCooperatives": "All cooperatives",
+      "listHint": "Select a Saving Scheme to operate it with full control",
+      "recentTitle": "All Saving Schemes",
+      "allCooperatives": "All Saving Schemes",
       "operatingHint": "You are not a member of this group. You have full control so you can help the President and officers when something goes wrong."
     },
     "admin": {
       "title": "Admin Dashboard",
       "titlePresident": "President dashboard",
-      "titleSuperAdmin": "Cooperative operations",
+      "titleSuperAdmin": "Saving Scheme operations",
       "titleVicePresident": "Vice President dashboard",
       "titleSecretary": "Secretary dashboard",
       "titleAccountant": "Accountant dashboard",
@@ -275,7 +276,7 @@
     "emptyTitle": "Nothing here yet",
     "emptyDescription": "This module will be connected when its backend phase is ready.",
     "errorTitle": "Unable to load",
-    "selectCooperative": "Select cooperative",
+    "selectCooperative": "Select Saving Scheme",
     "logout": "Sign out",
     "language": "Language",
     "openMenu": "Open menu",
@@ -332,30 +333,31 @@
     "LOCKED": "Locked"
   },
   "cooperatives": {
-    "create": "Create cooperative",
-    "createTitle": "Create cooperative",
-    "editTitle": "Edit cooperative",
+    "create": "Create Saving Scheme",
+    "createTitle": "Create Saving Scheme",
+    "editTitle": "Edit Saving Scheme",
     "createSuccess": "Welcome aboard! \"{{name}}\" is ready.",
-    "createWelcome": "Welcome aboard. Fill in the cooperative details carefully — contact email, Rwandan phone, registration number, and dates will be validated before saving.",
+    "createWelcome": "Welcome aboard. Fill in the Saving Scheme details carefully — contact email, Rwandan phone, registration number, and dates will be validated before saving.",
     "createWelcomeFooter": "After saving, you can add members, set contribution periods, and start recording savings.",
     "welcomeDialogTitle": "Welcome aboard",
     "welcomeDialogMessage": "\"{{name}}\" has been created successfully. You can now register members and configure contributions.",
-    "welcomeDialogContinue": "Open cooperative",
-    "updateSuccess": "Cooperative updated",
-    "statusUpdated": "Cooperative status updated",
+    "welcomeDialogContinue": "Open Saving Scheme",
+    "updateSuccess": "Saving Scheme updated",
+    "statusUpdated": "Saving Scheme status updated",
     "logoUpdated": "Logo uploaded",
     "logo": "Logo",
     "noLogo": "No logo uploaded yet.",
     "uploadLogo": "Upload logo",
-    "backToList": "Back to cooperatives",
-    "detailDescription": "Review cooperative settings, status, and branding.",
+    "backToList": "Back to Saving Schemes",
+    "detailDescription": "Review Saving Scheme settings, status, and branding.",
     "statusActions": "Change status",
     "confirmStatusTitle": "Confirm status change",
     "confirmStatusMessage": "Set \"{{name}}\" to {{status}}?",
-    "emptyTitle": "No cooperatives yet",
-    "emptyDescription": "Create the first cooperative tenant to get started.",
-    "noneAvailable": "No cooperative",
-    "selectorError": "Could not load cooperatives",
+    "emptyTitle": "No Saving Schemes yet",
+    "emptyDescription": "Create the first Saving Scheme to get started.",
+    "noneAvailable": "No Saving Scheme",
+    "noneSelected": "No Saving Scheme selected",
+    "selectorError": "Could not load Saving Schemes",
     "fields": {
       "name": "Name",
       "description": "Description",
@@ -411,9 +413,9 @@
     "confirmStatusTitle": "Confirm status change",
     "confirmStatusMessage": "Set \"{{name}}\" membership to {{status}}?",
     "emptyTitle": "No members yet",
-    "emptyDescription": "Register the first member for this cooperative.",
-    "selectCooperativeTitle": "Select a cooperative",
-    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage its members.",
+    "emptyDescription": "Register the first member for this Saving Scheme.",
+    "selectCooperativeTitle": "Select a Saving Scheme",
+    "selectCooperativeDescription": "Choose a Saving Scheme in the top bar to manage its members.",
     "temporaryPasswordHint": "Optional. Leave blank to auto-generate a temporary password.",
     "oneTimePasswordAlert": "Temporary password (shown once): {{password}}",
     "historyPlaceholderTitle": "Not available yet",
@@ -438,7 +440,7 @@
       "address": "Address",
       "membershipDate": "Membership date",
       "temporaryPassword": "Temporary password",
-      "roleInCooperative": "Role in cooperative",
+      "roleInCooperative": "Role in this Saving Scheme",
       "membershipStatus": "Membership status",
       "accountStatus": "Account status",
       "shareCount": "Shares (imigabane)",
@@ -450,8 +452,8 @@
     "additionalInfo": "Additional information"
   },
   "contributions": {
-    "selectCooperativeTitle": "Select a cooperative",
-    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage contributions.",
+    "selectCooperativeTitle": "Select a Saving Scheme",
+    "selectCooperativeDescription": "Choose a Saving Scheme in the top bar to manage contributions.",
     "tabs": {
       "monthly": "Monthly entry",
       "history": "History",
@@ -585,8 +587,8 @@
     }
   },
   "loans": {
-    "selectCooperativeTitle": "Select a cooperative",
-    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage loans.",
+    "selectCooperativeTitle": "Select a Saving Scheme",
+    "selectCooperativeDescription": "Choose a Saving Scheme in the top bar to manage loans.",
     "tabs": {
       "mine": "My loans",
       "all": "All loans",
@@ -651,7 +653,7 @@
       "issue": "Create loan",
       "requestSuccess": "Loan request submitted",
       "issueSuccess": "Loan created",
-      "memberRequestsDisabled": "Member loan requests are disabled for this cooperative.",
+      "memberRequestsDisabled": "Member loan requests are disabled for this Saving Scheme.",
       "settingsHint": "Current settings: {{rate}}% {{type}}, max amount {{maxAmount}}, max term {{maxTerm}} months.",
       "guaranteeMode": "Loan type",
       "guaranteeModeSelf": "Loan on your own",
@@ -689,7 +691,7 @@
     "application": {
       "title": "Loan Application Form",
       "description": "Completed from your member profile. This is the electronic application record.",
-      "cooperative": "Cooperative",
+      "cooperative": "Saving Scheme",
       "member": "Applicant"
     },
     "settings": {
@@ -706,7 +708,7 @@
       "reducingUnavailable": "Reducing-balance interest is not currently available. Please use Flat Interest.",
       "saveSuccess": "Loan settings saved",
       "shareTiersTitle": "Share-based loan levels",
-      "shareTiersDescription": "The President sets how much a member can borrow from their share of the cooperative. Example: 4% can take 20,000; 2% can take 3,000.",
+      "shareTiersDescription": "The President sets how much a member can borrow from their share of the Saving Scheme. Example: 4% can take 20,000; 2% can take 3,000.",
       "shareTiersPresidentOnly": "Only the President can add, change, or remove share-based loan levels.",
       "minSharePercent": "Minimum share %",
       "tierMaxLoanAmount": "Maximum loan amount",
@@ -746,8 +748,8 @@
     }
   },
   "fines": {
-    "selectCooperativeTitle": "Select a cooperative",
-    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage fines.",
+    "selectCooperativeTitle": "Select a Saving Scheme",
+    "selectCooperativeDescription": "Choose a Saving Scheme in the top bar to manage fines.",
     "tabs": {
       "mine": "My fines",
       "all": "All fines",
@@ -819,7 +821,7 @@
     },
     "settings": {
       "title": "Fine settings",
-      "description": "Configure automatic fine rules for this cooperative.",
+      "description": "Configure automatic fine rules for this Saving Scheme.",
       "progressiveHint": "Progressive total = base fine + (overdue days × daily increment).",
       "autoFinesEnabled": "Enable automatic fines",
       "fineMode": "Fine calculation mode",
@@ -830,7 +832,7 @@
       "presidentOnly": "Only the President can change the fine configuration.",
       "contributionDueDay": "Contribution due day",
       "editDueDay": "Edit contribution due day",
-      "editDueDayHint": "Configured on the cooperative settings page."
+      "editDueDayHint": "Configured on the Saving Scheme settings page."
     },
     "actions": {
       "waive": "Waive",
@@ -874,7 +876,7 @@
       "confirmRejectMessage": "Reject this payment? The fine outstanding balance will not change.",
       "viewEvidence": "View evidence"
     },
-    "workflowBanner": "Members submit payment details first. Only approved payments mark fines as paid and increase available cooperative funds.",
+    "workflowBanner": "Members submit payment details first. Only approved payments mark fines as paid and increase available Saving Scheme funds.",
     "summary": {
       "total": "Total fines",
       "unpaid": "Unpaid fines",
@@ -901,8 +903,8 @@
     }
   },
   "socialFund": {
-    "selectCooperativeTitle": "Select a cooperative",
-    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage the social fund.",
+    "selectCooperativeTitle": "Select a Saving Scheme",
+    "selectCooperativeDescription": "Choose a Saving Scheme in the top bar to manage the social fund.",
     "separationTitle": "Separate from group savings",
     "separationDescription": "The social fund is a welfare pot kept apart from available group funds. Approving social contributions or disbursements never changes the group savings balance used for loans.",
     "tabs": {
@@ -946,11 +948,11 @@
     },
     "settings": {
       "title": "Social fund settings",
-      "description": "Optional suggested contribution amount and enable/disable for this cooperative.",
+      "description": "Optional suggested contribution amount and enable/disable for this Saving Scheme.",
       "suggestedAmount": "Suggested contribution amount",
       "enabled": "Social fund enabled",
       "saveSuccess": "Social fund settings saved",
-      "unavailable": "Settings are not available yet for this cooperative."
+      "unavailable": "Settings are not available yet for this Saving Scheme."
     },
     "contributions": {
       "hint": "Contributions stay pending until the Accountant / Treasurer approves them into the social fund.",
@@ -987,7 +989,7 @@
       "listTitle": "Social disbursements",
       "emptyTitle": "No disbursements yet",
       "emptyDescription": "Create a disbursement request when a member needs welfare support.",
-      "memberViewHint": "Disbursements are managed by cooperative admins. You can view approved and pending requests below.",
+      "memberViewHint": "Disbursements are managed by Saving Scheme officers. You can view approved and pending requests below.",
       "memberEmptyDescription": "No social disbursements to show yet.",
       "balanceCheckHint": "Available social fund balance: {{balance}}. Approval fails if the amount exceeds this balance.",
       "approveSuccess": "Disbursement approved",
@@ -1016,10 +1018,10 @@
     }
   },
   "investments": {
-    "selectCooperativeTitle": "Select a cooperative",
-    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage investments.",
+    "selectCooperativeTitle": "Select a Saving Scheme",
+    "selectCooperativeDescription": "Choose a Saving Scheme in the top bar to manage investments.",
     "adminOnlyTitle": "Admin access required",
-    "adminOnlyDescription": "Investments are managed by cooperative administrators.",
+    "adminOnlyDescription": "Investments are managed by Saving Scheme officers.",
     "backToList": "Back to investments",
     "detailDescription": "Activate, record returns, cancel, or record a loss for this investment.",
     "notFoundTitle": "Investment not found",
@@ -1097,8 +1099,8 @@
     }
   },
   "payouts": {
-    "selectCooperativeTitle": "Select a cooperative",
-    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage payouts.",
+    "selectCooperativeTitle": "Select a Saving Scheme",
+    "selectCooperativeDescription": "Choose a Saving Scheme in the top bar to manage payouts.",
     "backToList": "Back to payouts",
     "detailDescription": "Review payout lines, confirm the run, mark paid, or download a statement.",
     "notFoundTitle": "Payout not found",
@@ -1174,7 +1176,7 @@
     },
     "statement": {
       "title": "Payout statement",
-      "cooperativeFallback": "Cooperative",
+      "cooperativeFallback": "Saving Scheme",
       "generatedAt": "Generated {{date}}",
       "downloadJson": "Download JSON",
       "print": "Print",
@@ -1182,12 +1184,12 @@
     }
   },
   "reports": {
-    "selectCooperativeTitle": "Select a cooperative",
-    "selectCooperativeDescription": "Choose a cooperative in the top bar to download reports.",
+    "selectCooperativeTitle": "Select a Saving Scheme",
+    "selectCooperativeDescription": "Choose a Saving Scheme in the top bar to download reports.",
     "primaryTitle": "Primary reports",
     "advancedTitle": "Advanced reports",
     "openAll": "Open report centre",
-    "memberOnly": "Your reports only include your own records — not the full cooperative ledger or all transactions.",
+    "memberOnly": "Your reports only include your own records — not the full Saving Scheme ledger or all transactions.",
     "primary": {
       "contributions": "Contributions",
       "contributionsHint": "Download a PDF of contributions for the selected timeline.",
@@ -1244,10 +1246,8 @@
         "fromAfterTo": "From date must be on or before to date.",
         "futureFrom": "You cannot start a report in the future.",
         "futureTo": "You cannot generate a report that ends in the future.",
-        "rangeTooLong": "The report timeline cannot be longer than 5 years.",
         "incompleteYearMonth": "Choose both year and month, or leave both as All.",
-        "futureYearMonth": "You cannot generate a report for a future month.",
-        "beforeRegistration": "From date cannot be before the cooperative registration date."
+        "futureYearMonth": "You cannot generate a report for a future month."
       }
     },
     "whatsapp": {
@@ -1266,7 +1266,7 @@
     "import": {
       "title": "Contribution Excel import",
       "description": "Download a template, upload filled rows for a period, review validation, then confirm to save contributions.",
-      "adminOnly": "Contribution import is available to cooperative administrators only.",
+      "adminOnly": "Contribution import is available to Saving Scheme officers only.",
       "step1": "1. Select period and download template",
       "step2": "2. Upload completed Excel file for preview",
       "downloadTemplate": "Download template",
@@ -1290,7 +1290,7 @@
       "emptyPreviewTitle": "No rows in preview",
       "emptyPreviewDescription": "Upload an Excel file that matches the template.",
       "historyTitle": "Import history",
-      "historyDescription": "Past contribution imports for this cooperative.",
+      "historyDescription": "Past contribution imports for this Saving Scheme.",
       "emptyHistoryTitle": "No imports yet",
       "emptyHistoryDescription": "Completed and cancelled imports will appear here.",
       "countsSummary": "{{valid}} valid · {{invalid}} invalid · {{total}} total",
@@ -1319,10 +1319,10 @@
     }
   },
   "transactions": {
-    "selectCooperativeTitle": "Select a cooperative",
-    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage income and expenses.",
+    "selectCooperativeTitle": "Select a Saving Scheme",
+    "selectCooperativeDescription": "Choose a Saving Scheme in the top bar to manage income and expenses.",
     "adminOnlyTitle": "Admin access required",
-    "adminOnlyDescription": "Income and expense transactions are managed by cooperative administrators.",
+    "adminOnlyDescription": "Income and expense transactions are managed by Saving Scheme officers.",
     "emptyTitle": "No transactions yet",
     "emptyDescription": "Create income, expense, or adjustment transactions to record other fund movements.",
     "approvedLocked": "Approved (locked)",
@@ -1388,10 +1388,10 @@
     }
   },
   "ledger": {
-    "selectCooperativeTitle": "Select a cooperative",
-    "selectCooperativeDescription": "Choose a cooperative in the top bar to view the ledger.",
+    "selectCooperativeTitle": "Select a Saving Scheme",
+    "selectCooperativeDescription": "Choose a Saving Scheme in the top bar to view the ledger.",
     "adminOnlyTitle": "Admin access required",
-    "adminOnlyDescription": "The financial ledger is available to cooperative administrators.",
+    "adminOnlyDescription": "The financial ledger is available to Saving Scheme officers.",
     "emptyTitle": "No ledger entries",
     "emptyDescription": "Approved financial movements will appear here.",
     "fields": {
@@ -1464,8 +1464,8 @@
     }
   },
   "auditLogs": {
-    "selectCooperativeTitle": "Select a cooperative",
-    "selectCooperativeDescription": "Choose a cooperative in the top bar to review its audit trail.",
+    "selectCooperativeTitle": "Select a Saving Scheme",
+    "selectCooperativeDescription": "Choose a Saving Scheme in the top bar to review its audit trail.",
     "emptyTitle": "No audit entries",
     "emptyDescription": "Filtered results are empty. Try widening the date range or clearing filters.",
     "clearFilters": "Clear filters",
@@ -1481,13 +1481,16 @@
       "ipAddress": "IP address",
       "previousValues": "Previous values",
       "newValues": "New values"
+    },
+    "entityTypes": {
+      "Cooperative": "Saving Scheme"
     }
   },
   "settings": {
-    "selectCooperativeTitle": "Select a cooperative",
-    "selectCooperativeDescription": "Choose a cooperative in the top bar to manage its settings.",
-    "formTitle": "Cooperative preferences",
-    "formDescription": "Timezone, locale, and in-app notification toggles for this cooperative.",
+    "selectCooperativeTitle": "Select a Saving Scheme",
+    "selectCooperativeDescription": "Choose a Saving Scheme in the top bar to manage its settings.",
+    "formTitle": "Saving Scheme preferences",
+    "formDescription": "Timezone, locale, and in-app notification toggles for this Saving Scheme.",
     "notifySection": "Notification preferences",
     "saveSuccess": "Settings saved",
     "fields": {
@@ -1527,7 +1530,7 @@
   "pages": {
     "members": {
       "title": "Members",
-      "description": "Register and manage cooperative members and their accounts."
+      "description": "Register and manage Saving Scheme members and their accounts."
     },
     "contributions": {
       "title": "Contributions",
@@ -1539,11 +1542,11 @@
     },
     "fines": {
       "title": "Fines",
-      "description": "Record and collect cooperative fines and penalties."
+      "description": "Record and collect Saving Scheme fines and penalties."
     },
     "finePayments": {
       "title": "Fine Payment Queue",
-      "description": "Review, approve, or reject fine payments submitted by members across the cooperative."
+      "description": "Review, approve, or reject fine payments submitted by members across the Saving Scheme."
     },
     "socialFund": {
       "title": "Social Dashboard",
@@ -1551,7 +1554,7 @@
     },
     "investments": {
       "title": "Investments",
-      "description": "Plan, activate, and track cooperative investment capital and returns."
+      "description": "Plan, activate, and track Saving Scheme investment capital and returns."
     },
     "transactions": {
       "title": "Transactions",
@@ -1559,19 +1562,19 @@
     },
     "ledger": {
       "title": "Ledger",
-      "description": "Read-only view of approved cooperative financial ledger entries."
+      "description": "Read-only view of approved Saving Scheme financial ledger entries."
     },
     "payouts": {
       "title": "Group Share Out",
-      "description": "Preview and confirm cooperative share-out payouts."
+      "description": "Preview and confirm Saving Scheme share-out payouts."
     },
     "reports": {
       "title": "Report Centre",
-      "description": "Download print-ready PDF reports for the selected cooperative."
+      "description": "Download print-ready PDF reports for the selected Saving Scheme."
     },
     "settings": {
       "title": "Settings",
-      "description": "Configure cooperative timezone, locale, and notification preferences."
+      "description": "Configure Saving Scheme timezone, locale, and notification preferences."
     },
     "notifications": {
       "title": "Notifications",
@@ -1579,19 +1582,84 @@
     },
     "auditLogs": {
       "title": "Audit logs",
-      "description": "Inspect cooperative activity with filters and change details."
+      "description": "Inspect Saving Scheme activity with filters and change details."
     },
     "profile": {
       "title": "Profile",
       "description": "Your account details and security preferences."
     },
     "cooperatives": {
-      "title": "Cooperatives",
-      "description": "Super-admin management of cooperative tenants."
+      "title": "Saving Schemes",
+      "description": "Super-admin management of Saving Schemes."
     },
     "system": {
       "title": "System health",
       "description": "Platform status and operational checks."
+    },
+    "historicalImport": {
+      "title": "Historical Data Import",
+      "description": "Import a Saving Scheme's existing history from Excel so CSAMS reports and the dashboard include it."
+    }
+  },
+  "historicalImport": {
+    "instructions": "Download the official workbook, fill historical business rows, then preview. Confirm stays disabled until every row is valid. Existing CSAMS financial records are never overwritten.",
+    "downloadTemplate": "Download Excel Template",
+    "chooseFile": "Choose File",
+    "noFile": "No file selected",
+    "preview": "Preview Import",
+    "previewTitle": "Validation summary",
+    "previewSuccess": "Workbook preview is ready",
+    "previewFailed": "Preview failed",
+    "templateSuccess": "Downloaded {{filename}}",
+    "sheetCounts": "{{total}} total · {{valid}} valid · {{invalid}} invalid",
+    "countsSummary": "{{total}} total · {{valid}} valid · {{invalid}} invalid",
+    "fixAndReupload": "Fix the errors in the workbook and upload it again.",
+    "noErrors": "No validation errors",
+    "confirm": "Confirm Import",
+    "confirmTitle": "Confirm historical import",
+    "confirmWarning": "This operation will add historical financial records to this Saving Scheme. Existing records will not be overwritten.",
+    "confirmSuccess": "Historical import confirmed",
+    "confirmSummaryTitle": "Import completed",
+    "confirmSummaryBody": "Imported {{members}} members, {{contributions}} contributions, {{loans}} loans, {{repayments}} repayments, and {{ledger}} ledger entries.",
+    "cancel": "Cancel",
+    "cancelTitle": "Cancel import",
+    "cancelMessage": "Cancel this unconfirmed historical import?",
+    "cancelSuccess": "Import cancelled",
+    "historyTitle": "Previous imports",
+    "historyFailed": "Could not load import history",
+    "noHistory": "No historical imports yet",
+    "selectCooperativeTitle": "Select a Saving Scheme",
+    "selectCooperativeDescription": "Choose a Saving Scheme to import historical data.",
+    "reconciliationTitle": "Fund reconciliation",
+    "reconciliationBody": "Credits {{credits}} · Debits {{debits}} · Outstanding loans {{outstanding}} · Available fund {{available}} · Social {{social}} · Payouts {{payouts}}",
+    "reconciliationCredits": "Historical credits: {{value}}",
+    "reconciliationDebits": "Historical debits: {{value}}",
+    "reconciliationOutstanding": "Outstanding loans: {{value}}",
+    "reconciliationPayouts": "Payouts: {{value}}",
+    "reconciliationAvailable": "Projected available group fund: {{value}}",
+    "reconciliationSocial": "Projected social fund: {{value}}",
+    "emptyWorkbook": "This workbook has no business rows. Confirm stays disabled so a blank template cannot create records.",
+    "fields": {
+      "sheet": "Sheet",
+      "row": "Row",
+      "field": "Field",
+      "error": "Error",
+      "filename": "Filename",
+      "uploadedBy": "Uploaded by",
+      "uploadedAt": "Uploaded",
+      "status": "Status",
+      "counts": "Rows",
+      "confirmedAt": "Confirmed",
+      "actions": "Actions"
+    },
+    "status": {
+      "UPLOADED": "Uploaded",
+      "VALIDATING": "Validating",
+      "READY": "Ready",
+      "INVALID": "Invalid",
+      "CONFIRMED": "Confirmed",
+      "CANCELLED": "Cancelled",
+      "FAILED": "Failed"
     }
   },
   "theme": {
@@ -1613,7 +1681,7 @@
     "MEMBER": "MEMBER",
     "dutiesTitle": "What the {{role}} does",
     "duties": {
-      "SUPER_ADMIN": "Platform owner: not a member of any cooperative. Create groups, appoint Presidents, see every cooperative, and take full control when officers need help.",
+      "SUPER_ADMIN": "Platform owner: not a member of any Saving Scheme. Create groups, appoint Presidents, see every Saving Scheme, and take full control when officers need help.",
       "MEMBER": "Save each month, request loans, and view your own fines, social fund, and share-out.",
       "PRESIDENT": "Chair the group, settle disputes, suspend members, approve rule changes, and co-sign money leaving the fund.",
       "VICE_PRESIDENT": "Act for the President when they are away, with the same authority, and head the loan committee.",
