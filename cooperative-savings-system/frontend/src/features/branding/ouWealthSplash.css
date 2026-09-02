@@ -1,4 +1,5 @@
-/* Exact keyframes, colors, easing, and timing from OuWealth-splash-animation (2).html */
+/* Keyframes, easing, and timing from OuWealth-splash-animation (2).html.
+   Accent colors use OuWealth logo blues (#1B4D8C / #4A7AB8) instead of the reference orange. */
 
 @import url('https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400;0,500;1,400&display=swap');
 
@@ -133,9 +134,9 @@
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(232, 112, 26, 0.2) 0%,
-    rgba(232, 112, 26, 0.07) 42%,
-    rgba(232, 112, 26, 0) 68%
+    rgba(27, 77, 140, 0.34) 0%,
+    rgba(74, 122, 184, 0.12) 42%,
+    rgba(27, 77, 140, 0) 68%
   );
   animation: ouGlow 1.6s 1.35s cubic-bezier(0.22, 0.7, 0.2, 1) both;
   pointer-events: none;
@@ -218,7 +219,7 @@
 .ou-splash-rule {
   width: 13.125em;
   height: 1px;
-  background: #f0862b;
+  background: #4a7ab8;
   transform-origin: center;
   animation: ouRuleIn 0.7s 2.62s cubic-bezier(0.22, 0.8, 0.2, 1) both;
 }
@@ -227,7 +228,7 @@
   font-family: Candara, Cabin, 'Gill Sans', sans-serif;
   font-size: 0.9375em;
   line-height: 1;
-  color: #f0862b;
+  color: #4a7ab8;
   letter-spacing: 0.54em;
   padding-left: 0.5625em;
   animation: ouTrack 0.9s 2.78s cubic-bezier(0.22, 0.8, 0.2, 1) both;
@@ -244,7 +245,7 @@
 }
 
 .ou-splash-instant {
-  color: #f0862b;
+  color: #4a7ab8;
 }
 
 .ou-splash-continue {
