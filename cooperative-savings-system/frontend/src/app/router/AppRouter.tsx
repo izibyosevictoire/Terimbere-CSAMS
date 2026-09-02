@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { AppLayout } from '@/layouts/AppLayout'
 import { LoginPage } from '@/pages/LoginPage'
+import { LoginSuccessSplashPage } from '@/pages/LoginSuccessSplashPage'
 import { SignupPage } from '@/pages/SignupPage'
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage'
@@ -56,6 +57,7 @@ export function AppRouter() {
           </Route>
 
           <Route element={<ProtectedRoute />}>
+            <Route path={ROUTES.loginSuccess} element={<LoginSuccessSplashPage />} />
             <Route element={<AppLayout />}>
               <Route path={ROUTES.dashboard} element={<DashboardPage />} />
               <Route

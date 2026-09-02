@@ -22,6 +22,7 @@ import { setCredentials, setSelectedCooperativeId } from '@/app/store/authSlice'
 import { login } from '@/shared/api/auth'
 import { getErrorMessage } from '@/shared/api/client'
 import { AuthBrand } from '@/shared/components/AuthBrand'
+import { LOGIN_SUCCESS_STATE } from '@/features/branding/loginSuccessSplash'
 import { ROUTES } from '@/shared/constants/routes'
 import { ROLE_PRESIDENT, ROLE_SUPER_ADMIN } from '@/shared/types/auth'
 import { isPreviewLoginEnabled } from '@/shared/auth/previewLogin'
@@ -55,7 +56,7 @@ export function LoginPage() {
     mutationFn: login,
     onSuccess: (data) => {
       dispatch(setCredentials({ user: data.user, accessToken: data.accessToken }))
-      navigate(ROUTES.dashboard, { replace: true })
+      navigate(ROUTES.loginSuccess, { replace: true, state: LOGIN_SUCCESS_STATE })
     },
     onError: (error) => {
       setErrorMessage(getErrorMessage(error, t('errors.loginFailed')))
