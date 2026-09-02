@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import authReducer from '@/app/store/authSlice'
 import uiReducer from '@/app/store/uiSlice'
 import { ROLE_PRESIDENT } from '@/shared/types/auth'
-import { BRAND_LOGO_ALT, BRAND_LOGO_ON_DARK_SRC, BRAND_LOGO_SRC } from '@/shared/components/BrandLogo'
+import { BRAND_LOGO_ALT } from '@/shared/components/BrandLogo'
 import { darkTheme, lightTheme } from '@/theme/theme'
 import { AppLayout } from './AppLayout'
 
@@ -84,40 +84,42 @@ function appBarLogo() {
   return within(screen.getByRole('banner')).getByRole('img', { name: BRAND_LOGO_ALT })
 }
 
-function drawerLogo() {
-  const paper = document.querySelector('.MuiDrawer-paper')
-  expect(paper).toBeInstanceOf(HTMLElement)
-  return within(paper as HTMLElement).getByRole('img', { name: BRAND_LOGO_ALT })
-}
-
 describe('AppLayout logo surfaces', () => {
   beforeEach(() => {
     stubMatchMedia(false)
   })
 
-  it('always uses the on-dark wordmark in the AppBar in Light Mode', () => {
+  it('uses the orange/white mark lockup in the AppBar in Light Mode', () => {
     renderAppLayout('light', true)
-    expect(appBarLogo()).toHaveAttribute('src', BRAND_LOGO_ON_DARK_SRC)
+    expect(appBarLogo()).toBeInTheDocument()
+    expect(within(screen.getByRole('banner')).getByText('Wealth')).toBeInTheDocument()
+    expect(within(screen.getByRole('banner')).getByText('COMMUNITY')).toBeInTheDocument()
+    expect(within(screen.getByRole('banner')).queryByRole('img', { name: BRAND_LOGO_ALT })?.getAttribute('src')).toBeNull()
   })
 
-  it('always uses the on-dark wordmark in the AppBar in Dark Mode', () => {
+  it('uses the orange/white mark lockup in the AppBar in Dark Mode', () => {
     renderAppLayout('dark', true)
-    expect(appBarLogo()).toHaveAttribute('src', BRAND_LOGO_ON_DARK_SRC)
+    expect(appBarLogo()).toBeInTheDocument()
+    expect(within(screen.getByRole('banner')).getByText('COMMUNITY')).toBeInTheDocument()
   })
 
-  it('uses the normal wordmark in the Light Mode drawer', async () => {
+  it('uses the lockup in the Light Mode drawer', async () => {
     const user = userEvent.setup()
     renderAppLayout('light', false)
-    expect(appBarLogo()).toHaveAttribute('src', BRAND_LOGO_ON_DARK_SRC)
+    expect(within(screen.getByRole('banner')).getByText('COMMUNITY')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /open menu/i }))
-    expect(drawerLogo()).toHaveAttribute('src', BRAND_LOGO_SRC)
+    const paper = document.querySelector('.MuiDrawer-paper')
+    expect(paper).toBeInstanceOf(HTMLElement)
+    expect(within(paper as HTMLElement).getByText('Wealth')).toBeInTheDocument()
+    expect(within(paper as HTMLElement).getByText('COMMUNITY')).toBeInTheDocument()
   })
 
-  it('uses the on-dark wordmark in the Dark Mode drawer', async () => {
+  it('uses the lockup in the Dark Mode drawer', async () => {
     const user = userEvent.setup()
     renderAppLayout('dark', false)
-    expect(appBarLogo()).toHaveAttribute('src', BRAND_LOGO_ON_DARK_SRC)
     await user.click(screen.getByRole('button', { name: /open menu/i }))
-    expect(drawerLogo()).toHaveAttribute('src', BRAND_LOGO_ON_DARK_SRC)
+    const paper = document.querySelector('.MuiDrawer-paper')
+    expect(paper).toBeInstanceOf(HTMLElement)
+    expect(within(paper as HTMLElement).getByText('COMMUNITY')).toBeInTheDocument()
   })
 })

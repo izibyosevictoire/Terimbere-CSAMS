@@ -66,4 +66,13 @@ describe('BrandLogo', () => {
     expect(screen.getByRole('img', { name: BRAND_LOGO_ALT })).toBeInTheDocument()
     expect(screen.queryByText(BRAND_LOGO_ALT)).not.toBeInTheDocument()
   })
+
+  it('renders a visible Wealth / COMMUNITY lockup with the orange mark', () => {
+    renderLogo(<BrandLogo variant="lockup" onDark />)
+    const lockup = screen.getByRole('img', { name: BRAND_LOGO_ALT })
+    expect(lockup).not.toHaveAttribute('src')
+    expect(screen.getByText('Wealth')).toBeInTheDocument()
+    expect(screen.getByText('COMMUNITY')).toBeInTheDocument()
+    expect(lockup.querySelector('svg')).not.toBeNull()
+  })
 })

@@ -104,7 +104,7 @@ export function AppLayout() {
           bgcolor: 'transparent',
         }}
       >
-        <BrandLogo size={44} onDark={theme.palette.mode === 'dark'} />
+        <BrandLogo variant="lockup" size={40} onDark={theme.palette.mode === 'dark'} />
       </Toolbar>
       <Divider />
       <Box sx={{ px: 2, py: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -129,7 +129,7 @@ export function AppLayout() {
           color: '#FFFFFF',
         }}
       >
-        <Toolbar sx={{ gap: { xs: 0.5, md: 1.5 }, minHeight: { xs: 56, sm: 64 } }}>
+        <Toolbar sx={{ gap: { xs: 0.5, md: 1.5 }, minHeight: { xs: 64, sm: 68 } }}>
           {!isMdUp ? (
             <IconButton
               edge="start"
@@ -159,13 +159,14 @@ export function AppLayout() {
             sx={{
               display: 'flex',
               alignItems: 'center',
-              minWidth: 0,
+              flexShrink: 0,
+              minWidth: 'max-content',
               textDecoration: 'none',
               backgroundColor: 'transparent',
               mr: { md: 1 },
             }}
           >
-            <BrandLogo size={40} onDark />
+            <BrandLogo variant="lockup" size={40} onDark />
           </Box>
 
           {isMdUp ? (
@@ -258,7 +259,7 @@ export function AppLayout() {
           bgcolor: 'background.default',
         }}
       >
-        <Toolbar />
+        <Toolbar sx={{ minHeight: { xs: 64, sm: 68 } }} />
         <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 1280, mx: 'auto' }}>
           <Outlet />
         </Box>

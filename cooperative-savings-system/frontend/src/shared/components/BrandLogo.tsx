@@ -1,4 +1,5 @@
 import { Box, useTheme, type BoxProps } from '@mui/material'
+import { OuWealthMark } from '@/features/branding/OuWealthMark'
 
 /**
  * Canonical UI wordmark paths. Current files are temporary raster brand assets
@@ -17,7 +18,12 @@ export function resolveBrandLogoSrc(onDark: boolean): string {
 interface BrandLogoProps {
   /** Height in pixels. Width follows the image aspect ratio. */
   size?: number
-  variant?: 'compact' | 'full'
+  /**
+   * `full` — login raster wordmark.
+   * `compact` — smaller raster (legacy).
+   * `lockup` — SVG mark + Wealth / COMMUNITY, sized for AppBar and drawer.
+   */
+  variant?: 'compact' | 'full' | 'lockup'
   animate?: boolean
   /**
    * True when the surrounding surface is dark (always-black AppBar, dark drawer,
@@ -27,6 +33,8 @@ interface BrandLogoProps {
   label?: string
   sx?: BoxProps['sx']
 }
+
+const lockupFont = "Candara, Cabin, 'Gill Sans', sans-serif"
 
 export function BrandLogo({
   size = 40,
@@ -39,6 +47,63 @@ export function BrandLogo({
   const theme = useTheme()
   const useOnDarkAsset = onDark ?? theme.palette.mode === 'dark'
   const isFull = variant === 'full'
+
+  if (variant === 'lockup') {
+    const markSize = size
+    const wealthColor = useOnDarkAsset ? '#4A7AB8' : '#1B4D8C'
+    const communityColor = useOnDarkAsset ? '#FFFFFF' : '#1B4D8C'
+
+    return (
+      <Box
+        className={animate ? 'brand-logo-enter' : undefined}
+        aria-label={label}
+        role="img"
+        sx={{
+          flexShrink: 0,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 1.25,
+          lineHeight: 0,
+          p: 0,
+          m: 0,
+          minWidth: 'max-content',
+          ...sx,
+        }}
+      >
+        <OuWealthMark size={markSize} />
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
+          <Box
+            component="span"
+            sx={{
+              fontFamily: lockupFont,
+              fontSize: `${Math.round(markSize * 0.5)}px`,
+              lineHeight: 0.92,
+              color: wealthColor,
+              letterSpacing: '-0.018em',
+              fontWeight: 500,
+            }}
+          >
+            Wealth
+          </Box>
+          <Box
+            component="span"
+            sx={{
+              fontFamily: lockupFont,
+              fontSize: `${Math.max(8, Math.round(markSize * 0.22))}px`,
+              lineHeight: 1,
+              color: communityColor,
+              letterSpacing: '0.42em',
+              paddingLeft: '0.12em',
+              mt: '0.28em',
+              fontWeight: 500,
+            }}
+          >
+            COMMUNITY
+          </Box>
+        </Box>
+      </Box>
+    )
+  }
 
   return (
     <Box
