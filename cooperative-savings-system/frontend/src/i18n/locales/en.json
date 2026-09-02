@@ -1639,6 +1639,8 @@
     "reconciliationAvailable": "Projected available group fund: {{value}}",
     "reconciliationSocial": "Projected social fund: {{value}}",
     "emptyWorkbook": "This workbook has no business rows. Confirm stays disabled so a blank template cannot create records.",
+    "yearSummaryTitle": "Historical years in this workbook",
+    "yearSummaryLine": "{{year}}: {{contributions}} contributions, {{loans}} loans, {{repayments}} repayments, {{fines}} fines, {{investments}} investments, {{payouts}} payouts",
     "fields": {
       "sheet": "Sheet",
       "row": "Row",

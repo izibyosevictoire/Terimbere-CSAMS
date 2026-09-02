@@ -195,7 +195,8 @@ public class HistoricalImportService {
         byte[] bytes = readStored(importEntity.getStorageKey());
         ParsedWorkbook parsed = parser.parse(bytes);
         ValidatedWorkbook validated = validator.validate(cooperative.getId(), parsed, principal);
-        if (validated.hasErrors()
+        if (!validated.reportReady
+                || validated.hasErrors()
                 || (validated.reconciliation != null && validated.reconciliation.isBlocked())) {
             throw new ValidationException("Workbook is no longer valid. Fix the errors and upload again.");
         }
@@ -285,6 +286,9 @@ public class HistoricalImportService {
                         .build());
             }
         }
+        HistoricalReconciliationSummary reconciliation =
+                readJson(importEntity.getReconciliationSummary(), HistoricalReconciliationSummary.class);
+        boolean ready = confirmAllowed(importEntity);
         return HistoricalImportPreviewResponse.builder()
                 .importId(importEntity.getId())
                 .status(importEntity.getStatus())
@@ -293,10 +297,14 @@ public class HistoricalImportService {
                 .totalRows(importEntity.getTotalRows())
                 .validRows(importEntity.getValidRows())
                 .invalidRows(importEntity.getInvalidRows())
-                .confirmAllowed(confirmAllowed(importEntity))
+                .confirmAllowed(ready)
+                .reportReady(ready)
                 .sheets(readJsonList(importEntity.getSheetSummary(), HistoricalImportSheetSummary.class))
                 .errors(errors)
-                .reconciliation(readJson(importEntity.getReconciliationSummary(), HistoricalReconciliationSummary.class))
+                .yearSummaries(reconciliation == null || reconciliation.getYearSummaries() == null
+                        ? List.of()
+                        : reconciliation.getYearSummaries())
+                .reconciliation(reconciliation)
                 .errorSummary(importEntity.getErrorSummary())
                 .build();
     }
@@ -337,9 +345,11 @@ public class HistoricalImportService {
                 .totalRows(validated.totalRows())
                 .validRows(validated.validRows())
                 .invalidRows(validated.invalidRows())
-                .confirmAllowed(confirmAllowed(entity))
+                .confirmAllowed(confirmAllowed(entity) && validated.reportReady)
+                .reportReady(validated.reportReady)
                 .sheets(new ArrayList<>(validated.sheetSummaries.values()))
                 .errors(validated.errors)
+                .yearSummaries(validated.yearSummaries)
                 .reconciliation(validated.reconciliation)
                 .errorSummary(entity.getErrorSummary())
                 .build();
@@ -463,6 +473,8 @@ public class HistoricalImportService {
         return List.of(
                 "Historical Data Import — Instructions",
                 "",
+                "Historical imports reconstruct reports for previous years. Dates must be the actual historical business dates. Do not use today's date unless the transaction actually happened today.",
+                "",
                 "1. The Saving Scheme is the one selected in CSAMS. Do not put cooperative UUIDs in this file.",
                 "2. Do not rename sheets. Do not change header row text.",
                 "3. Use Username to reference members on every financial sheet.",
@@ -472,7 +484,7 @@ public class HistoricalImportService {
                 "7. Amounts must be numeric. Do not recompute old contribution amounts from today's settings.",
                 "8. Empty business sheets are ignored. Unknown sheet names are rejected.",
                 "9. Existing CSAMS financial records are never overwritten. Duplicates fail validation.",
-                "10. Every row must be valid before Confirm Import is allowed. Fix errors and upload again.",
+                "10. Every row must be valid before Confirm Import is allowed. If a row cannot be reported correctly, it cannot be imported.",
                 "11. Historical members who already left may be INACTIVE or SUSPENDED.",
                 "12. New member accounts receive an unknown password. They must use Forgot password before signing in.",
                 "13. Allowed loan statuses: ACTIVE, OVERDUE, CLOSED, WRITTEN_OFF.",
@@ -482,10 +494,25 @@ public class HistoricalImportService {
                 "17. Income Category is OTHER_INCOME. Expense Category is GENERAL_EXPENSE or INTEREST_EXPENSE. Ledger type is derived by CSAMS; do not request ADJUSTMENT.",
                 "18. To attach child rows to a loan/fine/investment/payout/campaign that already exists in CSAMS, include a parent row whose natural fields match that record. The parent will not be reinserted.",
                 "",
+                "Required Dates for Historical Reporting",
+                "Members: Membership Date is required. Do not default it to today.",
+                "Contributions: Payment Date is required when Paid Amount > 0 because contribution reports filter by Payment Date. Unpaid rows (Paid Amount = 0) may leave Payment Date blank. Year and Month remain required. Late payment in a later month is allowed.",
+                "Special Contributions: Contribution Date is required.",
+                "Social Contributions: Contribution Date is required.",
+                "Social Disbursements: Disbursement Date is required.",
+                "Loans: Request Date, Approval Date, Disbursement Date, and Due Date are required for disbursed historical loans. Chronology: Request Date <= Approval Date <= Disbursement Date <= Due Date.",
+                "Loan Repayments: Payment Date, Amount Total, Principal Portion, and Interest Portion are required. Principal + Interest must equal Total.",
+                "Fines: Issued Date is required because the Fines report filters by Issued Date.",
+                "Fine Payments: Payment Date is required because the payment report and ledger use it.",
+                "Investments: Investment Date is required for money-out investments. The system cannot use today's date.",
+                "Investment Returns: Return Date is required. Capital Portion + Profit Portion must equal Amount Total.",
+                "Income / Expenses: Transaction Date is required. Never use import date as the business date.",
+                "Payouts: Period From, Period To, and Payout Date (when PAID) are required. Period From <= Period To. Do not substitute Period To for Payout Date.",
+                "",
                 "Examples (do not copy these onto business sheets unless they are real history):",
                 "Members: hist_jane | Jane | Uwase | jane.uwase@example.com | 0781234567 | | 2022-01-15 | 1 | ACTIVE | MEMBER",
                 "Contributions: hist_jane | 2022 | 3 | 10000 | 10000 | 2022-03-05 | REF-2022-03",
-                "Loans: L-2022-001 | hist_jane | principal 100000 | disbursed 2022-05-10 | CLOSED",
+                "Loans: L-2022-001 | hist_jane | principal 100000 | requested 2022-05-01 | disbursed 2022-05-10 | CLOSED",
                 "Payouts: PAY-2022-01 | 2022-01-01 | 2022-12-31 | Payout Date 2023-01-15 | PAID");
     }
 

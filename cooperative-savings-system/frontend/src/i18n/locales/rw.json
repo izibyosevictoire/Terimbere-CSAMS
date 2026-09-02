@@ -1624,6 +1624,8 @@
     "reconciliationAvailable": "Amafaranga asigaye: {{value}}",
     "reconciliationSocial": "Ikigega cy'imibano: {{value}}",
     "emptyWorkbook": "Iyi nyandiko nta mirongo y'ubucuruzi ifite. Emeza iracyafunze kugira ngo ntihagire icyinjizwa.",
+    "yearSummaryTitle": "Imyaka y'amateka iri muri iyi nyandiko",
+    "yearSummaryLine": "{{year}}: amafaranga {{contributions}}, inguzanyo {{loans}}, kwishyura {{repayments}}, ihazabu {{fines}}, ishoramari {{investments}}, gusangira {{payouts}}",
     "fields": {
       "sheet": "Urupapuro",
       "row": "Umurongo",

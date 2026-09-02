@@ -22,8 +22,10 @@ public class HistoricalImportPreviewResponse {
     private int validRows;
     private int invalidRows;
     private boolean confirmAllowed;
+    private boolean reportReady;
     private List<HistoricalImportSheetSummary> sheets;
     private List<HistoricalImportError> errors;
+    private List<HistoricalYearSummary> yearSummaries;
     private HistoricalReconciliationSummary reconciliation;
     private String errorSummary;
 }

@@ -400,7 +400,7 @@ class HistoricalPersistenceService {
                         .userId(persistedUser.getId())
                         .cooperativeId(cooperativeId)
                         .membershipStatus(draft.membershipStatus())
-                        .membershipDate(draft.membershipDate() == null ? LocalDate.now() : draft.membershipDate())
+                        .membershipDate(requireHistoricalDate(draft.membershipDate(), "Membership Date"))
                         .roleInCooperative(draft.role())
                         .shareCount(draft.shareCount())
                         .build()));
@@ -449,9 +449,7 @@ class HistoricalPersistenceService {
         if (paid.compareTo(BigDecimal.ZERO) > 0
                 && (draft.status() == ContributionStatus.PAID
                         || draft.status() == ContributionStatus.PARTIALLY_PAID)) {
-            LocalDate date = draft.paymentDate() == null
-                    ? LocalDate.of(draft.year(), draft.month(), 1)
-                    : draft.paymentDate();
+            LocalDate date = requireHistoricalDate(draft.paymentDate(), "Payment Date");
             ledgerService.appendApproved(LedgerService.AppendRequest.builder()
                     .cooperativeId(cooperative.getId())
                     .memberUserId(memberId)
@@ -769,7 +767,9 @@ class HistoricalPersistenceService {
         if (draft.existingId() != null) {
             return draft.existingId();
         }
-        Instant activated = toStartOfDay(draft.investmentDate() == null ? draft.expectedReturnDate() : draft.investmentDate());
+        Instant activated = draft.status() == InvestmentStatus.CANCELLED
+                ? null
+                : toStartOfDay(requireHistoricalDate(draft.investmentDate(), "Investment Date"));
         Investment investment = Investment.builder()
                 .cooperativeId(cooperative.getId())
                 .name(draft.name())
@@ -782,12 +782,12 @@ class HistoricalPersistenceService {
                 .totalProfitReturned(nvl(draft.totalProfitReturned()))
                 .status(draft.status())
                 .createdBy(actorId)
-                .activatedAt(draft.status() == InvestmentStatus.CANCELLED ? null : activated)
+                .activatedAt(activated)
                 .completedAt(draft.status() == InvestmentStatus.COMPLETED ? activated : null)
                 .build();
         investment = investmentRepository.save(investment);
         if (draft.status() != InvestmentStatus.CANCELLED) {
-            LocalDate date = draft.investmentDate() == null ? LocalDate.now() : draft.investmentDate();
+            LocalDate date = requireHistoricalDate(draft.investmentDate(), "Investment Date");
             ledgerService.appendApproved(LedgerService.AppendRequest.builder()
                     .cooperativeId(cooperative.getId())
                     .transactionType(LedgerTransactionType.INVESTMENT_OUTFLOW)
@@ -904,7 +904,9 @@ class HistoricalPersistenceService {
         if (draft.existingId() != null) {
             return draft.existingId();
         }
-        Instant paidAt = draft.payoutDate() == null ? null : toStartOfDay(draft.payoutDate());
+        Instant paidAt = draft.status() == rw.terimbere.csams.modules.payout.entity.PayoutRunStatus.PAID
+                ? toStartOfDay(requireHistoricalDate(draft.payoutDate(), "Payout Date"))
+                : (draft.payoutDate() == null ? null : toStartOfDay(draft.payoutDate()));
         PayoutRun run = PayoutRun.builder()
                 .cooperativeId(cooperative.getId())
                 .name(draft.name())
@@ -952,7 +954,7 @@ class HistoricalPersistenceService {
                 .transactionType(LedgerTransactionType.MEMBER_PAYOUT)
                 .debitAmount(draft.payoutAmount())
                 .currency(cooperative.getCurrency())
-                .transactionDate(transactionDate == null ? LocalDate.now() : transactionDate)
+                .transactionDate(requireHistoricalDate(transactionDate, "Payout Date"))
                 .reference("PAYOUT-" + runId)
                 .sourceEntityType(LedgerService.SOURCE_MEMBER_PAYOUT)
                 .sourceEntityId(line.getId())
@@ -1003,6 +1005,14 @@ class HistoricalPersistenceService {
 
     private static Instant toStartOfDay(LocalDate date) {
         return date == null ? null : date.atStartOfDay().toInstant(ZoneOffset.UTC);
+    }
+
+    private static LocalDate requireHistoricalDate(LocalDate date, String field) {
+        if (date == null) {
+            throw new IllegalStateException(
+                    field + " is required for historical persistence and cannot be replaced with today");
+        }
+        return date;
     }
 
     private static BigDecimal nvl(BigDecimal value) {

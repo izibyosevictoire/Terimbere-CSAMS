@@ -30,4 +30,7 @@ public class HistoricalReconciliationSummary {
 
     @Builder.Default
     private List<String> errors = new ArrayList<>();
+
+    @Builder.Default
+    private List<HistoricalYearSummary> yearSummaries = new ArrayList<>();
 }

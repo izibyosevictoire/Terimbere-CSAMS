@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,7 @@ import rw.terimbere.csams.modules.fine.entity.FineType;
 import rw.terimbere.csams.modules.historicalimport.dto.HistoricalImportError;
 import rw.terimbere.csams.modules.historicalimport.dto.HistoricalImportSheetSummary;
 import rw.terimbere.csams.modules.historicalimport.dto.HistoricalReconciliationSummary;
+import rw.terimbere.csams.modules.historicalimport.dto.HistoricalYearSummary;
 import rw.terimbere.csams.modules.historicalimport.entity.HistoricalImportSheet;
 import rw.terimbere.csams.modules.historicalimport.repository.HistoricalImportRowRepository;
 import rw.terimbere.csams.modules.incomeexpense.entity.IncomeExpenseCategory;
@@ -100,7 +102,14 @@ class HistoricalImportValidator {
         reconcileLoanTotals(out);
         reconcileFineTotals(out);
         reconcilePayoutTotals(out);
+        out.yearSummaries = buildYearSummaries(out);
         out.reconciliation = buildReconciliation(cooperativeId, out);
+        if (out.reconciliation != null) {
+            out.reconciliation.setYearSummaries(out.yearSummaries);
+        }
+        out.reportReady = !out.hasErrors()
+                && out.validRows() > 0
+                && (out.reconciliation == null || !out.reconciliation.isBlocked());
         return out;
     }
 
@@ -130,10 +139,11 @@ class HistoricalImportValidator {
             }
             String phone = row.get("Phone");
             String nationalId = trim(row.get("National ID"));
-            LocalDate membershipDate = optionalDate(row, "Membership Date", errors);
-            if (membershipDate != null && membershipDate.isAfter(LocalDate.now())) {
-                errors.add(err(row, "Membership Date", "FUTURE_DATE", "Membership date cannot be in the future"));
-            }
+            LocalDate membershipDate = requiredDate(
+                    row,
+                    "Membership Date",
+                    errors,
+                    "Membership Date is required. Do not leave it blank or use today's date unless the member actually joined today.");
             Integer shareCount = optionalInt(row, "Share Count", 1, errors);
             if (shareCount != null && (shareCount < 1 || shareCount > 1000)) {
                 errors.add(err(row, "Share Count", "INVALID_SHARE_COUNT", "Share count must be between 1 and 1000"));
@@ -315,7 +325,24 @@ class HistoricalImportValidator {
             }
             BigDecimal expected = requiredAmount(row, "Expected Amount", errors);
             BigDecimal paid = requiredAmount(row, "Paid Amount", errors);
-            LocalDate paymentDate = optionalDate(row, "Payment Date", errors);
+            boolean paidMoney = paid != null && paid.compareTo(BigDecimal.ZERO) > 0;
+            LocalDate paymentDate = paidMoney
+                    ? requiredDate(
+                            row,
+                            "Payment Date",
+                            errors,
+                            "Payment Date is required for a paid historical contribution because contribution reports use Payment Date for historical date filtering.")
+                    : optionalDate(row, "Payment Date", errors);
+            if (paymentDate != null && year != null && month != null && month >= 1 && month <= 12) {
+                LocalDate periodStart = LocalDate.of(year, month, 1);
+                if (paymentDate.isBefore(periodStart)) {
+                    errors.add(err(
+                            row,
+                            "Payment Date",
+                            "PERIOD_MISMATCH",
+                            "Payment Date cannot be before the contribution Year/Month. Late payment in a later month is allowed."));
+                }
+            }
             UUID memberId = resolveUsername(row, username, usernames, cooperativeId, errors);
             String periodKey = HistoricalFingerprint.normalize(username) + "|" + year + "|" + month;
             if (year != null && month != null && !seen.add(periodKey)) {
@@ -381,7 +408,11 @@ class HistoricalImportValidator {
             String username = required(row, "Username", errors);
             String campaignCode = required(row, "Campaign Code", errors);
             BigDecimal amount = requiredPositive(row, "Amount", errors);
-            LocalDate date = requiredDate(row, "Contribution Date", errors);
+            LocalDate date = requiredDate(
+                    row,
+                    "Contribution Date",
+                    errors,
+                    "Contribution Date is required because special contribution reports use Contribution Date for historical date filtering.");
             UUID memberId = resolveUsername(row, username, usernames, cooperativeId, errors);
             UUID campaignId = resolveCode(
                     row,
@@ -447,7 +478,11 @@ class HistoricalImportValidator {
             List<HistoricalImportError> errors = new ArrayList<>();
             String username = required(row, "Username", errors);
             BigDecimal amount = requiredPositive(row, "Amount", errors);
-            LocalDate date = requiredDate(row, "Contribution Date", errors);
+            LocalDate date = requiredDate(
+                    row,
+                    "Contribution Date",
+                    errors,
+                    "Contribution Date is required because social fund reports use Contribution Date for historical date filtering.");
             UUID memberId = resolveUsername(row, username, usernames, cooperativeId, errors);
             String fp = HistoricalFingerprint.of(
                     cooperativeId,
@@ -498,7 +533,11 @@ class HistoricalImportValidator {
             List<HistoricalImportError> errors = new ArrayList<>();
             String username = required(row, "Username", errors);
             BigDecimal amount = requiredPositive(row, "Amount", errors);
-            LocalDate date = requiredDate(row, "Disbursement Date", errors);
+            LocalDate date = requiredDate(
+                    row,
+                    "Disbursement Date",
+                    errors,
+                    "Disbursement Date is required because social fund reports use Disbursement Date for historical date filtering.");
             String reason = required(row, "Reason", errors);
             UUID memberId = resolveUsername(row, username, usernames, cooperativeId, errors);
             String fp = HistoricalFingerprint.of(
@@ -578,13 +617,29 @@ class HistoricalImportValidator {
             if (term != null && term < 1) {
                 errors.add(err(row, "Term Months", "INVALID_TERM", "Term months must be at least 1"));
             }
-            LocalDate disbursementDate = requiredDate(row, "Disbursement Date", errors);
-            LocalDate requestDate = optionalDate(row, "Request Date", errors);
-            if (requestDate == null) {
-                requestDate = disbursementDate;
-            }
-            LocalDate approvalDate = optionalDate(row, "Approval Date", errors);
-            LocalDate dueDate = optionalDate(row, "Due Date", errors);
+            LocalDate requestDate = requiredDate(
+                    row,
+                    "Request Date",
+                    errors,
+                    "Request Date is required because the Loans report uses Request Date to determine the reporting period.");
+            LocalDate approvalDate = requiredDate(
+                    row,
+                    "Approval Date",
+                    errors,
+                    "Approval Date is required for a historical disbursed loan.");
+            LocalDate disbursementDate = requiredDate(
+                    row,
+                    "Disbursement Date",
+                    errors,
+                    "Disbursement Date is required because the loan disbursement ledger uses the date money left the Saving Scheme.");
+            LocalDate dueDate = requiredDate(
+                    row,
+                    "Due Date",
+                    errors,
+                    "Due Date is required so the historical loan lifecycle can be reported.");
+            requireChronology(row, errors, "Request Date", requestDate, "Approval Date", approvalDate);
+            requireChronology(row, errors, "Approval Date", approvalDate, "Disbursement Date", disbursementDate);
+            requireChronology(row, errors, "Disbursement Date", disbursementDate, "Due Date", dueDate);
             LoanStatus status = parseEnum(row, "Status", LoanStatus.class, LoanStatus.CLOSED, errors);
             if (status != null && !HISTORICAL_LOAN_STATUSES.contains(status)) {
                 errors.add(err(
@@ -665,7 +720,11 @@ class HistoricalImportValidator {
             UUID memberId = resolveUsername(row, username, usernames, cooperativeId, errors);
             UUID loanId = resolveCode(
                     row, "Loan Code", loanCode, loanCodes, HistoricalImportSheet.LOANS, cooperativeId, errors);
-            LocalDate date = requiredDate(row, "Payment Date", errors);
+            LocalDate date = requiredDate(
+                    row,
+                    "Payment Date",
+                    errors,
+                    "Payment Date is required because loan repayment reports and the financial ledger use Payment Date.");
             BigDecimal total = requiredPositive(row, "Amount Total", errors);
             BigDecimal principal = requiredAmount(row, "Principal Portion", errors);
             BigDecimal interest = requiredAmount(row, "Interest Portion", errors);
@@ -747,14 +806,33 @@ class HistoricalImportValidator {
             }
             BigDecimal total = requiredPositive(row, "Total Amount", errors);
             BigDecimal paid = requiredAmount(row, "Paid Amount", errors);
-            LocalDate issued = requiredDate(row, "Issued Date", errors);
+            LocalDate issued = requiredDate(
+                    row,
+                    "Issued Date",
+                    errors,
+                    "Issued Date is required because the Fines report uses Issued Date to determine the reporting period.");
             LocalDate due = optionalDate(row, "Due Date", errors);
+            if (issued != null && due != null && due.isBefore(issued)) {
+                errors.add(err(row, "Due Date", "INVALID_SEQUENCE", "Due Date cannot be before Issued Date"));
+            }
             FineStatus status = parseEnum(row, "Status", FineStatus.class, null, errors);
             if (total != null && paid != null && paid.compareTo(total) > 0) {
                 errors.add(err(row, "Paid Amount", "PAID_EXCEEDS_TOTAL", "Paid amount cannot exceed total amount"));
             }
-            if (status == null && total != null && paid != null) {
-                status = deriveFineStatus(total, paid);
+            FineStatus derived = total != null && paid != null ? deriveFineStatus(total, paid) : null;
+            if (status == null && derived != null) {
+                status = derived;
+            }
+            if (status != null
+                    && derived != null
+                    && status != FineStatus.WAIVED
+                    && status != FineStatus.CANCELLED
+                    && status != derived) {
+                errors.add(err(
+                        row,
+                        "Status",
+                        "STATUS_AMOUNT_MISMATCH",
+                        "Fine Status must match Paid Amount versus Total Amount (expected " + derived + ")"));
             }
             String codeKey = HistoricalFingerprint.normalize(code);
             if (StringUtils.hasText(code) && !seen.add(codeKey)) {
@@ -819,7 +897,11 @@ class HistoricalImportValidator {
             UUID fineId = resolveCode(
                     row, "Fine Code", fineCode, fineCodes, HistoricalImportSheet.FINES, cooperativeId, errors);
             BigDecimal amount = requiredPositive(row, "Amount", errors);
-            LocalDate date = requiredDate(row, "Payment Date", errors);
+            LocalDate date = requiredDate(
+                    row,
+                    "Payment Date",
+                    errors,
+                    "Payment Date is required because fine payment reports and the financial ledger use Payment Date.");
             String fp = HistoricalFingerprint.of(
                     cooperativeId,
                     "FINE_PAYMENT",
@@ -877,12 +959,6 @@ class HistoricalImportValidator {
             String code = required(row, "Investment Code", errors);
             String name = required(row, "Name", errors);
             BigDecimal amount = requiredPositive(row, "Amount", errors);
-            LocalDate investmentDate = optionalDate(row, "Investment Date", errors);
-            BigDecimal expectedReturn = optionalAmount(row, "Expected Return Amount", errors);
-            LocalDate expectedReturnDate = optionalDate(row, "Expected Return Date", errors);
-            BigDecimal remaining = optionalAmount(row, "Remaining Capital", errors);
-            BigDecimal capitalReturned = optionalAmount(row, "Total Capital Returned", errors);
-            BigDecimal profitReturned = optionalAmount(row, "Total Profit Returned", errors);
             InvestmentStatus status =
                     parseEnum(row, "Status", InvestmentStatus.class, InvestmentStatus.COMPLETED, errors);
             if (status != null && !HISTORICAL_INVESTMENT_STATUSES.contains(status)) {
@@ -892,6 +968,21 @@ class HistoricalImportValidator {
                         "INVALID_STATUS",
                         "Historical investments cannot be PLANNED"));
             }
+            LocalDate investmentDate;
+            if (status == InvestmentStatus.CANCELLED) {
+                investmentDate = optionalDate(row, "Investment Date", errors);
+            } else {
+                investmentDate = requiredDate(
+                        row,
+                        "Investment Date",
+                        errors,
+                        "Investment Date is required for historical investments. The system cannot use today's date for a historical financial transaction.");
+            }
+            BigDecimal expectedReturn = optionalAmount(row, "Expected Return Amount", errors);
+            LocalDate expectedReturnDate = optionalDate(row, "Expected Return Date", errors);
+            BigDecimal remaining = optionalAmount(row, "Remaining Capital", errors);
+            BigDecimal capitalReturned = optionalAmount(row, "Total Capital Returned", errors);
+            BigDecimal profitReturned = optionalAmount(row, "Total Profit Returned", errors);
             if (capitalReturned == null) {
                 capitalReturned = BigDecimal.ZERO;
             }
@@ -967,7 +1058,11 @@ class HistoricalImportValidator {
                     HistoricalImportSheet.INVESTMENTS,
                     cooperativeId,
                     errors);
-            LocalDate date = requiredDate(row, "Return Date", errors);
+            LocalDate date = requiredDate(
+                    row,
+                    "Return Date",
+                    errors,
+                    "Return Date is required because investment return ledger entries use Return Date.");
             BigDecimal capital = requiredAmount(row, "Capital Portion", errors);
             BigDecimal profit = requiredAmount(row, "Profit Portion", errors);
             BigDecimal total = requiredPositive(row, "Amount Total", errors);
@@ -1026,7 +1121,11 @@ class HistoricalImportValidator {
         int invalid = 0;
         for (ParsedWorkbook.ParsedRow row : rows) {
             List<HistoricalImportError> errors = new ArrayList<>();
-            LocalDate date = requiredDate(row, "Transaction Date", errors);
+            LocalDate date = requiredDate(
+                    row,
+                    "Transaction Date",
+                    errors,
+                    "Transaction Date is required because income and expense reports and the financial ledger use Transaction Date.");
             BigDecimal amount = requiredPositive(row, "Amount", errors);
             IncomeExpenseCategory defaultCategory =
                     income ? IncomeExpenseCategory.OTHER_INCOME : IncomeExpenseCategory.GENERAL_EXPENSE;
@@ -1126,8 +1225,19 @@ class HistoricalImportValidator {
         for (ParsedWorkbook.ParsedRow row : rows) {
             List<HistoricalImportError> errors = new ArrayList<>();
             String code = required(row, "Payout Code", errors);
-            LocalDate from = requiredDate(row, "Period From", errors);
-            LocalDate to = requiredDate(row, "Period To", errors);
+            LocalDate from = requiredDate(
+                    row,
+                    "Period From",
+                    errors,
+                    "Period From is required because payout reports filter by the contribution period range.");
+            LocalDate to = requiredDate(
+                    row,
+                    "Period To",
+                    errors,
+                    "Period To is required because payout reports filter by the contribution period range.");
+            if (from != null && to != null && to.isBefore(from)) {
+                errors.add(err(row, "Period To", "INVALID_SEQUENCE", "Period To must be on or after Period From"));
+            }
             BigDecimal pool = requiredPositive(row, "Pool Amount", errors);
             BigDecimal eligible = optionalAmount(row, "Eligible Contributions", errors);
             PayoutRunStatus status = parseEnum(row, "Status", PayoutRunStatus.class, PayoutRunStatus.PAID, errors);
@@ -1136,7 +1246,11 @@ class HistoricalImportValidator {
                 errors.add(err(row, "Status", "INVALID_STATUS", "Historical payouts must be PAID or CONFIRMED"));
             }
             if (status == PayoutRunStatus.PAID && payoutDate == null) {
-                errors.add(err(row, "Payout Date", "REQUIRED", "PAID payouts require the actual Payout Date"));
+                errors.add(err(
+                        row,
+                        "Payout Date",
+                        "REQUIRED",
+                        "Payout Date is required for PAID payouts because the financial ledger uses the actual date money left the Saving Scheme. Do not substitute Period To."));
             }
             if (payoutDate != null && from != null && payoutDate.isBefore(from)) {
                 errors.add(err(
@@ -1314,6 +1428,15 @@ class HistoricalImportValidator {
                         "Status",
                         "LOAN_RECONCILE",
                         "CLOSED loans must have zero outstanding principal and interest after repayments");
+            }
+            if ((loan.status() == LoanStatus.ACTIVE || loan.status() == LoanStatus.OVERDUE)
+                    && expectedOutstandingPrincipal.compareTo(BigDecimal.ZERO) <= 0) {
+                addRowError(
+                        out,
+                        row,
+                        "Status",
+                        "LOAN_RECONCILE",
+                        "ACTIVE and OVERDUE loans must have outstanding principal after imported repayments");
             }
         }
     }
@@ -1784,6 +1907,144 @@ class HistoricalImportValidator {
         return FineStatus.PAID;
     }
 
+    private List<HistoricalYearSummary> buildYearSummaries(ValidatedWorkbook out) {
+        Map<Integer, YearCounts> byYear = new TreeMap<>();
+        for (var row : out.members) {
+            if (row.valid() && row.draft() != null) {
+                yearOf(byYear, row.draft().membershipDate()).members++;
+            }
+        }
+        for (var row : out.contributions) {
+            if (row.valid() && row.draft() != null) {
+                int year = row.draft().year() > 0 ? row.draft().year() : yearOrZero(row.draft().paymentDate());
+                if (year > 0) {
+                    counts(byYear, year).contributions++;
+                }
+            }
+        }
+        for (var row : out.specialContributions) {
+            if (row.valid() && row.draft() != null) {
+                yearOf(byYear, row.draft().contributionDate()).specialContributions++;
+            }
+        }
+        for (var row : out.socialContributions) {
+            if (row.valid() && row.draft() != null) {
+                yearOf(byYear, row.draft().contributionDate()).socialContributions++;
+            }
+        }
+        for (var row : out.socialDisbursements) {
+            if (row.valid() && row.draft() != null) {
+                yearOf(byYear, row.draft().disbursementDate()).socialDisbursements++;
+            }
+        }
+        for (var row : out.loans) {
+            if (row.valid() && row.draft() != null && row.draft().existingId() == null) {
+                LocalDate date = row.draft().requestDate() != null
+                        ? row.draft().requestDate()
+                        : row.draft().disbursementDate();
+                yearOf(byYear, date).loans++;
+            }
+        }
+        for (var row : out.repayments) {
+            if (row.valid() && row.draft() != null) {
+                yearOf(byYear, row.draft().paymentDate()).repayments++;
+            }
+        }
+        for (var row : out.fines) {
+            if (row.valid() && row.draft() != null && row.draft().existingId() == null) {
+                yearOf(byYear, row.draft().issuedDate()).fines++;
+            }
+        }
+        for (var row : out.finePayments) {
+            if (row.valid() && row.draft() != null) {
+                yearOf(byYear, row.draft().paymentDate()).finePayments++;
+            }
+        }
+        for (var row : out.investments) {
+            if (row.valid() && row.draft() != null && row.draft().existingId() == null) {
+                yearOf(byYear, row.draft().investmentDate()).investments++;
+            }
+        }
+        for (var row : out.investmentReturns) {
+            if (row.valid() && row.draft() != null) {
+                yearOf(byYear, row.draft().returnDate()).investmentReturns++;
+            }
+        }
+        for (var row : out.income) {
+            if (row.valid() && row.draft() != null) {
+                yearOf(byYear, row.draft().transactionDate()).income++;
+            }
+        }
+        for (var row : out.expenses) {
+            if (row.valid() && row.draft() != null) {
+                yearOf(byYear, row.draft().transactionDate()).expenses++;
+            }
+        }
+        for (var row : out.payouts) {
+            if (row.valid() && row.draft() != null && row.draft().existingId() == null) {
+                yearOf(byYear, row.draft().periodFrom()).payouts++;
+            }
+        }
+        List<HistoricalYearSummary> summaries = new ArrayList<>();
+        for (YearCounts counts : byYear.values()) {
+            if (counts.year <= 0) {
+                continue;
+            }
+            summaries.add(HistoricalYearSummary.builder()
+                    .year(counts.year)
+                    .members(counts.members)
+                    .contributions(counts.contributions)
+                    .specialContributions(counts.specialContributions)
+                    .socialContributions(counts.socialContributions)
+                    .socialDisbursements(counts.socialDisbursements)
+                    .loans(counts.loans)
+                    .repayments(counts.repayments)
+                    .fines(counts.fines)
+                    .finePayments(counts.finePayments)
+                    .investments(counts.investments)
+                    .investmentReturns(counts.investmentReturns)
+                    .income(counts.income)
+                    .expenses(counts.expenses)
+                    .payouts(counts.payouts)
+                    .build());
+        }
+        return summaries;
+    }
+
+    private static final class YearCounts {
+        private final int year;
+        private int members;
+        private int contributions;
+        private int specialContributions;
+        private int socialContributions;
+        private int socialDisbursements;
+        private int loans;
+        private int repayments;
+        private int fines;
+        private int finePayments;
+        private int investments;
+        private int investmentReturns;
+        private int income;
+        private int expenses;
+        private int payouts;
+
+        private YearCounts(int year) {
+            this.year = year;
+        }
+    }
+
+    private static YearCounts yearOf(Map<Integer, YearCounts> byYear, LocalDate date) {
+        return counts(byYear, yearOrZero(date));
+    }
+
+    private static YearCounts counts(Map<Integer, YearCounts> byYear, int year) {
+        return byYear.computeIfAbsent(year, YearCounts::new);
+    }
+
+    private static int yearOrZero(LocalDate date) {
+        return date == null ? 0 : date.getYear();
+    }
+
     private static String required(ParsedWorkbook.ParsedRow row, String field, List<HistoricalImportError> errors) {
         String value = trim(row.get(field));
         if (!StringUtils.hasText(value)) {
@@ -1794,16 +2055,17 @@ class HistoricalImportValidator {
 
     private static LocalDate requiredDate(
             ParsedWorkbook.ParsedRow row, String field, List<HistoricalImportError> errors) {
+        return requiredDate(row, field, errors, field + " is required");
+    }
+
+    private static LocalDate requiredDate(
+            ParsedWorkbook.ParsedRow row, String field, List<HistoricalImportError> errors, String missingMessage) {
         String raw = row.get(field);
         if (!StringUtils.hasText(raw)) {
-            errors.add(err(row, field, "REQUIRED", field + " is required"));
+            errors.add(err(row, field, "REQUIRED", missingMessage));
             return null;
         }
-        LocalDate date = WorkbookCellReader.parseDate(raw);
-        if (date == null) {
-            errors.add(err(row, field, "INVALID_DATE", field + " is not a valid date"));
-        }
-        return date;
+        return parsedDate(row, field, raw, errors);
     }
 
     private static LocalDate optionalDate(
@@ -1812,11 +2074,36 @@ class HistoricalImportValidator {
         if (!StringUtils.hasText(raw)) {
             return null;
         }
+        return parsedDate(row, field, raw, errors);
+    }
+
+    private static LocalDate parsedDate(
+            ParsedWorkbook.ParsedRow row, String field, String raw, List<HistoricalImportError> errors) {
         LocalDate date = WorkbookCellReader.parseDate(raw);
         if (date == null) {
             errors.add(err(row, field, "INVALID_DATE", field + " is not a valid date"));
+            return null;
+        }
+        if (date.isAfter(LocalDate.now())) {
+            errors.add(err(row, field, "FUTURE_DATE", field + " cannot be in the future"));
         }
         return date;
+    }
+
+    private static void requireChronology(
+            ParsedWorkbook.ParsedRow row,
+            List<HistoricalImportError> errors,
+            String earlierField,
+            LocalDate earlier,
+            String laterField,
+            LocalDate later) {
+        if (earlier != null && later != null && later.isBefore(earlier)) {
+            errors.add(err(
+                    row,
+                    laterField,
+                    "INVALID_SEQUENCE",
+                    laterField + " must be on or after " + earlierField));
+        }
     }
 
     private static BigDecimal requiredAmount(

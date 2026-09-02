@@ -205,6 +205,7 @@ export function HistoricalImportPage() {
 
   const confirmEnabled = isHistoricalImportReady(preview)
   const recon = preview?.reconciliation
+  const yearSummaries = preview?.yearSummaries ?? []
 
   return (
     <Box>
@@ -273,6 +274,25 @@ export function HistoricalImportPage() {
                 <SheetSummaryCard key={sheet.sheet} sheet={sheet} />
               ))}
             </Box>
+
+            {yearSummaries.length > 0 && (
+              <Alert severity="info">
+                <Typography variant="subtitle2">{t('historicalImport.yearSummaryTitle')}</Typography>
+                {yearSummaries.map((summary) => (
+                  <Typography key={summary.year} variant="body2">
+                    {t('historicalImport.yearSummaryLine', {
+                      year: summary.year,
+                      contributions: summary.contributions ?? 0,
+                      loans: summary.loans ?? 0,
+                      repayments: summary.repayments ?? 0,
+                      fines: summary.fines ?? 0,
+                      investments: summary.investments ?? 0,
+                      payouts: summary.payouts ?? 0,
+                    })}
+                  </Typography>
+                ))}
+              </Alert>
+            )}
 
             {recon && (
               <Alert severity={recon.blocked ? 'error' : recon.warnings?.length ? 'warning' : 'info'}>

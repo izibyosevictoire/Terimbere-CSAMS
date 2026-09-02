@@ -33,6 +33,7 @@ describe('historical import helpers', () => {
       false,
     )
     expect(isHistoricalImportReady(preview({ totalRows: 0, validRows: 0, confirmAllowed: false }))).toBe(false)
+    expect(isHistoricalImportReady(preview({ reportReady: false }))).toBe(false)
     expect(isHistoricalImportReady(null)).toBe(false)
   })
 })

@@ -22,6 +22,24 @@ export interface HistoricalImportSheetSummary {
   invalidRows: number
 }
 
+export interface HistoricalYearSummary {
+  year: number
+  members?: number
+  contributions?: number
+  specialContributions?: number
+  socialContributions?: number
+  socialDisbursements?: number
+  loans?: number
+  repayments?: number
+  fines?: number
+  finePayments?: number
+  investments?: number
+  investmentReturns?: number
+  income?: number
+  expenses?: number
+  payouts?: number
+}
+
 export interface HistoricalReconciliationSummary {
   currentAvailableFund?: string | number | null
   projectedCredits?: string | number | null
@@ -35,6 +53,7 @@ export interface HistoricalReconciliationSummary {
   blocked?: boolean
   warnings?: string[]
   errors?: string[]
+  yearSummaries?: HistoricalYearSummary[]
 }
 
 export interface HistoricalImportPreview {
@@ -46,8 +65,10 @@ export interface HistoricalImportPreview {
   validRows: number
   invalidRows: number
   confirmAllowed: boolean
+  reportReady?: boolean
   sheets: HistoricalImportSheetSummary[]
   errors: HistoricalImportError[]
+  yearSummaries?: HistoricalYearSummary[]
   reconciliation?: HistoricalReconciliationSummary | null
   errorSummary?: string | null
 }
@@ -99,6 +120,7 @@ export function isHistoricalImportReady(preview: HistoricalImportPreview | null)
   if (!preview) return false
   return (
     preview.confirmAllowed &&
+    preview.reportReady !== false &&
     preview.invalidRows === 0 &&
     preview.validRows > 0 &&
     preview.status === 'READY'

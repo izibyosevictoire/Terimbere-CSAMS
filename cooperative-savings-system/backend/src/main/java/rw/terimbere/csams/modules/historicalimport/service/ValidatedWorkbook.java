@@ -13,6 +13,7 @@ import rw.terimbere.csams.modules.fine.entity.FineType;
 import rw.terimbere.csams.modules.historicalimport.dto.HistoricalImportError;
 import rw.terimbere.csams.modules.historicalimport.dto.HistoricalImportSheetSummary;
 import rw.terimbere.csams.modules.historicalimport.dto.HistoricalReconciliationSummary;
+import rw.terimbere.csams.modules.historicalimport.dto.HistoricalYearSummary;
 import rw.terimbere.csams.modules.historicalimport.entity.HistoricalImportSheet;
 import rw.terimbere.csams.modules.incomeexpense.entity.IncomeExpenseCategory;
 import rw.terimbere.csams.modules.incomeexpense.entity.LedgerEffect;
@@ -29,6 +30,8 @@ final class ValidatedWorkbook {
     final Map<HistoricalImportSheet, HistoricalImportSheetSummary> sheetSummaries =
             new LinkedHashMap<>();
     HistoricalReconciliationSummary reconciliation;
+    List<HistoricalYearSummary> yearSummaries = new ArrayList<>();
+    boolean reportReady;
 
     final List<ValidatedRow<MemberDraft>> members = new ArrayList<>();
     final List<ValidatedRow<ContributionDraft>> contributions = new ArrayList<>();

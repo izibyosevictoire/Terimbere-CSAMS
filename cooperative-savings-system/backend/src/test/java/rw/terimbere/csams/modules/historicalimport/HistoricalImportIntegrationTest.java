@@ -94,6 +94,16 @@ class HistoricalImportIntegrationTest {
         byte[] body = result.getResponse().getContentAsByteArray();
         try (Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(body))) {
             assertThat(workbook.getSheet("Instructions")).isNotNull();
+            StringBuilder instructions = new StringBuilder();
+            Sheet instructionSheet = workbook.getSheet("Instructions");
+            for (int i = 0; i <= instructionSheet.getLastRowNum(); i++) {
+                Row row = instructionSheet.getRow(i);
+                if (row != null && row.getCell(0) != null) {
+                    instructions.append(row.getCell(0).getStringCellValue()).append('\n');
+                }
+            }
+            assertThat(instructions.toString()).contains("Required Dates for Historical Reporting");
+            assertThat(instructions.toString()).contains("cannot use today's date");
             for (HistoricalImportSheet sheet : HistoricalImportSheet.values()) {
                 Row header = workbook.getSheet(sheet.getSheetName()).getRow(0);
                 assertThat(header.getCell(0).getStringCellValue()).isEqualTo(sheet.getHeaders().get(0));
