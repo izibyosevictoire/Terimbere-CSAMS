@@ -475,7 +475,7 @@ public class HistoricalImportService {
                 "",
                 "Historical imports reconstruct reports for previous years. Dates must be the actual historical business dates. Do not use today's date unless the transaction actually happened today.",
                 "",
-                "1. The Saving Scheme is the one selected in CSAMS. Do not put cooperative UUIDs in this file.",
+                "1. The Saving Scheme is the one selected in CSAMS. Do not put a Saving Scheme UUID in this file.",
                 "2. Do not rename sheets. Do not change header row text.",
                 "3. Use Username to reference members on every financial sheet.",
                 "4. Use business codes (Loan Code, Fine Code, Campaign Code, Investment Code, Payout Code) to connect child rows.",

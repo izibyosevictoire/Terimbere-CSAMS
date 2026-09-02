@@ -124,7 +124,7 @@ public final class PdfReportWriter {
         meta.setSpacingAfter(14);
         meta.setWidths(new float[] {1.15f, 2.35f, 1.15f, 2.35f});
 
-        addMeta(meta, "Cooperative", header.getCooperativeName(), labelFont, valueFont);
+        addMeta(meta, ReportLabels.SCHEME, header.getCooperativeName(), labelFont, valueFont);
         addMeta(meta, "Selected period", header.getSelectedPeriod(), labelFont, valueFont);
         addMeta(
                 meta,

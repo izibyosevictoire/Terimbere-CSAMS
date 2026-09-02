@@ -65,6 +65,7 @@ import rw.terimbere.csams.modules.report.dto.ReportSheetData;
 import rw.terimbere.csams.modules.report.dto.ReportType;
 import rw.terimbere.csams.modules.report.dto.ReportTypeResponse;
 import rw.terimbere.csams.modules.report.export.ReportExporter;
+import rw.terimbere.csams.modules.report.export.ReportLabels;
 import rw.terimbere.csams.modules.socialfund.entity.SocialContribution;
 import rw.terimbere.csams.modules.socialfund.entity.SocialContributionStatus;
 import rw.terimbere.csams.modules.socialfund.entity.SocialDisbursement;
@@ -949,7 +950,7 @@ public class ReportService {
                     log.getCreatedAt(),
                     log.getUserId() == null ? "" : names.getOrDefault(log.getUserId(), log.getUserId().toString()),
                     nullToEmpty(log.getAction()),
-                    nullToEmpty(log.getEntityType()),
+                    nullToEmpty(ReportLabels.entityType(log.getEntityType())),
                     log.getEntityId() == null ? "" : log.getEntityId().toString(),
                     nullToEmpty(log.getIpAddress())));
         }

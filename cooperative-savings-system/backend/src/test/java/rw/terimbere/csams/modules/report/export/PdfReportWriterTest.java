@@ -80,6 +80,8 @@ class PdfReportWriterTest {
         assertThat(pdf.length).isGreaterThan(200);
         assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
         assertThat(new String(pdf, StandardCharsets.ISO_8859_1)).contains("Candara");
+        assertThat(new String(pdf, StandardCharsets.ISO_8859_1)).contains("SAVING SCHEME");
+        assertThat(new String(pdf, StandardCharsets.ISO_8859_1)).doesNotContain("COOPERATIVE");
     }
 
     @Test

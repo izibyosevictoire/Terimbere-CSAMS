@@ -116,7 +116,7 @@ public final class ExcelReportWriter {
 
     private static int writeHeaderBlock(Sheet sheet, ReportHeaderMeta header, CellStyle bold) {
         int row = 0;
-        row = writeLabelValue(sheet, row, "Cooperative", header.getCooperativeName(), bold);
+        row = writeLabelValue(sheet, row, ReportLabels.SCHEME, header.getCooperativeName(), bold);
         row = writeLabelValue(sheet, row, "Report", header.getReportTitle(), bold);
         row = writeLabelValue(sheet, row, "Selected period", header.getSelectedPeriod(), bold);
         row = writeLabelValue(
