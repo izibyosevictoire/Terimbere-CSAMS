@@ -43,7 +43,7 @@ export function OuWealthSplash({
                 data-anim="1"
                 pathLength={100}
                 d="M80.7 21.4 A42 42 0 1 1 58.7 8.9"
-                stroke="#4A7AB8"
+                stroke="#F0862B"
                 strokeWidth="8.5"
                 strokeLinecap="round"
                 strokeDasharray="100"
