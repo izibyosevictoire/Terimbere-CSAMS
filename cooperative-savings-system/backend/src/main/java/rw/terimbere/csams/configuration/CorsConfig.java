@@ -51,7 +51,10 @@ public class CorsConfig {
 
     private List<String> parseOrigins(String allowedOrigins) {
         if (!StringUtils.hasText(allowedOrigins)) {
-            return List.of("http://localhost:5173");
+            return List.of(
+                    "http://localhost:5173",
+                    "https://terimbere-csams.vercel.app",
+                    "https://wealthcommunity.ousuite.com");
         }
         return Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)

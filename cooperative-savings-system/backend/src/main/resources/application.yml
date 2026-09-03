@@ -57,7 +57,7 @@ app:
   seed:
     default-admin: ${APP_SEED_DEFAULT_ADMIN:false}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173},https://terimbere-csams.vercel.app,https://wealthcommunity.ousuite.com
   jwt:
     access-secret: ${JWT_ACCESS_SECRET:local-dev-access-secret-change-me-minimum-sixty-four-characters-long}
     refresh-secret: ${JWT_REFRESH_SECRET:local-dev-refresh-secret-change-me-minimum-sixty-four-characters-xx}
